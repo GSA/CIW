@@ -1,0 +1,3 @@
+﻿<connectionStrings>
+  <add name="connection name" connectionString="database connection string" />
+</connectionStrings>

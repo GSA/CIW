@@ -1,0 +1,17 @@
+﻿<appSettings>
+  <add key="DEBUGMODE" value="false" />
+  <add key="VERSION" value="V1"/>
+  <add key="SMTPSERVER" value="smtp.server.com" />
+  <add key="DEFAULTSUBJECT" value="Automated CIW Process" />
+  <add key="SUMMARYEMAIL" value="replaceme@example.com" />
+  <add key="DEFAULTEMAIL" value="replaceme@example.com" />
+  <add key="ONBOARDINGLOCATION" value="onboarding folder path"/>
+  <add key="EMAILTEMPLATESLOCATION" value="email template folder path" />
+  <add key="CIWPRODUCTIONFILELOCATION" value="production folder path" />
+  <add key="CIWDEBUGFILELOCATION" value="debug folder path" />
+  <add key="FASEMAIL" value="replaceme@example.com"/>
+  <add key="TEMPFOLDER" value="temp folder path" />
+  <add key="Salt" value="salt" />
+  <add key="EPass" value="epass" />
+  <add key="ClientSettingsProvider.ServiceUri" value="" />
+</appSettings>
