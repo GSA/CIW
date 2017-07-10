@@ -3,6 +3,12 @@
 ## Description: 
 The CIW application retrieves all unprocessed files based on the list of unprocessed files in the Upload table in the database. It will then convert these files to csv, import the data, perform validation, and database checks. If all fields pass it will insert the data into the database, start the sponsorsip/adjudication process. It will then send out appropriate emails to indicate pass/fail status of the upload procedure and directions on next steps.
 
+## Nuget packages and other dll's utilized
+* CsvHelper
+* DocumentFormat.OpenXml
+* FluentValidation
+* log4net
+
 ## Initial Setup
 ### Default config setup
 
