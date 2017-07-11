@@ -5,6 +5,11 @@ namespace ProcessCIW.Mapping
 {
     sealed class CIWMapping : CsvClassMap<CIW>
     {
+        /// <summary>
+        /// Maps the csv file created from the CIW to the CIW object.
+        /// Divided into sections based on the CIW form.
+        /// The referenced object CIWConstants just holds the field names extracted from the CIW form.
+        /// </summary>
         public CIWMapping()
         {
             //Version
@@ -43,7 +48,7 @@ namespace ProcessCIW.Mapping
             Map(m => m.AlienRegistrationNumber).Name(CIWConstants.EMPLOYEE_ALIENREGISTRATIONNUMBER);
             Map(m => m.CitzenshipCountry).Name(CIWConstants.EMPLOYEE_CITZENSHIPCOUNTRY);
 
-            //Seciton 2
+            //Section 2
             Map(m => m.CompanyName).Name(CIWConstants.CONTRACT_COMPANYNAME);
             Map(m => m.CompanyNameSub).Name(CIWConstants.CONTRACT_IFSUBNAMEOFPRIME);
             Map(m => m.DataUniversalNumberingSystem).Name(CIWConstants.CONTRACT_DUNS);
