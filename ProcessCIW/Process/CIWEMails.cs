@@ -12,16 +12,22 @@ using System.Text;
 
 namespace ProcessCIW.Process
 {
+    /// <summary>
+    /// All processes that involve email during processing the CIW
+    /// </summary>
     class CIWEMails
     {
+        //Logging object reference
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
+        //Object reference to Suitability.DLL
         private static Suitability.SendNotification sendNotification;
 
+        //Reference to basic Email class in Utilities
         EMail email = new EMail();
 
+        //Variable declaration and default values
         int uploaderID = 0;
-
         string prefixedName = string.Empty;
         string zonalEMail = string.Empty;
         string uploaderWorkEMail = string.Empty;
@@ -37,7 +43,8 @@ namespace ProcessCIW.Process
         bool isChildCareWorker;
 
         /// <summary>
-        /// Pass in the uploader ID
+        /// Constructor to retrieve uploader ID, full name, suffix, filename, and isChildCareWorker
+        /// Will then create an email subject line of either name or filename and append a date and time to the end
         /// </summary>
         /// <param name="uID"></param>
         public CIWEMails(int uID, string firstName, string middleName, string lastName, string suffix, string fileName, bool isChildCareWorker = false)
@@ -94,6 +101,11 @@ namespace ProcessCIW.Process
             return subject.ToString();
         }
 
+        /// <summary>
+        /// The final function of the CIWEmail class before emails are sent through the smtp server
+        /// Has many references so using CallerMemberName for logging to get source of request to SendEmail
+        /// </summary>
+        /// <param name="memberName"></param>
         private void SendEMail([CallerMemberName] string memberName = "")
         {
             GenerateEMailBody();
@@ -102,23 +114,31 @@ namespace ProcessCIW.Process
 
             log.Info(String.Format("Sending Email to {0} with subject:{1} called from function:{2}", sendTo, subject, memberName));
 
-            email.Send(defaultEMail, sendTo, "", "terry.saunders@gsa.gov", subject, emailBody, "", ConfigurationManager.AppSettings["SMTPSERVER"], true);
+            email.Send(defaultEMail, sendTo, "", "replaceme@example.com", subject, emailBody, "", ConfigurationManager.AppSettings["SMTPSERVER"], true);
         }
 
+        /// <summary>
+        /// Checks if uploaderMajorOrg is "p"
+        /// </summary>
+        /// <returns>Bool</returns>
         private bool IncludeZonalEMail()
         {
             return uploaderMajorOrg.ToLower().Equals("p");
         }
 
+        /// <summary>
+        /// Checks if uploaderMajorOrg is "q"
+        /// </summary>
+        /// <returns>Bool</returns>
         private bool IncludeFASEMail()
         {
             return uploaderMajorOrg.ToLower().Equals("q");
         }
 
         /// <summary>
-        /// 
+        /// Function utilizing stringbuilder to generate SendTo string
         /// </summary>
-        /// <returns></returns>
+        /// <returns>String of email addresses</returns>
         private string SendTo()
         {
             StringBuilder to = new StringBuilder();
@@ -146,11 +166,18 @@ namespace ProcessCIW.Process
             return to.ToString().TrimEnd(',');
         }
 
+        /// <summary>
+        /// Replace UploaderPrefixLastName with prefixedName
+        /// </summary>
         private void GenerateEMailBody()
         {
             emailBody = emailBody.Replace("[UploaderPrefixLastName]", prefixedName);
         }
 
+        /// <summary>
+        /// Function that calls stored procedure to retrieve uploader information based on uploader ID.
+        /// Values converted to strings and stored in previously declared variables.
+        /// </summary>
         private void GetUploaderInformation()
         {
             MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString());
@@ -194,6 +221,9 @@ namespace ProcessCIW.Process
             }
         }
 
+        /// <summary>
+        /// Called when CIW is Child care worker
+        /// </summary>
         public void SendChildCareWorker()
         {
             emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "Tier1CError.html");
@@ -203,6 +233,9 @@ namespace ProcessCIW.Process
             SendEMail(FormatSubject());
         }
 
+        /// <summary>
+        /// Called when CIW is Wrong version
+        /// </summary>
         public void SendWrongVersion()
         {
             emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "VersionError.html");
@@ -212,6 +245,9 @@ namespace ProcessCIW.Process
             SendEMail("Invalid CIW");
         }
 
+        /// <summary>
+        /// Called when CIW is password protected
+        /// </summary>
         public void SendPasswordProtection()
         {
             emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "PasswordError.html");
@@ -221,6 +257,9 @@ namespace ProcessCIW.Process
             SendEMail("Invalid CIW");
         }
 
+        /// <summary>
+        /// Called when CIW is a duplicate user
+        /// </summary>
         public void SendDuplicateUser()
         {
             emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "DuplicateUserError.html");
@@ -230,6 +269,9 @@ namespace ProcessCIW.Process
             SendEMail("Invalid CIW");
         }
 
+        /// <summary>
+        /// Called when CIW is ARRA
+        /// </summary>
         public void SendARRA()
         {
             emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "ARRAError.html");
@@ -239,6 +281,18 @@ namespace ProcessCIW.Process
             SendEMail("Invalid CIW");
         }
 
+        /// <summary>
+        /// Function to replace placeholder text in email template with actual error messages. 
+        /// Email template is divided by section, each sections errors are passed in as seperate objects
+        /// </summary>
+        /// <param name="s1"></param>
+        /// <param name="s2"></param>
+        /// <param name="s3"></param>
+        /// <param name="s4"></param>
+        /// <param name="s5"></param>
+        /// <param name="s6"></param>
+        /// <param name="nested_Err"></param>
+        /// <param name="nested_List"></param>
         public void SendErrors(ValidationResult s1, ValidationResult s2, ValidationResult s3, ValidationResult s4, ValidationResult s5, ValidationResult s6, ValidationResult nested_Err, List<CIWData> nested_List)
         {
             log.Info(string.Format("Preparing to send errors - generating email body"));
@@ -258,6 +312,12 @@ namespace ProcessCIW.Process
             SendEMail("Invalid CIW");
         }
 
+        /// <summary>
+        /// Generates list of nested errors to be added to email template
+        /// </summary>
+        /// <param name="failures"></param>
+        /// <param name="nestedErrors"></param>
+        /// <returns>String of nested errors</returns>
         private string AddNestedErrors(IList<ValidationFailure> failures, List<CIWData> nestedErrors)
         {
             StringBuilder errors = new StringBuilder();
@@ -288,6 +348,11 @@ namespace ProcessCIW.Process
             return errors.ToString();
         }
 
+        /// <summary>
+        /// Helper function that generates the actual error list for each section
+        /// </summary>
+        /// <param name="failures"></param>
+        /// <returns>String of errors in html format in an unordered list</returns>
         private string AddErrors(IList<ValidationFailure> failures)
         {
             StringBuilder errors = new StringBuilder();
@@ -315,6 +380,10 @@ namespace ProcessCIW.Process
             return errors.ToString();
         }
 
+        /// <summary>
+        /// If able to process CIW, sends email that sponsorship process has been initiated
+        /// </summary>
+        /// <param name="id"></param>
         public void SendSponsorshipEMail(int id)
         {
             try
