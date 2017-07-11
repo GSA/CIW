@@ -22,11 +22,12 @@ namespace ProcessCIW
 
         static void Main(string[] args)
         {
+            //used during logging
             stopWatch.Start();
 
             log.Info("Application Started");
            
-            //Need to get data from the DB for the uplaoder ID
+            //All action takes place here
             ProcessFiles();
 
             log.Info(string.Format("Processed Adjudications in {0} milliseconds", stopWatch.ElapsedMilliseconds));
@@ -37,9 +38,13 @@ namespace ProcessCIW
 
             Console.WriteLine("Done! " + stopWatch.ElapsedMilliseconds);
                 
+            //End of program
             return;
         }
 
+        /// <summary>
+        /// Gets unprocessed files and deletes old CSV files
+        /// </summary>
         private static void ProcessFiles()
         {
             List<UnprocessedFiles> uf = new List<UnprocessedFiles>();
@@ -82,6 +87,10 @@ namespace ProcessCIW
             return;
         }
 
+        /// <summary>
+        /// Processes files while in debug mode
+        /// </summary>
+        /// <param name="filesForProcessing"></param>
         private static void ProcessDebugFiles(List<UnprocessedFiles> filesForProcessing)
         {
             int processedResult;
@@ -121,6 +130,10 @@ namespace ProcessCIW
             }
         }
 
+        /// <summary>
+        /// Processes files uploaded when not in debug mode
+        /// </summary>
+        /// <param name="filesForProcessing"></param>
         private static void ProcessProdFiles(List<UnprocessedFiles> filesForProcessing)
         {
             int processedResult;
