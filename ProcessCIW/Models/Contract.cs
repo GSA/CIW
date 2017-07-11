@@ -2,6 +2,8 @@
 
 namespace ProcessCIW.Validation
 {
+    //Contract class, subset of CIW
+    //Currently has no References
     class Contract
     {
         public string CompanyName { get; set; }

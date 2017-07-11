@@ -1,6 +1,8 @@
 ﻿
 namespace ProcessCIW.Validation
 {
+    //Employee class, subset of CIW
+    //Currently has no References
     class Employee
     {
         public string FirstName { get; set; }
