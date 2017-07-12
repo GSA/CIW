@@ -43,7 +43,7 @@ namespace ProcessCIW
         }
 
         /// <summary>
-        /// Gets unprocessed files and deletes old CSV files
+        /// Gets unprocessed files, deletes old CSV files, calls process function based on debug mode boolean
         /// </summary>
         private static void ProcessFiles()
         {
@@ -88,7 +88,7 @@ namespace ProcessCIW
         }
 
         /// <summary>
-        /// Processes files while in debug mode
+        /// Processes files while in debug mode, note that in debug mode the files are not encrypted
         /// </summary>
         /// <param name="filesForProcessing"></param>
         private static void ProcessDebugFiles(List<UnprocessedFiles> filesForProcessing)
@@ -102,25 +102,30 @@ namespace ProcessCIW
                 
                 log.Info(string.Format("Processing file {0}", filePath));
 
+                //Get data from CIW
                 string tempFile = pd.GetCIWInformation(ciwFile.PersID, filePath, ciwFile.FileName, out dupes);
 
                 if (tempFile != null)
                 {
                     log.Info(string.Format("GetCIWInformation returned with temp file {0} and had {1} nested field(s).", tempFile, dupes.Count));
 
+                    //Process the data retreived from the CIW
                     processedResult = pd.ProcessCIWInformation(ciwFile.PersID, tempFile, true, dupes);
 
                     log.Info(string.Format("ProcessCIWInformation returned with result: {0}", processedResult == 1 ? "File processed successfully" : processedResult == 0 ? "File remains unprocessed" : "File failed processing"));
 
+                    //Update the status of processing the file in the database
                     pd.UpdateProcessed(ciwFile.ID, processedResult);
                 }
                 else
                 {
+                    //Mark the file as failed in the database
                     pd.UpdateProcessed(ciwFile.ID, -1);
                 }
 
                 try
                 {
+                    //Delete the original file
                     Utilities.Utilities.DeleteFiles(new List<string> { filePath });
                 }
                 catch (IOException e)
@@ -145,6 +150,7 @@ namespace ProcessCIW
 
                 log.Info(string.Format("Processing file {0}", filePath));
 
+                //Decrypt unprocessed production files
                 byte[] buffer = new byte[] { };
 
                 string decryptedFile = string.Empty;
@@ -157,6 +163,7 @@ namespace ProcessCIW
 
                 buffer.WriteToFile(decryptedFile, Cryptography.Security.Decrypt, true);
 
+                //Gets data from CIW
                 string tempFile = pd.GetCIWInformation(ciwFile.PersID, decryptedFile, ciwFile.FileName, out dupes);
 
                 if (tempFile != null)
@@ -164,17 +171,21 @@ namespace ProcessCIW
 
                     log.Info(string.Format("GetCIWInformation returned with temp file {0} and had {1} nested field(s).", tempFile, dupes.Count));
 
+                    //Processes data retreived from CIW
                     processedResult = pd.ProcessCIWInformation(ciwFile.PersID, tempFile, true, dupes);
 
                     log.Info(string.Format("ProcessCIWInformation returned with result: {0}", processedResult == 1 ? "File processed successfully" : processedResult == 0 ? "File remains unprocessed" : "File failed processing"));
 
+                    //Mark stataus of processed file in the database
                     pd.UpdateProcessed(ciwFile.ID, processedResult);
                 }
                 else
+                    //Mark the file as failed in the database
                     pd.UpdateProcessed(ciwFile.ID, -1);
 
                 try
                 {
+                    //Delete the original and decrypted file
                     Utilities.Utilities.DeleteFiles(new List<string> { filePath, decryptedFile });
                 }
                 catch (IOException e)

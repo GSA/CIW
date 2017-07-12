@@ -116,7 +116,7 @@ namespace ProcessCIW.Models
         /// <summary>
         /// Section 2
         /// </summary>
-
+        
         public string CompanyName { get; set; }
         public string CompanyNameSub { get; set; }
         public string DataUniversalNumberingSystem { get; set; }

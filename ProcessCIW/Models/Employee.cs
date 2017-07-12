@@ -45,6 +45,10 @@ namespace ProcessCIW.Validation
             get { return FirstName + ' ' + LastName + ' ' + Suffix; }
         }
 
+        /// <summary>
+        /// Checks if first or middle or last name is null or empty
+        /// </summary>
+        /// <returns>bool</returns>
         public bool IsValid()
         {
             if (string.IsNullOrEmpty(FirstName) || string.IsNullOrEmpty(LastName) || string.IsNullOrEmpty(MiddleName))

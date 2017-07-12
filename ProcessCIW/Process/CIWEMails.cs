@@ -62,6 +62,14 @@ namespace ProcessCIW.Process
             GetUploaderInformation();
         }
 
+        /// <summary>
+        /// Generates subject line string
+        /// Starts with "Invalid CIW - "
+        /// Then chooses last and first name if the exist
+        /// Else it chooses the file name
+        /// Then appends date and time to end
+        /// </summary>
+        /// <returns></returns>
         private string FormatSubject()
         {
             StringBuilder subject = new StringBuilder();

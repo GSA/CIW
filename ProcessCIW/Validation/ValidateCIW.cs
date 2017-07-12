@@ -1427,6 +1427,7 @@ namespace ProcessCIW.Validation
             if (section6.Errors.Count > 0)
                 PrintToLog(section6.Errors);
 
+            //Verify all sections are valid and return result
             if ((section1.IsValid && section2.IsValid && section3.IsValid && section4.IsValid && section5.IsValid && section6.IsValid) == false)
                 return false;
 
@@ -1505,6 +1506,7 @@ namespace ProcessCIW.Validation
             {
                 ciwInformation.First().VendorPOC = new List<POC.VendorPOC>();
 
+                //Add each vendor poc to list if not empty by using helper function
                 AddVendorPOC(
                     ciwInformation.First().ContractPOCFirstName,
                     ciwInformation.First().ContractPOCLastName,
@@ -1607,6 +1609,7 @@ namespace ProcessCIW.Validation
             {
                 ciwInformation.First().GSAPOC = new List<POC.GSAPOC>();
 
+                //Add each row to a list of GSAPOC's checking to make sure its not empty first using helper function
                 AddGSAPOC(
                     ciwInformation.First().SponsorEmailAddress,
                     ciwInformation.First().SponsorIsPMCORCO,
