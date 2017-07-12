@@ -39,7 +39,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="DocumentFormat.OpenXml">
-      <HintPath>..\..\..\Downloads\DocumentFormat.OpenXml.dll</HintPath>
+      <HintPath>..\references\DocumentFormat.OpenXml.dll</HintPath>
     </Reference>
     <Reference Include="FluentValidation, Version=6.4.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

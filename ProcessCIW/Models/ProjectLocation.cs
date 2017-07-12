@@ -1,6 +1,8 @@
 ﻿
 namespace ProcessCIW.Validation
 {
+    //ProjectLocation class, subset of CIW
+    //Currently has no References
     class ProjectLocation
     {
         public string BuildingNumber { get; set; }
