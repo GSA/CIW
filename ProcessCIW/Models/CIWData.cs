@@ -2,10 +2,16 @@
 
 namespace ProcessCIW.Models
 {
+    /// <summary>
+    /// Class used while processing CIW and creating csv file
+    /// </summary>
     class CIWData
     {
+        //Backing field for InnerText
         private string _innerText;
 
+        //Property used during XML parsing of the CIW.
+        //Sets InnerText to empty string if null or default value
         public string InnerText
         {
             get { return _innerText; }
@@ -19,7 +25,11 @@ namespace ProcessCIW.Models
             }
         }
 
-        public string TagName { get; set; }       
+        //Used for logging
+        public string TagName { get; set; }    
+   
+        //Used for error checking, if not null, indicates nested text boxes on the CIW form.
+        //This can result from improper cut/paste operations on Microsoft Word Forms 
 		public string Child { get; set; }
     }
 }

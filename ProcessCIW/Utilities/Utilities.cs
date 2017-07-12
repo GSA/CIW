@@ -14,7 +14,7 @@ namespace ProcessCIW.Utilities
         /// SHA256 Hash of the SSN, pass in the full 9 or the last 4
         /// </summary>
         /// <param name="ssn"></param>
-        /// <returns></returns>
+        /// <returns>Hashed version of SSN passed in</returns>
         public byte[] HashSSN(string ssn)
         {
             byte[] hashedSSN = null;
@@ -31,11 +31,20 @@ namespace ProcessCIW.Utilities
             return hashedSSN;
         }
 
+        /// <summary>
+        /// Adds -d.docx to end of filename
+        /// </summary>
+        /// <param name="encryptedFilename"></param>
+        /// <returns></returns>
         public string GenerateDecryptedFilename(string encryptedFilename)
         {
             return string.Concat(encryptedFilename, "-d.docx");
         }
 
+        /// <summary>
+        /// Deletes all files in the list of files passed in
+        /// </summary>
+        /// <param name="filesToDelete"></param>
         public static void DeleteFiles(List<string> filesToDelete)
         {
             foreach (var file in filesToDelete)
