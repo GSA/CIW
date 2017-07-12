@@ -44,16 +44,5 @@ namespace ProcessCIW.Utilities
                 File.Delete(file);
             }
         }
-
-        public string GenerateEMailBody(string fileName, int totalAdjudications, string errors = "")
-        {
-            string template = File.ReadAllText(ConfigurationManager.AppSettings["SUMMARYTEMPLATE"]);
-
-            template = template.Replace("[FILENAME]", Path.GetFileName(fileName));
-            template = template.Replace("[TACOUNT]", totalAdjudications.ToString());
-            template = template.Replace("[ERRORS]", errors);
-
-            return template;
-        }
     }
 }
