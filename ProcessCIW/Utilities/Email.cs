@@ -3,6 +3,9 @@ using System.Net.Mail;
 
 namespace ProcessCIW.Utilities
 {
+    /// <summary>
+    /// Used for sending emails through a smtp server
+    /// </summary>
     class EMail : IDisposable
     {
         protected string _strSmtpServer = string.Empty;
@@ -20,6 +23,18 @@ namespace ProcessCIW.Utilities
 
         private readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
+        /// <summary>
+        /// Prepare a message for sending through the smtp server
+        /// </summary>
+        /// <param name="strEmailFrom"></param>
+        /// <param name="strEmailTo"></param>
+        /// <param name="strEmailCc"></param>
+        /// <param name="strEmailBcc"></param>
+        /// <param name="strEmailSubject"></param>
+        /// <param name="strEmailMessageBody"></param>
+        /// <param name="strEmailAttachments"></param>
+        /// <param name="strSmtpServer"></param>
+        /// <param name="IsBodyHtml"></param>
         public void Send(string strEmailFrom, string strEmailTo, string strEmailCc, string strEmailBcc, string strEmailSubject,
                          string strEmailMessageBody, string strEmailAttachments, string strSmtpServer, bool IsBodyHtml = false)
         {
@@ -36,6 +51,9 @@ namespace ProcessCIW.Utilities
             SendEmail();
         }
 
+        /// <summary>
+        /// Sends the email prepared in the Send function
+        /// </summary>
         private void SendEmail()
         {
             // Don't attempt an email if there is no smtp server

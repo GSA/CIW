@@ -6,6 +6,9 @@ using System.Data;
 
 namespace ProcessCIW
 {
+    /// <summary>
+    /// If validation succeeds, InsertCIW uses stored procedures to insert CIW data into the database
+    /// </summary>
     class InsertCIW
     {
         MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString());
@@ -17,15 +20,22 @@ namespace ProcessCIW
         private readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
-        /// Setup Database Connection along with the transaction
+        /// Constructor to recieve new user data and uploader ID
         /// </summary>
-        /// <param name="conn"></param>
+        /// <param name="newUser"></param>
+        /// <param name="uploaderID"></param>
         public InsertCIW(CIW newUser, int uploaderID)
         {
             this.ciwInformation = newUser;
             this.uploaderID = uploaderID;
         }
 
+        /// <summary>
+        /// Called to start saving the CIW in the database. 
+        /// All inserts are inside a transaction
+        /// Data insertion is all or nothing
+        /// </summary>
+        /// <returns>Id of person inserted or 0 if fail</returns>
         public int SaveCIW()
         {
             try
@@ -50,14 +60,18 @@ namespace ProcessCIW
                         using (trans)
                         {
                             log.Info(String.Format("Inserting user {0}", ciwInformation.FullNameForLog));
+
+                            //Call stored procedure "CIW_InsertPerson" and assign to personID
                             personID = InsertNewUser(cmd, "CIW_InsertPerson");
 
                             if (personID == 0)
                             {
+                                //Rollback on failure
                                 trans.Rollback();
                                 return 0;
                             }
 
+                            //Continue on success
                             if (personID > 0)
                             {
                                 log.Info(String.Format("{0} inserted with id {1}", ciwInformation.FullNameForLog, personID));
@@ -66,19 +80,25 @@ namespace ProcessCIW
                                 if (ciwInformation.ContractorType == "Child Care" || ciwInformation.InvestigationTypeRequested == "Tier 1C")
                                 {
                                     log.Info(String.Format("Inserting/Retrieving Child Care/Tier 1C contract header"));
+
+                                    //Insert Contract header of child care worker or tier 1C and assign return value to contractID
                                     contractID = InsertContractHeaderChildCare(cmd, "CIW_InsertContractHeader_ChildCare");
                                 }
                                 else
                                 {
                                     log.Info(String.Format("Inserting/Updating contract header {0} with start date of {1} and end date {2}", ciwInformation.TaskOrderDeliveryOrder, ciwInformation.ContractStartDate, ciwInformation.ContractEndDate));
+                                    
+                                    //Insert Contract header and assign return value to contractID
                                     contractID = InsertOrUpdateContractHeader(cmd, "CIW_InsertOrUpdateContractHeader");
                                 }
 
+                                //Continue on success
                                 if (contractID > 0)
                                 {
                                     log.Info(string.Format("Contract Id is {0}", contractID)); 
                                     int rows = 0;
 
+                                    //Associate person with contract
                                     rows = AssignContract(cmd, "CIW_InsertContractPerson", personID, contractID);
 
                                     if (rows > 0)
@@ -89,6 +109,8 @@ namespace ProcessCIW
                                         foreach (var POC in ciwInformation.VendorPOC)
                                         {
                                             log.Info(String.Format("Inserting vendorPOC {0} {1} with Email:{2}", POC.FirstName, POC.LastName, POC.EMail));
+
+                                            //Insert VendorPOC's by iterating through collection of vendors
                                             InsertVendorPOC(cmd, "CIW_InsertVendorPOC", personID, contractID, POC.FirstName, POC.LastName, POC.WorkPhone, POC.EMail);
 
                                         }
@@ -97,6 +119,8 @@ namespace ProcessCIW
                                         foreach (var GSAPOC in ciwInformation.GSAPOC)
                                         {
                                             log.Info(String.Format("Adding GSAPOC with Email:{0}", GSAPOC.EMail));
+
+                                            //Insert GSAPOC's by iterating through collection of POC's
                                             InsertGSAPOC(cmd, "CIW_InsertGSAPOC", personID, contractID, GSAPOC.EMail, GSAPOC.IsPM_COR_CO_CS);
                                         }
                                     }
@@ -131,6 +155,12 @@ namespace ProcessCIW
             }
         }
 
+        /// <summary>
+        /// Function that calls stored procedure for inserting a user
+        /// </summary>
+        /// <param name="cmd"></param>
+        /// <param name="storedProcedure"></param>
+        /// <returns>ID of new user</returns>
         private int InsertNewUser(MySqlCommand cmd, string storedProcedure)
         {
             cmd.CommandText = storedProcedure;
@@ -229,11 +259,22 @@ namespace ProcessCIW
             return (int)cmd.Parameters["PersID"].Value;
         }
 
+        /// <summary>
+        /// removes [.-()] from phone number
+        /// </summary>
+        /// <param name="phoneNumber"></param>
+        /// <returns>new phone number</returns>
         private string FormatPhoneNumber(string phoneNumber)
         {
             return phoneNumber.Replace(".", "").Replace("-","").Replace("(", "").Replace(")", "").Replace(" ", "");
         }
 
+        /// <summary>
+        /// Function that calls stored procedure to insert a contract
+        /// </summary>
+        /// <param name="cmd"></param>
+        /// <param name="storedProcedure"></param>
+        /// <returns>Contract ID</returns>
         private int InsertOrUpdateContractHeader(MySqlCommand cmd, string storedProcedure)
         {
             cmd.CommandText = storedProcedure;
@@ -267,6 +308,12 @@ namespace ProcessCIW
             return (int)cmd.Parameters["ContractID"].Value;
         }
 
+        /// <summary>
+        /// Function that calls stored procedure to insert child care contract
+        /// </summary>
+        /// <param name="cmd"></param>
+        /// <param name="storedProcedure"></param>
+        /// <returns>Contract ID</returns>
         private int InsertContractHeaderChildCare(MySqlCommand cmd, string storedProcedure)
         {
             cmd.CommandText = storedProcedure;
@@ -289,6 +336,14 @@ namespace ProcessCIW
             return (int)cmd.Parameters["ContractID"].Value;
         }
 
+        /// <summary>
+        /// Calls stored procedure that inserts an association between person and contract
+        /// </summary>
+        /// <param name="cmd"></param>
+        /// <param name="storedProcedure"></param>
+        /// <param name="personId"></param>
+        /// <param name="contractId"></param>
+        /// <returns>Number of rows affected</returns>
         private int AssignContract(MySqlCommand cmd, string storedProcedure, int personId, int contractId)
         {
             cmd.CommandText = storedProcedure;
@@ -316,6 +371,18 @@ namespace ProcessCIW
             return (int)cmd.Parameters["Result"].Value;
         }
 
+        /// <summary>
+        /// Calls stored procedure that inserts VendorPOC's
+        /// </summary>
+        /// <param name="cmd"></param>
+        /// <param name="storedProcedure"></param>
+        /// <param name="personId"></param>
+        /// <param name="contractId"></param>
+        /// <param name="fName"></param>
+        /// <param name="lName"></param>
+        /// <param name="phone"></param>
+        /// <param name="email"></param>
+        /// <returns>Number of rows affected</returns>
         private int InsertVendorPOC(MySqlCommand cmd, string storedProcedure, int personId, int contractId, string fName, string lName, string phone, string email)
         {
             cmd.CommandText = storedProcedure;
@@ -346,6 +413,16 @@ namespace ProcessCIW
             return (int)cmd.Parameters["Result"].Value;
         }
 
+        /// <summary>
+        /// Calls stored procedure that inserts GSAPOC's
+        /// </summary>
+        /// <param name="cmd"></param>
+        /// <param name="storedProcedure"></param>
+        /// <param name="personId"></param>
+        /// <param name="contractId"></param>
+        /// <param name="email"></param>
+        /// <param name="roleTypeId"></param>
+        /// <returns>Number of rows affected</returns>
         private int InsertGSAPOC(MySqlCommand cmd, string storedProcedure, int personId, int contractId, string email, string roleTypeId)
         {
             cmd.CommandText = storedProcedure;
@@ -373,6 +450,12 @@ namespace ProcessCIW
 
         }
 
+        /// <summary>
+        /// Helper function that returns first choice if not null or white space, else it returns second choice
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns>Selected string</returns>
         private string FieldPicker(string a, string b)
         {
             if (!string.IsNullOrWhiteSpace(a))
@@ -382,11 +465,21 @@ namespace ProcessCIW
             else return b;
         }
 
+        /// <summary>
+        /// Converts yes/no to 1/0 for database insertion
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         private bool ConvertYesNo(string value)
         {
             return value.Equals("Yes", StringComparison.OrdinalIgnoreCase);
         }
 
+        /// <summary>
+        /// Converts roleTypeId to a numeric representation stored in the database
+        /// </summary>
+        /// <param name="roleTypeId"></param>
+        /// <returns></returns>
         private int GetRoleTypeNum(string roleTypeId)
         {
             if (roleTypeId == "N/A")
