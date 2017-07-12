@@ -1390,42 +1390,42 @@ namespace ProcessCIW.Validation
             log.Info(String.Format("Section 1 validation completed with {0} errors", section1.Errors.Count));
 
             if (section1.Errors.Count > 0)
-                PrintToLog(section1.Errors);
+                PrintToLog(section1.Errors,1);
 
             //Section 2
             ValidateContractInformation(ciwInformation);
             log.Info(String.Format("Section 2 validation completed with {0} errors", section2.Errors.Count));
 
             if (section2.Errors.Count > 0)
-                PrintToLog(section2.Errors);
+                PrintToLog(section2.Errors,2);
 
             //Section 3
             ValidateRWAIAAInformation(ciwInformation);
             log.Info(String.Format("Section 3 validation completed with {0} errors", section3.Errors.Count));
 
             if (section3.Errors.Count > 0)
-                PrintToLog(section3.Errors);
+                PrintToLog(section3.Errors,3);
 
             //Section 4
             ValidateProjectLocationInformation(ciwInformation);
             log.Info(String.Format("Section 4 validation completed with {0} errors", section4.Errors.Count));
 
             if (section4.Errors.Count > 0)
-                PrintToLog(section4.Errors);
+                PrintToLog(section4.Errors,4);
 
             //Section 5
             ValidateInvestigationRequested(ciwInformation);
             log.Info(String.Format("Section 5 validation completed with {0} errors", section5.Errors.Count));
 
             if (section5.Errors.Count > 0)
-                PrintToLog(section5.Errors);
+                PrintToLog(section5.Errors,5);
 
             //Section 6
             ValidateGSARequestionOfficialInformation(ciwInformation);
             log.Info(String.Format("Section 6 validation completed with {0} errors", section6.Errors.Count));
 
             if (section6.Errors.Count > 0)
-                PrintToLog(section6.Errors);
+                PrintToLog(section6.Errors,6);
 
             //Verify all sections are valid and return result
             if ((section1.IsValid && section2.IsValid && section3.IsValid && section4.IsValid && section5.IsValid && section6.IsValid) == false)
@@ -1473,11 +1473,18 @@ namespace ProcessCIW.Validation
         /// Takes a list of validation errors and prints them to the log
         /// </summary>
         /// <param name="failures"></param>
-        private void PrintToLog(IList<ValidationFailure> failures)
+        private void PrintToLog(IList<ValidationFailure> failures, int section)
         {
             foreach (var rule in failures)
             {
-                log.Error(string.Format("{0} failed with attempted value {1}", rule.PropertyName, rule.AttemptedValue == null ? "Null" : rule.AttemptedValue.Equals("") ? "Empty" : "Not Null or Empty"));
+                if (section != 1 || rule.PropertyName == "PositionJobTitle" || rule.PropertyName == "LastName" || rule.PropertyName == "FirstName" || rule.PropertyName == "MiddleName")
+                {
+                    log.Error(string.Format("{0} failed with attempted value {1}", rule.PropertyName, String.IsNullOrWhiteSpace(rule.AttemptedValue.ToString()) ? "Empty" : rule.AttemptedValue));
+                }
+                else 
+                {
+                    log.Error(string.Format("{0} failed with attempted value {1}", rule.PropertyName, rule.AttemptedValue == null ? "Null" : rule.AttemptedValue.Equals("") ? "Empty" : "PII"));
+                }
             }
         }
 
