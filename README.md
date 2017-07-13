@@ -20,10 +20,8 @@ The repository contains a web config that points to external config files. These
    * You can publish a new branch and do pull requests to have your changes incorporated into the project.
    * Once you have created a new branch you will need to create the config files. (see below for more info on this)
    * Default version of these files are provided in the repo with the .example extension
-   * Copy these files back into the project and change the extension to .config using the previous filename
-   * Or create new files that contain the code as seen below
-   * After the config files are created go to the commit screen, right click on each of the new files and click exclude. 
-   * This will move them to the excluded section of the commit window. 
+   * Copy these files into the project **bin\Debug folder** and change the extension to .config using the previous filename
+   * Or create new files that contain the code as seen below and place them in the **bin\Debug folder**
    * Do not push your config files to the repository. Pull requests that include these files will be rejected.
  
  * **Current config files that will need to be added.**
