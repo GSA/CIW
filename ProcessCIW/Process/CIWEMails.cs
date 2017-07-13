@@ -122,7 +122,7 @@ namespace ProcessCIW.Process
 
             log.Info(String.Format("Sending Email to {0} with subject:{1} called from function:{2}", sendTo, subject, memberName));
 
-            email.Send(defaultEMail, sendTo, "", "replaceme@example.com", subject, emailBody, "", ConfigurationManager.AppSettings["SMTPSERVER"], true);
+            email.Send(defaultEMail, sendTo, "", ConfigurationManager.AppSettings["BCCEMAIL"], subject, emailBody, "", ConfigurationManager.AppSettings["SMTPSERVER"], true);
         }
 
         /// <summary>
