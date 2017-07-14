@@ -11,31 +11,65 @@ namespace ProcessCIW.Utilities
     sealed class Utilities
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+                
+        /// <summary>
+        /// Checks if Startdate is before enddate and enddate is later than current date
+        /// </summary>
+        /// <param name="contractStartDate"></param>
+        /// <param name="contractEndDate"></param>
+        /// <returns>Bool</returns>
+        public static bool StartBeforeEnd(string StartDate, string EndDate)
+        {
+            //parse into datetime or icomparable data type then check if StartDate < EndDate
+            //Note: string is comparable but strings in mm/dd/yyyy format cannot be compared properly            
+            DateTime _StartDate;
+            DateTime _EndDate;
+            DateTime Today = DateTime.Now.Date;
+
+            if (DateTime.TryParse(EndDate, out _EndDate) && DateTime.TryParse(StartDate, out _StartDate))
+            {
+                return ((_StartDate < _EndDate)); // && (Today < _EndDate));
+            }
+            else
+            {
+                return false;
+            }
+        }
 
         /// <summary>
-        /// Checks if date can be parsed into datetime
+        /// Checks if enddate is greater than current date
+        /// </summary>
+        /// <param name="End"></param>
+        /// <returns></returns>
+        public static bool EndIsFutureDate(string End)
+        {
+            //parse into datetime or icomparable data type then check if EndDate > DateTime.Now.Date
+            //Note: string is comparable but strings in mm/dd/yyyy format cannot be compared properly
+            DateTime EndDate;
+            DateTime Today = DateTime.Now.Date;
+
+            if (DateTime.TryParse(End, out EndDate))
+            {
+                return ((Today < EndDate));
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Checks if date provided is less than num of years in the future
         /// </summary>
         /// <param name="Start"></param>
         /// <returns>Bool</returns>
-        //public static bool BeAValidStartDate(string Start)
-        //{
-        //    //parse into datetime or icomparable data type
-        //    DateTime StartDate;
-        //    return DateTime.TryParse(Start, out StartDate);
-        //}
-
-        /// <summary>
-        /// Checks if date provided is less than 30 years in the future
-        /// </summary>
-        /// <param name="Start"></param>
-        /// <returns>Bool</returns>
-        public static bool BeAValidEndDate(string End)
+        public static bool BeAValidEndDate(string End,int NumOfYearsInTheFuture)
         {
             //parse into datetime or icomparable data type
             DateTime EndDate;
             if (DateTime.TryParse(End, out EndDate))
             {
-                if (EndDate >= DateTime.Now.AddYears(30))
+                if (EndDate >= DateTime.Now.AddYears(NumOfYearsInTheFuture))
                     return false;
             }
             else
