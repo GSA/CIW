@@ -39,7 +39,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="DocumentFormat.OpenXml">
-      <HintPath>..\..\..\Downloads\DocumentFormat.OpenXml.dll</HintPath>
+      <HintPath>..\references\DocumentFormat.OpenXml.dll</HintPath>
     </Reference>
     <Reference Include="FluentValidation, Version=6.4.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -81,12 +81,6 @@
     <Compile Include="Mapping\CIWMapping.cs" />
     <Compile Include="Mapping\Constants.cs" />
     <Compile Include="Models\CIW.cs" />
-    <Compile Include="Models\Contract.cs" />
-    <Compile Include="Models\Employee.cs" />
-    <Compile Include="Models\Investigation.cs" />
-    <Compile Include="Models\ProjectLocation.cs" />
-    <Compile Include="Models\RequestingOfficial.cs" />
-    <Compile Include="Models\RWAIAA.cs" />
     <Compile Include="Process\ProcessDocuments.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -97,11 +91,9 @@
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="AppSettings.config" />
     <None Include="AppSettings.example">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="ConnectionStrings.config" />
     <None Include="ConnectionStrings.example">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
