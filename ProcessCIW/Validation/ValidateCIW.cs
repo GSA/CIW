@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Linq;
+using U = ProcessCIW.Utilities;
 
 namespace ProcessCIW.Validation
 {
@@ -109,7 +110,7 @@ namespace ProcessCIW.Validation
                         {
                             new MySqlParameter { ParameterName = "lastName", Value = lastName, MySqlDbType = MySqlDbType.VarChar, Size = 60, Direction = ParameterDirection.Input },
                             new MySqlParameter { ParameterName = "personSSN", Value = ssn.Replace("-","").Replace(" ", ""), MySqlDbType = MySqlDbType.VarChar, Size = 20, Direction = ParameterDirection.Input },
-                            new MySqlParameter { ParameterName = "personDOB", Value = FormatDate(dob), MySqlDbType = MySqlDbType.VarChar, Size = 20, Direction = ParameterDirection.Input },
+                            new MySqlParameter { ParameterName = "personDOB", Value = U.Utilities.FormatDate(dob), MySqlDbType = MySqlDbType.VarChar, Size = 20, Direction = ParameterDirection.Input },
                             new MySqlParameter { ParameterName = "rowsReturned", MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Output }
                         };
 
@@ -131,19 +132,7 @@ namespace ProcessCIW.Validation
             return result;
         }
 
-        /// <summary>
-        /// Parses a datetime from string then formats in yyyy-MM-dd format
-        /// </summary>
-        /// <param name="birthDate"></param>
-        /// <returns></returns>
-        private string FormatDate(string birthDate)
-        {
-            DateTime dateOfBirth;
-
-            DateTime.TryParse(birthDate, out dateOfBirth);
-
-            return string.Format("{0:yyyy-MM-dd}", dateOfBirth);
-        }
+        
     }
 
     /// <summary>
@@ -205,7 +194,7 @@ namespace ProcessCIW.Validation
             RuleFor(employee => employee.DateOfBirth)
                     .NotEmpty()
                     .WithMessage("Date Of Birth: Required Field")
-                    .Must(BeAValidBirthDate)
+                    .Must(U.Utilities.BeAValidBirthDate)
                     .WithMessage("Date Of Birth: Invalid Date");
 
             //POB:City
@@ -388,7 +377,7 @@ namespace ProcessCIW.Validation
                 RuleFor(employee => employee.ApproximiateInvestigationDate)
                         .NotEmpty()
                         .WithMessage("Approx. Investigation Date: Required Field")
-                        .Must(DateIsValidAndNotFuture)
+                        .Must(U.Utilities.DateIsValidAndNotFuture)
                         .WithMessage("Approx. Investigation Date: Invalid Date");
 
                 RuleFor(employee => employee.AgencyAdjudicatedPriorInvestigation)
@@ -445,7 +434,7 @@ namespace ProcessCIW.Validation
                 RuleFor(employee => employee.DateOfEntry)
                    .NotEmpty()
                    .WithMessage("Date Of Entry: Required Field")
-                   .Must(DateIsValidAndNotFuture)
+                   .Must(U.Utilities.DateIsValidAndNotFuture)
                    .WithMessage("Date Of Entry: Invalid Date");
 
                 //Less than 3 Yrs. U.S. Resident
@@ -571,57 +560,9 @@ namespace ProcessCIW.Validation
             return true;
         }
 
-        /// <summary>
-        /// Checks if birthdate given is valid
-        /// </summary>
-        /// <param name="date"></param>
-        /// <returns>Bool</returns>
-        private bool BeAValidBirthDate(string date)
-        {
-            DateTime _birthDate;
+        
 
-            if (DateTime.TryParse(date, out _birthDate))
-            {
-                if ((_birthDate > DateTime.Now) || (_birthDate >= DateTime.Now.AddYears(-15)))
-                    return false;
-            }
-            else
-                return false;
-
-            return true;
-        }
-
-        /// <summary>
-        /// Checks if date given can be parsed into datetime
-        /// </summary>
-        /// <param name="date"></param>
-        /// <returns>Bool</returns>
-        private bool BeAValidDate(string date)
-        {
-            DateTime _date;
-
-            return DateTime.TryParse(date, out _date);
-        }
-
-        /// <summary>
-        /// Checks if date given was prior to current date
-        /// </summary>
-        /// <param name="Date"></param>
-        /// <returns></returns>
-        private bool DateIsValidAndNotFuture(string Date)
-        {
-            DateTime _Date;
-            DateTime Today = DateTime.Now.Date;
-
-            if (DateTime.TryParse(Date, out _Date))
-            {
-                return ((_Date <= Today));
-            }
-            else
-            {
-                return false;
-            }
-        }
+        
     }
 
     /// <summary>
@@ -629,6 +570,7 @@ namespace ProcessCIW.Validation
     /// </summary>
     class ContractorValidator : AbstractValidator<CIW>
     {
+        private const int YearsInTheFuture = 30;
         /// <summary>
         /// Contains all the validation rules for section 2
         /// </summary>
@@ -663,18 +605,18 @@ namespace ProcessCIW.Validation
                     RuleFor(employee => employee.ContractStartDate)
                         .NotEqual("")
                         .WithMessage("Contract Start Date: Required Field")
-                        .Must(BeAValidStartDate)
+                        .Must(U.Utilities.BeAValidDate)
                         .WithMessage("Contract Start Date: Invalid Date")
-                        .Must((c, ContractStartDate) => ContractStartBeforeEnd(c.ContractStartDate, c.ContractEndDate))
+                        .Must((c, ContractStartDate) => U.Utilities.StartBeforeEnd(c.ContractStartDate, c.ContractEndDate) && U.Utilities.EndIsFutureDate(c.ContractEndDate))
                         .WithMessage("Contract Start Date: Cannot be later than Contract End Date");
 
                     //Contract End Date
                     RuleFor(employee => employee.ContractEndDate)
                         .NotEqual("")
                         .WithMessage("Contract End Date: Required Field")
-                        .Must(BeAValidEndDate)
+                        .Must((c,x) => U.Utilities.BeAValidEndDate(c.ContractEndDate,YearsInTheFuture))
                         .WithMessage("Contract End Date: Invalid Date: date must follow mm/dd/yyyy format and be no more than 30 years in the future")
-                        .Must(ContractEndIsFutureDate)
+                        .Must(U.Utilities.EndIsFutureDate)
                         .WithMessage("Contract End Date: Must be a future date");
                 });
 
@@ -687,18 +629,18 @@ namespace ProcessCIW.Validation
                         RuleFor(employee => employee.ContractStartDate)
                             .NotEqual("")
                             .WithMessage("Contract Start Date: Required Field (unless Child Care)")
-                            .Must(BeAValidStartDate)
+                            .Must(U.Utilities.BeAValidDate)
                             .WithMessage("Contract Start Date: Invalid Date")
-                            .Must((c, ContractStartDate) => ContractStartBeforeEnd(c.ContractStartDate, c.ContractEndDate))
+                            .Must((c, ContractStartDate) => U.Utilities.StartBeforeEnd(c.ContractStartDate, c.ContractEndDate) && U.Utilities.EndIsFutureDate(c.ContractEndDate))
                             .WithMessage("Contract Start Date: Cannot be later than Contract End Date");
 
                         //Contract End Date
                         RuleFor(employee => employee.ContractEndDate)
                             .NotEqual("")
                             .WithMessage("Contract End Date: Required Field (unless Child Care)")
-                            .Must(BeAValidEndDate)
+                            .Must((c,x) => U.Utilities.BeAValidEndDate(c.ContractEndDate,YearsInTheFuture))
                             .WithMessage("Contract End Date: Invalid Date: date must follow mm/dd/yyyy format and be no more than 30 years in the future")
-                            .Must(ContractEndIsFutureDate)
+                            .Must(U.Utilities.EndIsFutureDate)
                             .WithMessage("Contract End Date: Must be a future date");
                     });
                 });
@@ -902,83 +844,9 @@ namespace ProcessCIW.Validation
             });
         }
 
-        /// <summary>
-        /// Checks if date can be parsed into datetime
-        /// </summary>
-        /// <param name="Start"></param>
-        /// <returns>Bool</returns>
-        private bool BeAValidStartDate(string Start)
-        {
-            //parse into datetime or icomparable data type
-            DateTime StartDate;
-            return DateTime.TryParse(Start, out StartDate);
-        }
+        
 
-        /// <summary>
-        /// Checks if date provided is less than 30 years in the future
-        /// </summary>
-        /// <param name="Start"></param>
-        /// <returns>Bool</returns>
-        private bool BeAValidEndDate(string Start)
-        {
-            //parse into datetime or icomparable data type
-            DateTime EndDate;
-            if (DateTime.TryParse(Start, out EndDate))
-            {
-                if (EndDate >= DateTime.Now.AddYears(30))
-                    return false;
-            }
-            else
-                return false;
-
-            return true;
-        }
-
-        /// <summary>
-        /// Checks if Startdate is before enddate and enddate is later than current date
-        /// </summary>
-        /// <param name="contractStartDate"></param>
-        /// <param name="contractEndDate"></param>
-        /// <returns>Bool</returns>
-        private bool ContractStartBeforeEnd(string contractStartDate, string contractEndDate)
-        {
-            //parse into datetime or icomparable data type then check if StartDate < EndDate
-            //Note: string is comparable but strings in mm/dd/yyyy format cannot be compared properly            
-            DateTime StartDate;
-            DateTime EndDate;
-            DateTime Today = DateTime.Now.Date;
-
-            if (DateTime.TryParse(contractEndDate, out EndDate) && DateTime.TryParse(contractStartDate, out StartDate))
-            {
-                return ((StartDate < EndDate) && (Today < EndDate));
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Checks if enddate is greater than current date
-        /// </summary>
-        /// <param name="End"></param>
-        /// <returns></returns>
-        private bool ContractEndIsFutureDate(string End)
-        {
-            //parse into datetime or icomparable data type then check if EndDate > DateTime.Now.Date
-            //Note: string is comparable but strings in mm/dd/yyyy format cannot be compared properly
-            DateTime EndDate;
-            DateTime Today = DateTime.Now.Date;
-
-            if (DateTime.TryParse(End, out EndDate))
-            {
-                return ((Today < EndDate));
-            }
-            else
-            {
-                return false;
-            }
-        }
+        
     }
 
     /// <summary>

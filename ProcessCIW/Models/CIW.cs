@@ -4,11 +4,16 @@ using System.Text.RegularExpressions;
 
 namespace ProcessCIW.Models
 {
+    
+
     /// <summary>
     /// The CIW class is the main data object of ProcessCIW. After the CIW is extracted into a csv, this data is then mapped to the CIW object.
     /// </summary>
     class CIW
     {
+        delegate string del(string s);
+        del TrimPhone = new del(Utilities.Utilities.TrimPhoneNum);
+
         //List of backing fields
         private string _PhoneNumberWork;
         private string _PhoneNumberWorkCell;
@@ -81,7 +86,7 @@ namespace ProcessCIW.Models
             get
             { return _PhoneNumberWork; }
             set
-            { _PhoneNumberWork = Regex.Replace(value, "[^0-9]", ""); }
+            { _PhoneNumberWork = TrimPhone(value); }
         }
 
         //Removes all non digit characters from PhoneNumberCell
@@ -90,7 +95,7 @@ namespace ProcessCIW.Models
             get
             { return _PhoneNumberWorkCell; }
             set
-            { _PhoneNumberWorkCell = Regex.Replace(value, "[^0-9]", ""); }
+            { _PhoneNumberWorkCell = TrimPhone(value); }
         }
 
         //Stores PersonalEmailAddress as lower case
@@ -135,7 +140,7 @@ namespace ProcessCIW.Models
             get
             { return _ContractPOCPhoneWork; }
             set
-            { _ContractPOCPhoneWork = Regex.Replace(value, "[^0-9]", ""); }
+            { _ContractPOCPhoneWork = TrimPhone(value); }
         }
 
         //Stores ContractPOCEMailAddress as lower case
@@ -156,7 +161,7 @@ namespace ProcessCIW.Models
             get
             { return _ContractPOCAlternatePocPhoneWork1; }
             set
-            { _ContractPOCAlternatePocPhoneWork1 = Regex.Replace(value, "[^0-9]", ""); }
+            { _ContractPOCAlternatePocPhoneWork1 = TrimPhone(value); }
         }
 
         //Stores ContractPOCAlternatePocEmail1 as lower case
@@ -177,7 +182,7 @@ namespace ProcessCIW.Models
             get
             { return _ContractPOCAlternatePocPhoneWork2; }
             set
-            { _ContractPOCAlternatePocPhoneWork2 = Regex.Replace(value, "[^0-9]", ""); }
+            { _ContractPOCAlternatePocPhoneWork2 = TrimPhone(value); }
         }
 
         //Stores ContractPOCAlternatePocEmail2 as lower case
@@ -198,7 +203,7 @@ namespace ProcessCIW.Models
             get
             { return _ContractPOCAlternatePocPhoneWork3; }
             set
-            { _ContractPOCAlternatePocPhoneWork3 = Regex.Replace(value, "[^0-9]", ""); }
+            { _ContractPOCAlternatePocPhoneWork3 = TrimPhone(value); }
         }
 
         //Stores ContractPOCAlternatePocEmail3 as lower case
@@ -219,7 +224,7 @@ namespace ProcessCIW.Models
             get
             { return _ContractPOCAlternatePocPhoneWork4; }
             set
-            { _ContractPOCAlternatePocPhoneWork4 = Regex.Replace(value, "[^0-9]", ""); }
+            { _ContractPOCAlternatePocPhoneWork4 = TrimPhone(value); }
         }
 
         //Stores ContractPOCAlternatePocEmail4 as lower case
@@ -287,7 +292,7 @@ namespace ProcessCIW.Models
             get
             { return _SponsorPhoneWork; }
             set
-            { _SponsorPhoneWork = Regex.Replace(value, "[^0-9]", ""); }
+            { _SponsorPhoneWork = TrimPhone(value); }
         }
 
         public string SponsorIsPMCORCO { get; set; }
@@ -310,7 +315,7 @@ namespace ProcessCIW.Models
             get
             { return _SponsorAlternatePhoneWork1; }
             set
-            { _SponsorAlternatePhoneWork1 = Regex.Replace(value, "[^0-9]", ""); }
+            { _SponsorAlternatePhoneWork1 = TrimPhone(value); }
         }
 
         public string SponsorAlternateIsPMCORCO1 { get; set; }
@@ -333,7 +338,7 @@ namespace ProcessCIW.Models
             get
             { return _SponsorAlternatePhoneWork2; }
             set
-            { _SponsorAlternatePhoneWork2 = Regex.Replace(value, "[^0-9]", ""); }
+            { _SponsorAlternatePhoneWork2 = TrimPhone(value); }
         }
 
         public string SponsorAlternateIsPMCORCO2 { get; set; }
@@ -356,7 +361,7 @@ namespace ProcessCIW.Models
             get
             { return _SponsorAlternatePhoneWork3; }
             set
-            { _SponsorAlternatePhoneWork3 = Regex.Replace(value, "[^0-9]", ""); }
+            { _SponsorAlternatePhoneWork3 = TrimPhone(value); }
         }
 
         public string SponsorAlternateIsPMCORCO3 { get; set; }
@@ -379,7 +384,7 @@ namespace ProcessCIW.Models
             get
             { return _SponsorAlternatePhoneWork4; }
             set
-            { _SponsorAlternatePhoneWork4 = Regex.Replace(value, "[^0-9]", ""); }
+            { _SponsorAlternatePhoneWork4 = TrimPhone(value); }
         }
 
         public string SponsorAlternateIsPMCORCO4 { get; set; }
@@ -396,32 +401,32 @@ namespace ProcessCIW.Models
         /// <summary>
         /// Property utilizing stringbuilder to generate a name string pre-pended with "Invalid CIW - " for email purposes
         /// </summary>
-        public string FullName
-        {
-            get
-            {
-                StringBuilder fullName = new StringBuilder();
+        //public string FullName                    *** no references ***
+        //{
+        //    get
+        //    {
+        //        StringBuilder fullName = new StringBuilder();
 
-                fullName.Append("Invalid CIW - ");
-                fullName.Append(LastName);
-                fullName.Append(" ");
+        //        fullName.Append("Invalid CIW - ");
+        //        fullName.Append(LastName);
+        //        fullName.Append(" ");
 
-                if (!Suffix.Equals("N/A"))
-                {
-                    fullName.Append(Suffix);
-                }
+        //        if (!Suffix.Equals("N/A"))
+        //        {
+        //            fullName.Append(Suffix);
+        //        }
 
-                fullName.Append(",");
-                fullName.Append(" ");
-                fullName.Append(FirstName);
-                fullName.Append(" ");
+        //        fullName.Append(",");
+        //        fullName.Append(" ");
+        //        fullName.Append(FirstName);
+        //        fullName.Append(" ");
 
-                if (!MiddleName.Equals("NMN"))
-                    fullName.Append(MiddleName);
+        //        if (!MiddleName.Equals("NMN"))
+        //            fullName.Append(MiddleName);
 
-                return fullName.ToString();
-            }
-        }
+        //        return fullName.ToString();
+        //    }
+        //}
 
         /// <summary>
         /// Property utilizing StringBuilder to genererate a name field to be used in logging

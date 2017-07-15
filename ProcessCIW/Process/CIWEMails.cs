@@ -17,7 +17,6 @@ namespace ProcessCIW.Process
     /// </summary>
     class CIWEMails
     {
-        //Logging object reference
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         //Object reference to Suitability.DLL
@@ -232,14 +231,14 @@ namespace ProcessCIW.Process
         /// <summary>
         /// Called when CIW is Child care worker
         /// </summary>
-        public void SendChildCareWorker()
-        {
-            emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "Tier1CError.html");
+        //public void SendChildCareWorker()                 *** No references ***
+        //{
+        //    emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "Tier1CError.html");
 
-            log.Info(string.Format("Sending child care worker E-Mail"));
+        //    log.Info(string.Format("Sending child care worker E-Mail"));
 
-            SendEMail(FormatSubject());
-        }
+        //    SendEMail(FormatSubject());
+        //}
 
         /// <summary>
         /// Called when CIW is Wrong version
