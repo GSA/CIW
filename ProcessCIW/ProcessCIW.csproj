@@ -91,12 +91,8 @@
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="AppSettings.example">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="ConnectionStrings.example">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <None Include="AppSettings.example" />
+    <None Include="ConnectionStrings.example" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
