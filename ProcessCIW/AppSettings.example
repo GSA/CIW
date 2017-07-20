@@ -16,5 +16,5 @@
   <add key="TEMPFOLDER" value="temp folder path" />
   <add key="Salt" value="salt" />
   <add key="EPass" value="epass" />
-  <add key="ClientSettingsProvider.ServiceUri" value="" />  
+  <add key="ClientSettingsProvider.ServiceUri" value="" />
 </appSettings>
