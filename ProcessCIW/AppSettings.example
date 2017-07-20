@@ -12,8 +12,9 @@
   <add key="CCEMAIL" value="replaceme@example.com" />
   <add key="BCCEMAIL" value="replaceme@example.com" />
   <add key="FASEMAIL" value="replaceme@example.com"/>
+  <add key="CHILDCAREEMAIL" value="replaceme@example.com" />
   <add key="TEMPFOLDER" value="temp folder path" />
   <add key="Salt" value="salt" />
   <add key="EPass" value="epass" />
-  <add key="ClientSettingsProvider.ServiceUri" value="" />
+  <add key="ClientSettingsProvider.ServiceUri" value="" />  
 </appSettings>
