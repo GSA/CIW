@@ -1348,7 +1348,7 @@ namespace ProcessCIW.Validation
                 //Print values only if not section 1 unless PropertyName is job title or part of name
                 if (section != 1 || rule.PropertyName == "PositionJobTitle" || rule.PropertyName == "LastName" || rule.PropertyName == "FirstName" || rule.PropertyName == "MiddleName")
                 {
-                    log.Error(string.Format("{0} failed with attempted value {1}", rule.PropertyName, String.IsNullOrWhiteSpace(rule.AttemptedValue.ToString()) ? "Empty" : rule.AttemptedValue));
+                    log.Error(string.Format("{0} failed with attempted value {1}", rule.PropertyName, String.IsNullOrWhiteSpace(rule.AttemptedValue.ToString()) ? "Empty" : '"' + rule.AttemptedValue.ToString() + '"'));
                 }
                 else 
                 {
