@@ -57,7 +57,7 @@ namespace ProcessCIW.Process
             this.isChildCareWorker = isChildCareWorker;
 
             this.subject = FormatSubject();
-            
+
             GetUploaderInformation();
         }
 
@@ -120,17 +120,17 @@ namespace ProcessCIW.Process
             string sendTo = SendTo();
 
             log.Info(String.Format("Sending Email to {0} with subject:{1} called from function:{2}", sendTo, subject, memberName));
-
             email.Send(defaultEMail, sendTo, "", ConfigurationManager.AppSettings["BCCEMAIL"], subject, emailBody, "", ConfigurationManager.AppSettings["SMTPSERVER"], true);
         }
 
         /// <summary>
-        /// Checks if uploaderMajorOrg is "p"
+        /// Checks if uploaderMajorOrg is "p" and not Child care worker
         /// </summary>
         /// <returns>Bool</returns>
         private bool IncludeZonalEMail()
         {
-            return uploaderMajorOrg.ToLower().Equals("p");
+            return uploaderMajorOrg.ToLower().Equals("p") && !isChildCareWorker;
+
         }
 
         /// <summary>
@@ -150,7 +150,7 @@ namespace ProcessCIW.Process
         {
             StringBuilder to = new StringBuilder();
 
-            to.Append(uploaderWorkEMail);            
+            to.Append(uploaderWorkEMail);
 
             if (IncludeZonalEMail())
             {
@@ -205,7 +205,7 @@ namespace ProcessCIW.Process
                     MySqlParameter[] ContractHeaderParameters = new MySqlParameter[]
                     {
                         new MySqlParameter { ParameterName = "UploaderId", Value = uploaderID, MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Input },
-                        
+
                         new MySqlParameter { ParameterName = "PrefixedName", MySqlDbType=MySqlDbType.VarChar, Size=64, Direction = ParameterDirection.Output },
                         new MySqlParameter { ParameterName = "ZoneLetter", MySqlDbType=MySqlDbType.VarChar, Size=2, Direction = ParameterDirection.Output },
                         new MySqlParameter { ParameterName = "ZoneEmail", MySqlDbType=MySqlDbType.VarChar, Size=64, Direction = ParameterDirection.Output },
@@ -289,7 +289,7 @@ namespace ProcessCIW.Process
         }
 
         /// <summary>
-        /// Function to replace placeholder text in email template with actual error messages. 
+        /// Function to replace placeholder text in email template with actual error messages.
         /// Email template is divided by section, each sections errors are passed in as seperate objects
         /// </summary>
         /// <param name="s1"></param>
@@ -395,7 +395,7 @@ namespace ProcessCIW.Process
         {
             try
             {
-                log.Info("Begin Sponsorship E-Mail");                
+                log.Info("Begin Sponsorship E-Mail");
 
                 sendNotification = new Suitability.SendNotification(
                                     ConfigurationManager.AppSettings["DEFAULTEMAIL"],
