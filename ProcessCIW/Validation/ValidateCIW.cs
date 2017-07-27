@@ -1058,7 +1058,7 @@ namespace ProcessCIW.Validation
                         .Cascade(FluentValidation.CascadeMode.StopOnFirstFailure)
                         .NotEmpty()
                         .WithMessage("Primary GSA Requesting Official E-Mail Address: Required Field")
-                        .Matches(@"^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(gsa)\.gov$")
+                        .Matches(@"^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(gsa)(ig)?\.gov$")
                         .WithMessage("Primary GSA Requesting Official E-Mail Address: Not Valid GSA E-Mail")
                         .Must(BeAValidEMail)
                         .WithMessage("Primary GSA Requesting Official E-Mail Address: Not Found in GCIMS");
@@ -1074,10 +1074,10 @@ namespace ProcessCIW.Validation
                 When(r => (r.SponsorAlternateEmailAddress1 != "" || r.SponsorAlternateIsPMCORCO1 != ""), () =>
                 {
                     RuleFor(r => r.SponsorAlternateEmailAddress1)
-                            .Matches(@"^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(gsa)\.gov$")
-                            .WithMessage("Alternate GSA Requesting Official 1: E-Mail Address: Not Valid GSA E-Mail")
+                            .Matches(@"^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(gsa)(ig)?\.gov$")
+                            .WithMessage("Alternate GSA Requesting Official 1: E-Mail Address: Not Valid GSA E-Mail");
                             .Must(BeAValidEMail)
-                            .WithMessage("Alternate GSA Requesting Official 1: E-Mail Address: Not Found in GCIMS");
+                            .WithMessage("Alternate GSA Requesting Official 1: E-Mail Address: Not Found in GCIMS")
 
                     RuleFor(requestingOfficial => requestingOfficial.SponsorAlternateIsPMCORCO1)
                             .NotEmpty()
@@ -1091,7 +1091,7 @@ namespace ProcessCIW.Validation
                 When(r => (r.SponsorAlternateEmailAddress2 != "" || r.SponsorAlternateIsPMCORCO2 != ""), () =>
                 {
                     RuleFor(r => r.SponsorAlternateEmailAddress2)
-                            .Matches(@"^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(gsa)\.gov$")
+                            .Matches(@"^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(gsa)(ig)?\.gov$")
                             .WithMessage("Alternate GSA Requesting Official 2: E-Mail Address: Not Valid GSA E-Mail")
                             .Must(BeAValidEMail)
                             .WithMessage("Alternate GSA Requesting Official 2: E-Mail Address: Not Found in GCIMS");
@@ -1108,10 +1108,10 @@ namespace ProcessCIW.Validation
                 When(r => (r.SponsorAlternateEmailAddress3 != "" || r.SponsorAlternateIsPMCORCO3 != ""), () =>
                 {
                     RuleFor(r => r.SponsorAlternateEmailAddress3)
-                            .Matches(@"^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(gsa)\.gov$")
-                            .WithMessage("Alternate GSA Requesting Official 3: E-Mail Address: Not Valid GSA E-Mail")
+                            .Matches(@"^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(gsa)(ig)?\.gov$")
+                            .WithMessage("Alternate GSA Requesting Official 3: E-Mail Address: Not Valid GSA E-Mail");
                             .Must(BeAValidEMail)
-                            .WithMessage("Alternate GSA Requesting Official 3: E-Mail Address: Not Found in GCIMS");
+                            .WithMessage("Alternate GSA Requesting Official 3: E-Mail Address: Not Found in GCIMS")
 
                     RuleFor(requestingOfficial => requestingOfficial.SponsorAlternateIsPMCORCO3)
                             .NotEmpty()
@@ -1125,7 +1125,7 @@ namespace ProcessCIW.Validation
                 When(r => (r.SponsorAlternateEmailAddress4 != "" || r.SponsorAlternateIsPMCORCO4 != ""), () =>
                 {
                     RuleFor(r => r.SponsorAlternateEmailAddress4)
-                            .Matches(@"^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(gsa)\.gov$")
+                            .Matches(@"^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(gsa)(ig)?\.gov$")
                             .WithMessage("Alternate GSA Requesting Official 4: E-Mail Address: Not Valid GSA E-Mail")
                             .Must(BeAValidEMail)
                             .WithMessage("Alternate GSA Requesting Official 4: E-Mail Address: Not Found in GCIMS");
