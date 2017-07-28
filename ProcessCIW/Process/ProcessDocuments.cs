@@ -123,7 +123,7 @@ namespace ProcessCIW
         }
 
         /// <summary>
-        /// Get all the CIW inforamtion, create temp csv file then load that and then filter it down to the different objects
+        /// Get all the CIW information, create temp csv file then load that and then filter it down to the different objects
         /// </summary>
         /// <param name="fileName"></param>
         public string GetCIWInformation(int uploaderID, string filePath, string fileName, out List<CIWData> dupes)
@@ -131,7 +131,7 @@ namespace ProcessCIW
             List<CIWData> ciwInformation = new List<CIWData>();
 
             log.Info(String.Format("Getting information from file {0}", filePath));
-            
+
             //Check for password protection
             try
             {
@@ -142,7 +142,7 @@ namespace ProcessCIW
             }
             catch (FileFormatException e)
             {
-                log.Error(string.Format("Locked Document - {0} with innner exception:{1}", e.Message, e.InnerException));                
+                log.Error(string.Format("Locked Document - {0} with inner exception:{1}", e.Message, e.InnerException));
                 sendPasswordProtection(uploaderID, fileNameHelper(fileName));
                 dupes = null;
                 return null;
@@ -177,7 +177,7 @@ namespace ProcessCIW
                     dupes = null;
                     return null;
                 }
-                
+
                 try
                 {
                     //Gets all data on the form via tags
@@ -208,13 +208,13 @@ namespace ProcessCIW
                 dupes = ciwInformation.Where(c => c.Child != String.Empty).ToList();
 
                 //used in log
-                string lastFirst = ciwInformation.FirstOrDefault(c => c.TagName == "Employee-LastName").InnerText ?? "null" + ", " + ciwInformation.FirstOrDefault(c => c.TagName == "Employee-FirstName").InnerText ?? "null";
+                string lastFirst = (ciwInformation.FirstOrDefault(c => c.TagName == "Employee-LastName").InnerText ?? "null") + ", " + (ciwInformation.FirstOrDefault(c => c.TagName == "Employee-FirstName").InnerText ?? "null");
 
                 log.Info(String.Format("CiwInformation obtained for {0}", lastFirst));
 
                 log.Info(String.Format("Creating temp file for {0}", lastFirst));
 
-                //Create a temp csv file of the informaiton within the form                
+                //Create a temp csv file of the information within the form
                 string tempFile = CreateTempFile(ciwInformation);
 
                 return tempFile;
@@ -285,14 +285,14 @@ namespace ProcessCIW
         }
 
         /// <summary>
-        /// Retreives the node
+        /// Retrieves the node
         /// </summary>
         /// <param name="innerText"></param>
         /// <param name="outerXML"></param>
         /// <returns>The text object in a field or the selected list item value</returns>
         private string ParseXML(string innerText, string outerXML)
         {
-            //if xml contains dropdownlist then parse and return value otherwise return innerxml
+            //if xml contains dropdown list then parse and return value otherwise return inner xml
             XmlDocument xml = new XmlDocument();
 
             if (!String.IsNullOrEmpty(outerXML))
@@ -300,7 +300,7 @@ namespace ProcessCIW
                 xml.InnerXml = outerXML;
             }
 
-            // Add the namespace.  
+            // Add the namespace.
             XmlNamespaceManager nameSpaceManager = new XmlNamespaceManager(xml.NameTable);
 
             nameSpaceManager.AddNamespace("w", "http://schemas.openxmlformats.org/wordprocessingml/2006/main");
@@ -352,7 +352,7 @@ namespace ProcessCIW
         /// <returns>Int success code</returns>
         public int ProcessCIWInformation(int uploaderID, string filePath, bool isDebug, List<CIWData> dupes)
         {
-            log.Info("Processing CIW");           
+            log.Info("Processing CIW");
 
             //Create validation object
             ValidateCIW validate = new Validation.ValidateCIW();
@@ -367,12 +367,12 @@ namespace ProcessCIW
             CIWEMails sendEmails = new CIWEMails(uploaderID, ciwInformation.First().FirstName, ciwInformation.First().MiddleName,
                                                  ciwInformation.First().LastName, ciwInformation.First().Suffix, Path.GetFileName(filePath),
                                                  CheckIfChildCare(ciwInformation));
-            
-            //Delete temp csv file before proceding
+
+            //Delete temp csv file before proceeding
             try
             {
                 log.Info(string.Format("Deleting Temp CSV File {0}.", filePath));
-                File.Delete(filePath); 
+                File.Delete(filePath);
             }
             catch (IOException e)
             {
@@ -449,7 +449,7 @@ namespace ProcessCIW
                 log.Error(String.Format("Form failed validation for user {0}", ciwInformation.First().FullNameForLog));
 
                 //E-Mail Failure Template
-                //Send error email                    
+                //Send error email
                 Tuple<ValidationResult, ValidationResult, ValidationResult,
                         ValidationResult, ValidationResult, ValidationResult, ValidationResult> ValidationErrors = new Tuple<ValidationResult, ValidationResult, ValidationResult,
                                                                                                             ValidationResult, ValidationResult, ValidationResult, ValidationResult>(null, null, null,
@@ -490,17 +490,17 @@ namespace ProcessCIW
             string first = ciwData.First(c => c.TagName == "Employee-FirstName").InnerText;
             string last = ciwData.First(c => c.TagName == "Employee-LastName").InnerText;
 
-            //If either is null or empty then use p;aceholder name
-            first = (first == null ? "FirstNameNull" : (first == "" ? "FirstNameEmpty" : first));            
+            //If either is null or empty then use placeholder name
+            first = (first == null ? "FirstNameNull" : (first == "" ? "FirstNameEmpty" : first));
             last = (last == null ? "LastNameNull" : (last == "" ? "LastNameEmpty" : last));
 
-            //uses first 20 characters of first and last name and adds timestamp to end and then .csv
+            //uses first 20 characters of first and last name and adds time stamp to end and then .csv
             string csvFileName = first.Length >= 20 ? first.Substring(0, 20) : first.Substring(0, first.Length) + "_" + (last.Length >= 20 ? last.Substring(0, 20) : last.Substring(0, last.Length)) + "_" + DateTime.Now.ToString("MMddyyyy_HHmmss") + ".csv";
-            
+
             log.Info("CIW Info Count: " + ciwData.Count);
 
-            string fileName = ConfigurationManager.AppSettings["TEMPFOLDER"] + csvFileName; 
-                        
+            string fileName = ConfigurationManager.AppSettings["TEMPFOLDER"] + csvFileName;
+
             try
             {
                 using (StreamWriter writer = new StreamWriter(fileName, false))
@@ -517,7 +517,7 @@ namespace ProcessCIW
             log.Info(string.Format("Temp csv file {0} created", fileName));
 
             return fileName;
-        }        
+        }
 
         /// <summary>
         /// Loads the CIW information
