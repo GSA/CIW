@@ -9,7 +9,10 @@
   <add key="EMAILTEMPLATESLOCATION" value="email template folder path" />
   <add key="CIWPRODUCTIONFILELOCATION" value="production folder path" />
   <add key="CIWDEBUGFILELOCATION" value="debug folder path" />
+  <add key="CCEMAIL" value="replaceme@example.com" />
+  <add key="BCCEMAIL" value="replaceme@example.com" />
   <add key="FASEMAIL" value="replaceme@example.com"/>
+  <add key="CHILDCAREEMAIL" value="replaceme@example.com" />
   <add key="TEMPFOLDER" value="temp folder path" />
   <add key="Salt" value="salt" />
   <add key="EPass" value="epass" />

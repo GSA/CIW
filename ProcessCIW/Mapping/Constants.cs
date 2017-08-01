@@ -1,6 +1,9 @@
 ﻿
 namespace ProcessCIW.Mapping
 {
+    /// <summary>
+    /// A list of field names from the CIW form
+    /// </summary>
     class CIWConstants
     {
         private CIWConstants() { }
@@ -110,6 +113,9 @@ namespace ProcessCIW.Mapping
         public const string SPONSOR_ALTERNATEISPMCORCO4 = "Sponsor-AlternateIsPMCORCO4";
     }
 
+    /// <summary>
+    /// A list of default strings found on the CIW form.
+    /// </summary>
     class CIWWordConstants
     {
         private CIWWordConstants() { }

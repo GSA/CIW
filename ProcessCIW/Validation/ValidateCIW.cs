@@ -8,17 +8,29 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Linq;
+using U = ProcessCIW.Utilities;
 
 namespace ProcessCIW.Validation
 {
+    /// <summary>
+    /// Fluent Validation class to validate if tags are nested
+    /// </summary>
 	class HasNestedTagsValidator : AbstractValidator<CIW>
     {
+        /// <summary>
+        /// Tests if any nested tags
+        /// </summary>
         public HasNestedTagsValidator()
         {
             RuleFor(c => c.Dupes)
                 .Must((e, x) => VerifyEmptyDupes(e.Dupes));
         }
 
+        /// <summary>
+        /// Creates a string of nested tags
+        /// </summary>
+        /// <param name="dupes"></param>
+        /// <returns>string of nested tags</returns>
         public static string getCIWDataChildString(List<CIWData> dupes)
         {
             string _dupes = "";
@@ -37,14 +49,27 @@ namespace ProcessCIW.Validation
             return _dupes;
         }
 
+        /// <summary>
+        /// Returns if dupes equals 0
+        /// </summary>
+        /// <param name="dupes"></param>
+        /// <returns>bool</returns>
         public  bool VerifyEmptyDupes(List<CIWData> dupes)
         {
             return dupes.Count == 0;
         }
     }
+
+    /// <summary>
+    /// Fluent Validation class to validate if user exists
+    /// </summary>
     class UserExistsValidator : AbstractValidator<CIW>
     {
         private readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        /// <summary>
+        /// Validates if user exists
+        /// </summary>
         public UserExistsValidator()
         {
             RuleFor(employee => employee.LastName)
@@ -53,7 +78,7 @@ namespace ProcessCIW.Validation
         }
 
         /// <summary>
-        /// 
+        /// Calls stored procedure that checks if a duplicate user exists
         /// </summary>
         /// <param name="lastName"></param>
         /// <param name="dob"></param>
@@ -85,7 +110,7 @@ namespace ProcessCIW.Validation
                         {
                             new MySqlParameter { ParameterName = "lastName", Value = lastName, MySqlDbType = MySqlDbType.VarChar, Size = 60, Direction = ParameterDirection.Input },
                             new MySqlParameter { ParameterName = "personSSN", Value = ssn.Replace("-","").Replace(" ", ""), MySqlDbType = MySqlDbType.VarChar, Size = 20, Direction = ParameterDirection.Input },
-                            new MySqlParameter { ParameterName = "personDOB", Value = FormatDate(dob), MySqlDbType = MySqlDbType.VarChar, Size = 20, Direction = ParameterDirection.Input },
+                            new MySqlParameter { ParameterName = "personDOB", Value = U.Utilities.FormatDate(dob), MySqlDbType = MySqlDbType.VarChar, Size = 20, Direction = ParameterDirection.Input },
                             new MySqlParameter { ParameterName = "rowsReturned", MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Output }
                         };
 
@@ -107,14 +132,7 @@ namespace ProcessCIW.Validation
             return result;
         }
 
-        private string FormatDate(string birthDate)
-        {
-            DateTime dateOfBirth;
-
-            DateTime.TryParse(birthDate, out dateOfBirth);
-
-            return string.Format("{0:yyyy-MM-dd}", dateOfBirth);
-        }
+        
     }
 
     /// <summary>
@@ -122,6 +140,9 @@ namespace ProcessCIW.Validation
     /// </summary>
     class EmployeeValidator : AbstractValidator<CIW>
     {
+        /// <summary>
+        /// Contains all the validation rules for Section 1 of the CIW
+        /// </summary>
         public EmployeeValidator()
         {
             ValidatorOptions.CascadeMode = CascadeMode.StopOnFirstFailure;
@@ -173,7 +194,7 @@ namespace ProcessCIW.Validation
             RuleFor(employee => employee.DateOfBirth)
                     .NotEmpty()
                     .WithMessage("Date Of Birth: Required Field")
-                    .Must(BeAValidBirthDate)
+                    .Must(U.Utilities.BeAValidBirthDate)
                     .WithMessage("Date Of Birth: Invalid Date");
 
             //POB:City
@@ -356,7 +377,7 @@ namespace ProcessCIW.Validation
                 RuleFor(employee => employee.ApproximiateInvestigationDate)
                         .NotEmpty()
                         .WithMessage("Approx. Investigation Date: Required Field")
-                        .Must(DateIsValidAndNotFuture)
+                        .Must(U.Utilities.DateIsValidAndNotFuture)
                         .WithMessage("Approx. Investigation Date: Invalid Date");
 
                 RuleFor(employee => employee.AgencyAdjudicatedPriorInvestigation)
@@ -413,7 +434,7 @@ namespace ProcessCIW.Validation
                 RuleFor(employee => employee.DateOfEntry)
                    .NotEmpty()
                    .WithMessage("Date Of Entry: Required Field")
-                   .Must(DateIsValidAndNotFuture)
+                   .Must(U.Utilities.DateIsValidAndNotFuture)
                    .WithMessage("Date Of Entry: Invalid Date");
 
                 //Less than 3 Yrs. U.S. Resident
@@ -437,6 +458,11 @@ namespace ProcessCIW.Validation
                     .WithMessage("Citizenship Country: Required Field");
         }
 
+        /// <summary>
+        /// Calls stored procedure to check if SSN is duplicate
+        /// </summary>
+        /// <param name="ssn"></param>
+        /// <returns></returns>
         private bool NotBeADuplicateSSN(string ssn)
         {
             //Need global connection check.
@@ -482,6 +508,12 @@ namespace ProcessCIW.Validation
             return true;
         }
 
+        /// <summary>
+        /// Calls stored procedure to help validate if state and country codes for mexico/canada match
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="country"></param>
+        /// <returns></returns>
         private bool ValidateState(string state, string country)
         {
             MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString());
@@ -528,42 +560,9 @@ namespace ProcessCIW.Validation
             return true;
         }
 
-        private bool BeAValidBirthDate(string date)
-        {
-            DateTime _birthDate;
+        
 
-            if (DateTime.TryParse(date, out _birthDate))
-            {
-                if ((_birthDate > DateTime.Now) || (_birthDate >= DateTime.Now.AddYears(-15)))
-                    return false;
-            }
-            else
-                return false;
-
-            return true;
-        }
-
-        private bool BeAValidDate(string date)
-        {
-            DateTime _date;
-
-            return DateTime.TryParse(date, out _date);
-        }
-
-        private bool DateIsValidAndNotFuture(string Date)
-        {
-            DateTime _Date;
-            DateTime Today = DateTime.Now.Date;
-
-            if (DateTime.TryParse(Date, out _Date))
-            {
-                return ((_Date <= Today));
-            }
-            else
-            {
-                return false;
-            }
-        }
+        
     }
 
     /// <summary>
@@ -571,6 +570,10 @@ namespace ProcessCIW.Validation
     /// </summary>
     class ContractorValidator : AbstractValidator<CIW>
     {
+        private const int YearsInTheFuture = 30;
+        /// <summary>
+        /// Contains all the validation rules for section 2
+        /// </summary>
         public ContractorValidator()
         {
             RuleSet("ValidFirstAndSecondRow", () =>
@@ -602,18 +605,18 @@ namespace ProcessCIW.Validation
                     RuleFor(employee => employee.ContractStartDate)
                         .NotEqual("")
                         .WithMessage("Contract Start Date: Required Field")
-                        .Must(BeAValidStartDate)
+                        .Must(U.Utilities.BeAValidDate)
                         .WithMessage("Contract Start Date: Invalid Date")
-                        .Must((c, ContractStartDate) => ContractStartBeforeEnd(c.ContractStartDate, c.ContractEndDate))
+                        .Must((c, ContractStartDate) => U.Utilities.StartBeforeEnd(c.ContractStartDate, c.ContractEndDate) && U.Utilities.EndIsFutureDate(c.ContractEndDate))
                         .WithMessage("Contract Start Date: Cannot be later than Contract End Date");
 
                     //Contract End Date
                     RuleFor(employee => employee.ContractEndDate)
                         .NotEqual("")
                         .WithMessage("Contract End Date: Required Field")
-                        .Must(BeAValidEndDate)
+                        .Must((c,x) => U.Utilities.BeAValidEndDate(c.ContractEndDate,YearsInTheFuture))
                         .WithMessage("Contract End Date: Invalid Date: date must follow mm/dd/yyyy format and be no more than 30 years in the future")
-                        .Must(ContractEndIsFutureDate)
+                        .Must(U.Utilities.EndIsFutureDate)
                         .WithMessage("Contract End Date: Must be a future date");
                 });
 
@@ -626,18 +629,18 @@ namespace ProcessCIW.Validation
                         RuleFor(employee => employee.ContractStartDate)
                             .NotEqual("")
                             .WithMessage("Contract Start Date: Required Field (unless Child Care)")
-                            .Must(BeAValidStartDate)
+                            .Must(U.Utilities.BeAValidDate)
                             .WithMessage("Contract Start Date: Invalid Date")
-                            .Must((c, ContractStartDate) => ContractStartBeforeEnd(c.ContractStartDate, c.ContractEndDate))
+                            .Must((c, ContractStartDate) => U.Utilities.StartBeforeEnd(c.ContractStartDate, c.ContractEndDate) && U.Utilities.EndIsFutureDate(c.ContractEndDate))
                             .WithMessage("Contract Start Date: Cannot be later than Contract End Date");
 
                         //Contract End Date
                         RuleFor(employee => employee.ContractEndDate)
                             .NotEqual("")
                             .WithMessage("Contract End Date: Required Field (unless Child Care)")
-                            .Must(BeAValidEndDate)
+                            .Must((c,x) => U.Utilities.BeAValidEndDate(c.ContractEndDate,YearsInTheFuture))
                             .WithMessage("Contract End Date: Invalid Date: date must follow mm/dd/yyyy format and be no more than 30 years in the future")
-                            .Must(ContractEndIsFutureDate)
+                            .Must(U.Utilities.EndIsFutureDate)
                             .WithMessage("Contract End Date: Must be a future date");
                     });
                 });
@@ -841,61 +844,9 @@ namespace ProcessCIW.Validation
             });
         }
 
-        private bool BeAValidStartDate(string Start)
-        {
-            //parse into datetime or icomparable data type
-            DateTime StartDate;
-            return DateTime.TryParse(Start, out StartDate);
-        }
+        
 
-        private bool BeAValidEndDate(string Start)
-        {
-            //parse into datetime or icomparable data type
-            DateTime EndDate;
-            if (DateTime.TryParse(Start, out EndDate))
-            {
-                if (EndDate >= DateTime.Now.AddYears(30))
-                    return false;
-            }
-            else
-                return false;
-
-            return true;
-        }
-
-        private bool ContractStartBeforeEnd(string contractStartDate, string contractEndDate)
-        {
-            //parse into datetime or icomparable data type then check if StartDate < EndDate
-            //Note: string is comparable but strings in mm/dd/yyyy format cannot be compared properly            
-            DateTime StartDate;
-            DateTime EndDate;
-            DateTime Today = DateTime.Now.Date;
-
-            if (DateTime.TryParse(contractEndDate, out EndDate) && DateTime.TryParse(contractStartDate, out StartDate))
-            {
-                return ((StartDate < EndDate) && (Today < EndDate));
-            }
-            else
-            {
-                return false;
-            }
-        }
-        private bool ContractEndIsFutureDate(string End)
-        {
-            //parse into datetime or icomparable data type then check if EndDate > DateTime.Now.Date
-            //Note: string is comparable but strings in mm/dd/yyyy format cannot be compared properly
-            DateTime EndDate;
-            DateTime Today = DateTime.Now.Date;
-
-            if (DateTime.TryParse(End, out EndDate))
-            {
-                return ((Today < EndDate));
-            }
-            else
-            {
-                return false;
-            }
-        }
+        
     }
 
     /// <summary>
@@ -903,6 +854,9 @@ namespace ProcessCIW.Validation
     /// </summary>
     class RWAIAAValidator : AbstractValidator<CIW>
     {
+        /// <summary>
+        /// Contains all the validation rules for section 3
+        /// </summary>
         public RWAIAAValidator()
         {
             When(r => !r.RWAIAANumber.Equals(""), () =>
@@ -940,6 +894,9 @@ namespace ProcessCIW.Validation
         MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString());
         MySqlCommand cmd = new MySqlCommand();
 
+        /// <summary>
+        /// Contains all the validation rules for section 4
+        /// </summary>
         public ProjectLocationValidator()
         {
             //Building ID is only required when other is not home, vendor or nongsa
@@ -1008,7 +965,7 @@ namespace ProcessCIW.Validation
         /// Returns whether or not the user entered in a valid building.
         /// </summary>
         /// <param name="buildingID"></param>
-        /// <returns></returns>
+        /// <returns>Bool</returns>
         private bool BeAValidBuilding(string buildingID)
         {
             try
@@ -1056,6 +1013,9 @@ namespace ProcessCIW.Validation
     /// </summary>
     class InvestigationValidator : AbstractValidator<CIW>
     {
+        /// <summary>
+        /// Contains all the validation rules for section 5
+        /// </summary>
         public InvestigationValidator()
         {
             RuleFor(employee => employee.InvestigationTypeRequested)
@@ -1086,6 +1046,9 @@ namespace ProcessCIW.Validation
         MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString());
         MySqlCommand cmd = new MySqlCommand();
 
+        /// <summary>
+        /// Contains all the validation rules for section 6
+        /// </summary>
         public RequestingOfficialValidator()
         {
             //Row 1 check for email and PMCORCO
@@ -1095,7 +1058,7 @@ namespace ProcessCIW.Validation
                         .Cascade(FluentValidation.CascadeMode.StopOnFirstFailure)
                         .NotEmpty()
                         .WithMessage("Primary GSA Requesting Official E-Mail Address: Required Field")
-                        .Matches(@"^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(gsa)\.gov$")
+                        .Matches(@"^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(gsa)(ig)?\.gov$")
                         .WithMessage("Primary GSA Requesting Official E-Mail Address: Not Valid GSA E-Mail")
                         .Must(BeAValidEMail)
                         .WithMessage("Primary GSA Requesting Official E-Mail Address: Not Found in GCIMS");
@@ -1111,7 +1074,7 @@ namespace ProcessCIW.Validation
                 When(r => (r.SponsorAlternateEmailAddress1 != "" || r.SponsorAlternateIsPMCORCO1 != ""), () =>
                 {
                     RuleFor(r => r.SponsorAlternateEmailAddress1)
-                            .Matches(@"^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(gsa)\.gov$")
+                            .Matches(@"^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(gsa)(ig)?\.gov$")
                             .WithMessage("Alternate GSA Requesting Official 1: E-Mail Address: Not Valid GSA E-Mail")
                             .Must(BeAValidEMail)
                             .WithMessage("Alternate GSA Requesting Official 1: E-Mail Address: Not Found in GCIMS");
@@ -1128,7 +1091,7 @@ namespace ProcessCIW.Validation
                 When(r => (r.SponsorAlternateEmailAddress2 != "" || r.SponsorAlternateIsPMCORCO2 != ""), () =>
                 {
                     RuleFor(r => r.SponsorAlternateEmailAddress2)
-                            .Matches(@"^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(gsa)\.gov$")
+                            .Matches(@"^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(gsa)(ig)?\.gov$")
                             .WithMessage("Alternate GSA Requesting Official 2: E-Mail Address: Not Valid GSA E-Mail")
                             .Must(BeAValidEMail)
                             .WithMessage("Alternate GSA Requesting Official 2: E-Mail Address: Not Found in GCIMS");
@@ -1145,7 +1108,7 @@ namespace ProcessCIW.Validation
                 When(r => (r.SponsorAlternateEmailAddress3 != "" || r.SponsorAlternateIsPMCORCO3 != ""), () =>
                 {
                     RuleFor(r => r.SponsorAlternateEmailAddress3)
-                            .Matches(@"^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(gsa)\.gov$")
+                            .Matches(@"^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(gsa)(ig)?\.gov$")
                             .WithMessage("Alternate GSA Requesting Official 3: E-Mail Address: Not Valid GSA E-Mail")
                             .Must(BeAValidEMail)
                             .WithMessage("Alternate GSA Requesting Official 3: E-Mail Address: Not Found in GCIMS");
@@ -1162,7 +1125,7 @@ namespace ProcessCIW.Validation
                 When(r => (r.SponsorAlternateEmailAddress4 != "" || r.SponsorAlternateIsPMCORCO4 != ""), () =>
                 {
                     RuleFor(r => r.SponsorAlternateEmailAddress4)
-                            .Matches(@"^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(gsa)\.gov$")
+                            .Matches(@"^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(gsa)(ig)?\.gov$")
                             .WithMessage("Alternate GSA Requesting Official 4: E-Mail Address: Not Valid GSA E-Mail")
                             .Must(BeAValidEMail)
                             .WithMessage("Alternate GSA Requesting Official 4: E-Mail Address: Not Found in GCIMS");
@@ -1174,6 +1137,11 @@ namespace ProcessCIW.Validation
             });
         }
 
+        /// <summary>
+        /// Verifies that email provided is a valid GSA POC email
+        /// </summary>
+        /// <param name="workEMail"></param>
+        /// <returns></returns>
         private bool BeAValidEMail(string workEMail)
         {
             try
@@ -1220,6 +1188,10 @@ namespace ProcessCIW.Validation
         }
     }
 
+    /// <summary>
+    /// Class VallidateCIW
+    /// Does validation for entire CIW form
+    /// </summary>
     class ValidateCIW
     {
         private readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -1235,6 +1207,11 @@ namespace ProcessCIW.Validation
         {
         }
 		
+        /// <summary>
+        /// Calls validation to check for nested fields
+        /// </summary>
+        /// <param name="ciwInformation"></param>
+        /// <returns></returns>
 		public bool IsNested(List<CIW> ciwInformation)
         {
             log.Info(string.Format("Checking if Fields are nested"));    
@@ -1253,6 +1230,11 @@ namespace ProcessCIW.Validation
             return nestedIsValid;
         }
 
+        /// <summary>
+        /// Calls validation for duplicate users
+        /// </summary>
+        /// <param name="ciwInformation"></param>
+        /// <returns></returns>
         public bool IsDuplicate(List<CIW> ciwInformation)
         {
             ValidationResult duplicate = new ValidationResult();
@@ -1264,6 +1246,11 @@ namespace ProcessCIW.Validation
             return duplicate.IsValid;
         }
 
+        /// <summary>
+        /// Calls validation for sections 1 through 6
+        /// </summary>
+        /// <param name="ciwInformation"></param>
+        /// <returns></returns>
         public bool IsFormValid(List<CIW> ciwInformation)
         {
             //Section 1
@@ -1271,49 +1258,53 @@ namespace ProcessCIW.Validation
             log.Info(String.Format("Section 1 validation completed with {0} errors", section1.Errors.Count));
 
             if (section1.Errors.Count > 0)
-                PrintToLog(section1.Errors);
+                PrintToLog(section1.Errors,1);
 
             //Section 2
             ValidateContractInformation(ciwInformation);
             log.Info(String.Format("Section 2 validation completed with {0} errors", section2.Errors.Count));
 
             if (section2.Errors.Count > 0)
-                PrintToLog(section2.Errors);
+                PrintToLog(section2.Errors,2);
 
             //Section 3
             ValidateRWAIAAInformation(ciwInformation);
             log.Info(String.Format("Section 3 validation completed with {0} errors", section3.Errors.Count));
 
             if (section3.Errors.Count > 0)
-                PrintToLog(section3.Errors);
+                PrintToLog(section3.Errors,3);
 
             //Section 4
             ValidateProjectLocationInformation(ciwInformation);
             log.Info(String.Format("Section 4 validation completed with {0} errors", section4.Errors.Count));
 
             if (section4.Errors.Count > 0)
-                PrintToLog(section4.Errors);
+                PrintToLog(section4.Errors,4);
 
             //Section 5
             ValidateInvestigationRequested(ciwInformation);
             log.Info(String.Format("Section 5 validation completed with {0} errors", section5.Errors.Count));
 
             if (section5.Errors.Count > 0)
-                PrintToLog(section5.Errors);
+                PrintToLog(section5.Errors,5);
 
             //Section 6
             ValidateGSARequestionOfficialInformation(ciwInformation);
             log.Info(String.Format("Section 6 validation completed with {0} errors", section6.Errors.Count));
 
             if (section6.Errors.Count > 0)
-                PrintToLog(section6.Errors);
+                PrintToLog(section6.Errors,6);
 
+            //Verify all sections are valid and return result
             if ((section1.IsValid && section2.IsValid && section3.IsValid && section4.IsValid && section5.IsValid && section6.IsValid) == false)
                 return false;
 
             return true;
         }
 
+        /// <summary>
+        /// Prints errors to console
+        /// </summary>
         public void PrintErrors()
         {
             PrintToConsole(section1.Errors, "Section 1: ");
@@ -1324,11 +1315,20 @@ namespace ProcessCIW.Validation
             PrintToConsole(section6.Errors, "Section 6: ");
         }
 
+        /// <summary>
+        /// Gets all errors
+        /// </summary>
+        /// <returns>Tuple of errors</returns>
         public Tuple<ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult> GetErrors()
         {
             return new Tuple<ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult>(section1, section2, section3, section4, section5, section6, nested);
         }
 
+        /// <summary>
+        /// Takes a list of validation errors and prints them to the console
+        /// </summary>
+        /// <param name="failures"></param>
+        /// <param name="section"></param>
         private void PrintToConsole(IList<ValidationFailure> failures, string section)
         {
             foreach (var rule in failures)
@@ -1337,16 +1337,28 @@ namespace ProcessCIW.Validation
             }
         }
 
-        private void PrintToLog(IList<ValidationFailure> failures)
+        /// <summary>
+        /// Takes a list of validation errors and prints them to the log
+        /// </summary>
+        /// <param name="failures"></param>
+        private void PrintToLog(IList<ValidationFailure> failures, int section)
         {
             foreach (var rule in failures)
             {
-                log.Error(string.Format("{0} failed with attempted value {1}", rule.PropertyName, rule.AttemptedValue == null ? "Null" : rule.AttemptedValue.Equals("") ? "Empty" : "Not Null or Empty"));
+                //Print values only if not section 1 unless PropertyName is job title or part of name
+                if (section != 1 || rule.PropertyName == "PositionJobTitle" || rule.PropertyName == "LastName" || rule.PropertyName == "FirstName" || rule.PropertyName == "MiddleName")
+                {
+                    log.Error(string.Format("{0} failed with attempted value {1}", rule.PropertyName, String.IsNullOrWhiteSpace(rule.AttemptedValue.ToString()) ? "Empty" : '"' + rule.AttemptedValue.ToString() + '"'));
+                }
+                else 
+                {
+                    log.Error(string.Format("{0} failed with attempted value {1}", rule.PropertyName, rule.AttemptedValue == null ? "Null" : rule.AttemptedValue.Equals("") ? "Empty" : "PII"));
+                }
             }
         }
 
         /// <summary>
-        /// Section 1
+        /// Call Section 1 validation
         /// </summary>
         /// <param name="employeeInforamtion"></param>
         private void ValidateEmployeeInformation(List<CIW> ciwInformation)
@@ -1357,7 +1369,7 @@ namespace ProcessCIW.Validation
         }
 
         /// <summary>
-        /// Section 2
+        /// Call Section 2 validation
         /// </summary>
         /// <param name="ciwInformation"></param>
         private void ValidateContractInformation(List<CIW> ciwInformation)
@@ -1370,6 +1382,7 @@ namespace ProcessCIW.Validation
             {
                 ciwInformation.First().VendorPOC = new List<POC.VendorPOC>();
 
+                //Add each vendor poc to list if not empty by using helper function
                 AddVendorPOC(
                     ciwInformation.First().ContractPOCFirstName,
                     ciwInformation.First().ContractPOCLastName,
@@ -1426,7 +1439,7 @@ namespace ProcessCIW.Validation
         }
 
         /// <summary>
-        /// Section 3
+        /// Call Section 3 validation
         /// </summary>
         /// <param name="ciwInformation"></param>
         private void ValidateRWAIAAInformation(List<CIW> ciwInformation)
@@ -1437,7 +1450,7 @@ namespace ProcessCIW.Validation
         }
 
         /// <summary>
-        /// Section 4
+        /// Call Section 4 validation
         /// </summary>
         /// <param name="ciwInformation"></param>
         private void ValidateProjectLocationInformation(List<CIW> ciwInformation)
@@ -1448,7 +1461,7 @@ namespace ProcessCIW.Validation
         }
 
         /// <summary>
-        /// Section 5
+        /// Call Section 5 validation
         /// </summary>
         /// <param name="ciwInformation"></param>
         private void ValidateInvestigationRequested(List<CIW> ciwInformation)
@@ -1459,7 +1472,7 @@ namespace ProcessCIW.Validation
         }
 
         /// <summary>
-        /// Section 6
+        /// Call Section 6 validation
         /// </summary>
         /// <param name="ciwInformation"></param>
         private void ValidateGSARequestionOfficialInformation(List<CIW> ciwInformation)
@@ -1472,6 +1485,7 @@ namespace ProcessCIW.Validation
             {
                 ciwInformation.First().GSAPOC = new List<POC.GSAPOC>();
 
+                //Add each row to a list of GSAPOC's checking to make sure its not empty first using helper function
                 AddGSAPOC(
                     ciwInformation.First().SponsorEmailAddress,
                     ciwInformation.First().SponsorIsPMCORCO,
@@ -1503,6 +1517,13 @@ namespace ProcessCIW.Validation
                 );
             }
         }
+
+        /// <summary>
+        /// Helper function that adds GSAPOC to list if not empty
+        /// </summary>
+        /// <param name="email"></param>
+        /// <param name="pmCorCoCs"></param>
+        /// <param name="ciwInfo"></param>
         public void AddGSAPOC(string email, string pmCorCoCs, List<CIW> ciwInfo)
         {
             if (!email.Equals("") && !pmCorCoCs.Equals(""))
