@@ -59,7 +59,7 @@
     </Reference>
     <Reference Include="Suitability, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\references\Suitability.dll</HintPath>
+      <HintPath>..\..\..\CIW\references\Suitability.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
