@@ -20,7 +20,7 @@ namespace ProcessCIW
         private readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
-        /// Constructor to recieve new user data and uploader ID
+        /// Constructor to receive new user data and uploader ID
         /// </summary>
         /// <param name="newUser"></param>
         /// <param name="uploaderID"></param>
@@ -31,7 +31,7 @@ namespace ProcessCIW
         }
 
         /// <summary>
-        /// Called to start saving the CIW in the database. 
+        /// Called to start saving the CIW in the database.
         /// All inserts are inside a transaction
         /// Data insertion is all or nothing
         /// </summary>
@@ -87,7 +87,7 @@ namespace ProcessCIW
                                 else
                                 {
                                     log.Info(String.Format("Inserting/Updating contract header {0} with start date of {1} and end date {2}", ciwInformation.TaskOrderDeliveryOrder, ciwInformation.ContractStartDate, ciwInformation.ContractEndDate));
-                                    
+
                                     //Insert Contract header and assign return value to contractID
                                     contractID = InsertOrUpdateContractHeader(cmd, "CIW_InsertOrUpdateContractHeader");
                                 }
@@ -95,7 +95,7 @@ namespace ProcessCIW
                                 //Continue on success
                                 if (contractID > 0)
                                 {
-                                    log.Info(string.Format("Contract Id is {0}", contractID)); 
+                                    log.Info(string.Format("Contract Id is {0}", contractID));
                                     int rows = 0;
 
                                     //Associate person with contract
@@ -125,7 +125,7 @@ namespace ProcessCIW
                                         }
                                     }
                                 }
-                            }                           
+                            }
 
                             trans.Commit();
 
@@ -137,14 +137,14 @@ namespace ProcessCIW
             catch (Exception ex)
             {
                 log.Error(String.Format("Insert failed:{0}", ex.Message));
-               
+
                 try
                 {
                     trans.Rollback();
                 }
                 catch (Exception ex2)
                 {
-                    log.Error(String.Format("Rollback failed:{0}", ex2.Message));                    
+                    log.Error(String.Format("Rollback failed:{0}", ex2.Message));
                 }
 
                 return 0;
@@ -183,63 +183,63 @@ namespace ProcessCIW
                     new MySqlParameter { ParameterName = "oPersGender", Value = ciwInformation.Sex, MySqlDbType = MySqlDbType.VarChar, Size = 1, Direction = ParameterDirection.Input },
 
                     //Section 1 - Row 2
-                    new MySqlParameter { ParameterName = "oPersSSN", Value = ciwInformation.SocialSecurityNumber.Replace("-","").Replace(" ", ""), MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input }, 
+                    new MySqlParameter { ParameterName = "oPersSSN", Value = ciwInformation.SocialSecurityNumber.Replace("-","").Replace(" ", ""), MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "strBirthDate", Value = ciwInformation.DateOfBirth , MySqlDbType = MySqlDbType.Date, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersBirthCity", Value = ciwInformation.PlaceOfBirthCity , MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersBirthCountry", Value = ciwInformation.PlaceOfBirthCountry , MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
 
                     //Use POB:State or POB:MexCan if State is null or empty
                     new MySqlParameter { ParameterName = "oPersBirthState", Value = FieldPicker(ciwInformation.PlaceOfBirthState, ciwInformation.PlaceOfBirthMexicoCanada), MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
-                            
+
                     //Section 1 - Row 3
                     new MySqlParameter { ParameterName = "oPersHomeAddr1", Value = ciwInformation.HomeAddressOne , MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersHomeAddr2", Value = ciwInformation.HomeAddressTwo , MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
-                                    
+
                     //Section 1 - Row 4
                     new MySqlParameter { ParameterName = "oPersHomeCity", Value = ciwInformation.HomeAddressCity , MySqlDbType = MySqlDbType.VarChar, Size = 50, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersHomeCountry", Value = ciwInformation.HomeAddressCountry , MySqlDbType = MySqlDbType.VarChar, Size = 2, Direction = ParameterDirection.Input },
 
                     //Use US first, then mexcan
                     new MySqlParameter { ParameterName = "oPersHomeState", Value = FieldPicker(ciwInformation.HomeAddressUSState, ciwInformation.HomeAddressMexicoStateCanadaProvince) , MySqlDbType = MySqlDbType.VarChar, Size = 2, Direction = ParameterDirection.Input },
-                    
+
                     new MySqlParameter { ParameterName = "oPersHomeZip", Value = ciwInformation.HomeAddressZip , MySqlDbType = MySqlDbType.VarChar, Size = 10, Direction = ParameterDirection.Input },
-                            
+
                     //Section 1 - Row 5
                     new MySqlParameter { ParameterName = "oPersWorkCell", Value = FormatPhoneNumber(ciwInformation.PhoneNumberWorkCell) , MySqlDbType = MySqlDbType.VarChar, Size = 22, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersWorkPhone", Value = FormatPhoneNumber(ciwInformation.PhoneNumberWork) , MySqlDbType = MySqlDbType.VarChar, Size = 22, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersHomeEmail", Value = ciwInformation.PersonalEmailAddress , MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersJobTitle", Value = ciwInformation.PositionJobTitle , MySqlDbType = MySqlDbType.VarChar, Size = 60, Direction = ParameterDirection.Input },
-                            
+
                     //Section 1 - Row 6
                     new MySqlParameter { ParameterName = "oPersPriorInvestigation", Value = ConvertYesNo(ciwInformation.PriorInvestigation), MySqlDbType = MySqlDbType.Byte, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersPriorInvestigationDate", Value = ciwInformation.ApproximiateInvestigationDate , MySqlDbType = MySqlDbType.VarChar, Size = 12, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersPriorInvestigationWhere", Value = ciwInformation.AgencyAdjudicatedPriorInvestigation , MySqlDbType = MySqlDbType.VarChar, Size = 50, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersIsCitizen", Value = ConvertYesNo(ciwInformation.Citizen) , MySqlDbType = MySqlDbType.Byte, Direction = ParameterDirection.Input },
-                            
+
                     //Section 1 - Row 7
                     new MySqlParameter { ParameterName = "oPersForeignPOE", Value = ciwInformation.PortOfEntryUSCityAndState , MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersForeignDOE", Value = ciwInformation.DateOfEntry , MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersForeignRegistration", Value = ciwInformation.AlienRegistrationNumber , MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersCitizenCountry", Value = ciwInformation.CitzenshipCountry , MySqlDbType = MySqlDbType.VarChar, Size = 2, Direction = ParameterDirection.Input },
-                            
+
                     //Section 3
                     new MySqlParameter { ParameterName = "oPersInvestigationRWANumber", Value = ciwInformation.RWAIAANumber , MySqlDbType = MySqlDbType.VarChar, Size = 20, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersRwaiaaAgy", Value = ciwInformation.RWAIAAAgency , MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
-                            
+
                     //Section 4
                     //-- WorkBuilding - GSA building number or Other if GSA building number is null
                     new MySqlParameter { ParameterName = "oPersWorkBuilding", Value = FieldPicker(ciwInformation.BuildingNumber, ciwInformation.Other) , MySqlDbType = MySqlDbType.VarChar, Size = 6, Direction = ParameterDirection.Input },
-                   
+
                     new MySqlParameter { ParameterName = "oPersContractorType", Value = ciwInformation.ContractorType == "Building Support" ? "PBS" : ciwInformation.ContractorType , MySqlDbType = MySqlDbType.VarChar, Size = 10, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersContractorCategory", Value = ciwInformation.ArraLongTermContractor , MySqlDbType = MySqlDbType.VarChar, Size = 30, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersMajorOrg", Value = ciwInformation.SponsoringMajorOrg , MySqlDbType = MySqlDbType.VarChar, Size = 2, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersOfficeSymbol", Value = ciwInformation.SponsoringOfficeSymbol , MySqlDbType = MySqlDbType.VarChar, Size = 12, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersRegion", Value = ciwInformation.Region.PadLeft(2,'0') , MySqlDbType = MySqlDbType.VarChar, Size = 3, Direction = ParameterDirection.Input },
-                            
+
                     //Section 5
                     new MySqlParameter { ParameterName = "oPersInvestigationTypeRequested", Value = ciwInformation.InvestigationTypeRequested , MySqlDbType = MySqlDbType.VarChar, Size = 12, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersIsCardRequired", Value = ConvertYesNo(ciwInformation.AccessCardRequired) , MySqlDbType = MySqlDbType.Byte, Direction = ParameterDirection.Input },
-                            
+
                     //Not on CIW
 	                new MySqlParameter { ParameterName = "PersGUID", Value = persGuid, MySqlDbType=MySqlDbType.VarChar, Size=36, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "PersHashedSSN", Value = hashedSSNFull, MySqlDbType=MySqlDbType.VarBinary, Size=32, Direction = ParameterDirection.Input },
@@ -284,13 +284,13 @@ namespace ProcessCIW
                 {
                     new MySqlParameter { ParameterName = "ContractDUNSNumber", Value = ciwInformation.DataUniversalNumberingSystem, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "ContractTaskOrderNumber", Value = ciwInformation.TaskOrderDeliveryOrder, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
-                    
+
                     new MySqlParameter { ParameterName = "ContractDateStart", Value = string.Format("{0:yyyy-MM-dd}", ciwInformation.ContractStartDate) , MySqlDbType = MySqlDbType.Date, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "ContractDateEnd", Value = string.Format("{0:yyyy-MM-dd}", ciwInformation.ContractEndDate) , MySqlDbType = MySqlDbType.Date, Direction = ParameterDirection.Input },
-                    
+
                     new MySqlParameter { ParameterName = "ContractHasOptionYears", Value = ConvertYesNo(ciwInformation.HasOptionYears) , MySqlDbType = MySqlDbType.Bit, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "ContractNumOptionYrs", Value = ciwInformation.NumberOfOptionYears != "" ? ciwInformation.NumberOfOptionYears : "0" , MySqlDbType = MySqlDbType.Int64, Direction = ParameterDirection.Input },
-                    
+
                     new MySqlParameter { ParameterName = "ContractCompanyName", Value = ciwInformation.CompanyName , MySqlDbType = MySqlDbType.VarChar, Size=96, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "UploaderID", Value = uploaderID, MySqlDbType=MySqlDbType.Int32, Direction = ParameterDirection.Input },
 
@@ -355,9 +355,9 @@ namespace ProcessCIW
                     new MySqlParameter { ParameterName = "ConperPersId", Value =personId , MySqlDbType = MySqlDbType.Int64, Direction = ParameterDirection.Input },
 
                     //ConperVendorId generated with DateTime.Now.Ticks
-                    new MySqlParameter { ParameterName = "ConperVendorId", Value = DateTime.Now.Ticks, MySqlDbType = MySqlDbType.Int64, Direction = ParameterDirection.Input },  
+                    new MySqlParameter { ParameterName = "ConperVendorId", Value = DateTime.Now.Ticks, MySqlDbType = MySqlDbType.Int64, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "UploaderID", Value = uploaderID, MySqlDbType=MySqlDbType.Int32, Direction = ParameterDirection.Input },
-                    
+
                     new MySqlParameter { ParameterName = "Result", MySqlDbType=MySqlDbType.Int32, Direction = ParameterDirection.Output },
                     new MySqlParameter { ParameterName = "SQLExceptionWarning", MySqlDbType=MySqlDbType.VarChar, Size=4000, Direction = ParameterDirection.Output },
                 };
@@ -399,6 +399,7 @@ namespace ProcessCIW
                     new MySqlParameter { ParameterName = "VendSub", Value = ciwInformation.CompanyNameSub , MySqlDbType = MySqlDbType.VarChar, Size = 255, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "ContractID", Value = contractId, MySqlDbType = MySqlDbType.Int64, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "PersID", Value =personId , MySqlDbType = MySqlDbType.Int64, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "UploaderID", Value = uploaderID, MySqlDbType=MySqlDbType.Int32, Direction = ParameterDirection.Input },
 
                     new MySqlParameter { ParameterName = "Result", MySqlDbType=MySqlDbType.Int32, Direction = ParameterDirection.Output },
                     new MySqlParameter { ParameterName = "SQLExceptionWarning", MySqlDbType=MySqlDbType.VarChar, Size=4000, Direction = ParameterDirection.Output },
@@ -433,8 +434,9 @@ namespace ProcessCIW
                 {
                     new MySqlParameter { ParameterName = "SponsorEmail", Value = email , MySqlDbType = MySqlDbType.VarChar, Size= 64, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "RoleTypeID", Value = GetRoleTypeNum(roleTypeId) , MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Input },
-                    new MySqlParameter { ParameterName = "PersID", Value =personId , MySqlDbType = MySqlDbType.Int64, Direction = ParameterDirection.Input },          
+                    new MySqlParameter { ParameterName = "PersID", Value =personId , MySqlDbType = MySqlDbType.Int64, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "ContractID", Value = contractId, MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "UploaderID", Value = uploaderID, MySqlDbType=MySqlDbType.Int32, Direction = ParameterDirection.Input },
 
                     new MySqlParameter { ParameterName = "Result", MySqlDbType=MySqlDbType.Int32, Direction = ParameterDirection.Output },
                     new MySqlParameter { ParameterName = "SQLExceptionWarning", MySqlDbType=MySqlDbType.VarChar, Size=4000, Direction = ParameterDirection.Output },
