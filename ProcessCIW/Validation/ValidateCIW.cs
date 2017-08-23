@@ -132,7 +132,7 @@ namespace ProcessCIW.Validation
             return result;
         }
 
-        
+
     }
 
     /// <summary>
@@ -336,7 +336,7 @@ namespace ProcessCIW.Validation
 
             When(employee => !employee.PhoneNumberWorkCell.Equals(""), () =>
             {
-                //Phone Mumber (Work Cell)
+                //Phone Number (Work Cell)
                 RuleFor(employee => employee.PhoneNumberWorkCell)
                         .NotEmpty()
                         .Matches(@"^\(?([0-9]{3})\)?[-.●]?([0-9]{3})[-.●]?([0-9]{4})$")
@@ -509,7 +509,7 @@ namespace ProcessCIW.Validation
         }
 
         /// <summary>
-        /// Calls stored procedure to help validate if state and country codes for mexico/canada match
+        /// Calls stored procedure to help validate if state and country codes for Mexico/Canada match
         /// </summary>
         /// <param name="state"></param>
         /// <param name="country"></param>
@@ -560,9 +560,9 @@ namespace ProcessCIW.Validation
             return true;
         }
 
-        
 
-        
+
+
     }
 
     /// <summary>
@@ -578,7 +578,7 @@ namespace ProcessCIW.Validation
         {
             RuleSet("ValidFirstAndSecondRow", () =>
             {
-                //Comany Name
+                //Company Name
                 RuleFor(employee => employee.CompanyName)
                     .NotEmpty()
                     .WithMessage("Company Name (Primary): Required Field");
@@ -597,7 +597,7 @@ namespace ProcessCIW.Validation
 
                 //Contract Number Type
 
-                //changes for contract dates to be used with child care changes 
+                //changes for contract dates to be used with child care changes
                 //This will be when neither is child care
                 When((e => e.ContractorType != "Child Care" && e.InvestigationTypeRequested != "Tier 1C"), () =>
                 {
@@ -844,9 +844,9 @@ namespace ProcessCIW.Validation
             });
         }
 
-        
 
-        
+
+
     }
 
     /// <summary>
@@ -899,7 +899,7 @@ namespace ProcessCIW.Validation
         /// </summary>
         public ProjectLocationValidator()
         {
-            //Building ID is only required when other is not home, vendor or nongsa
+            //Building ID is only required when other is not home, vendor or non-gsa
             When(b => (b.Other.Equals("")), () =>
             {
                 RuleFor(building => building.BuildingNumber)
@@ -1206,7 +1206,7 @@ namespace ProcessCIW.Validation
         public ValidateCIW()
         {
         }
-		
+
         /// <summary>
         /// Calls validation to check for nested fields
         /// </summary>
@@ -1214,7 +1214,7 @@ namespace ProcessCIW.Validation
         /// <returns></returns>
 		public bool IsNested(List<CIW> ciwInformation)
         {
-            log.Info(string.Format("Checking if Fields are nested"));    
+            log.Info(string.Format("Checking if Fields are nested"));
 
             HasNestedTagsValidator validator = new HasNestedTagsValidator();
 
@@ -1350,7 +1350,7 @@ namespace ProcessCIW.Validation
                 {
                     log.Error(string.Format("{0} failed with attempted value {1}", rule.PropertyName, String.IsNullOrWhiteSpace(rule.AttemptedValue.ToString()) ? "Empty" : '"' + rule.AttemptedValue.ToString() + '"'));
                 }
-                else 
+                else
                 {
                     log.Error(string.Format("{0} failed with attempted value {1}", rule.PropertyName, rule.AttemptedValue == null ? "Null" : rule.AttemptedValue.Equals("") ? "Empty" : "PII"));
                 }

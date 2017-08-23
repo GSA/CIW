@@ -7,13 +7,13 @@ using System.Text;
 using System.Text.RegularExpressions;
 
 namespace ProcessCIW.Utilities
-{ 
+{
     sealed class Utilities
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-                
+
         /// <summary>
-        /// Checks if Startdate is before enddate and enddate is later than current date
+        /// Checks if Start date is before end date and end date is later than current date
         /// </summary>
         /// <param name="contractStartDate"></param>
         /// <param name="contractEndDate"></param>
@@ -21,7 +21,7 @@ namespace ProcessCIW.Utilities
         public static bool StartBeforeEnd(string StartDate, string EndDate)
         {
             //parse into datetime or icomparable data type then check if StartDate < EndDate
-            //Note: string is comparable but strings in mm/dd/yyyy format cannot be compared properly            
+            //Note: string is comparable but strings in mm/dd/yyyy format cannot be compared properly
             DateTime _StartDate;
             DateTime _EndDate;
             DateTime Today = DateTime.Now.Date;
@@ -37,7 +37,7 @@ namespace ProcessCIW.Utilities
         }
 
         /// <summary>
-        /// Checks if enddate is greater than current date
+        /// Checks if end date is greater than current date
         /// </summary>
         /// <param name="End"></param>
         /// <returns></returns>
@@ -111,7 +111,7 @@ namespace ProcessCIW.Utilities
         }
 
         /// <summary>
-        /// Checks if birthdate given is valid
+        /// Checks if birth date given is valid
         /// </summary>
         /// <param name="date"></param>
         /// <returns>Bool</returns>
@@ -167,7 +167,7 @@ namespace ProcessCIW.Utilities
 
             ssn = ssn.Replace("-", string.Empty).Trim();
 
-            //Using UTF8 because this only contains ASCII text            
+            //Using UTF8 because this only contains ASCII text
             hashedSSN = shaM.ComputeHash(Encoding.UTF8.GetBytes(ssn));
 
             shaM.Dispose();

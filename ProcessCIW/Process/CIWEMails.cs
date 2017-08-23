@@ -290,7 +290,7 @@ namespace ProcessCIW.Process
 
         /// <summary>
         /// Function to replace placeholder text in email template with actual error messages.
-        /// Email template is divided by section, each sections errors are passed in as seperate objects
+        /// Email template is divided by section, each sections errors are passed in as separate objects
         /// </summary>
         /// <param name="s1"></param>
         /// <param name="s2"></param>
@@ -359,7 +359,7 @@ namespace ProcessCIW.Process
         /// Helper function that generates the actual error list for each section
         /// </summary>
         /// <param name="failures"></param>
-        /// <returns>String of errors in html format in an unordered list</returns>
+        /// <returns>String of errors in HTML format in an unordered list</returns>
         private string AddErrors(IList<ValidationFailure> failures)
         {
             StringBuilder errors = new StringBuilder();
