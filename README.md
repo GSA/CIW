@@ -53,6 +53,7 @@ The repository contains a web config that points to external config files. These
   <add key="CCEMAIL" value="email address" />
   <add key="BCCEMAIL" value="email address" />
   <add key="FASEMAIL" value="replaceme@example.com"/>
+  <add key="CHILDCAREEMAIL" value="replaceme@example.com" />
   <add key="TEMPFOLDER" value="temp folder path" />
   <add key="Salt" value="salt" />
   <add key="EPass" value="epass" />
