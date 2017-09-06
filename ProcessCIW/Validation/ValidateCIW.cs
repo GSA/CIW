@@ -201,7 +201,7 @@ namespace ProcessCIW.Validation
             RuleFor(employee => employee.PlaceOfBirthCity)
                     .NotEmpty()
                     .WithMessage("POB: City: Required Field")
-                    .Matches(@"^[a-zA-Z-\. \'\‘\’]{1,24}$")
+                    .Matches(@"^[a-zA-Z-\. \'\‘\’]{1,75}$")
                     .WithMessage("POB: City: Contains Invalid Characters");
 
             //POB: Country
