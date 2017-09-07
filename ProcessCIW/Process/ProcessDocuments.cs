@@ -316,7 +316,7 @@ namespace ProcessCIW
             {
                 if (!String.IsNullOrEmpty(innerText))
                 {
-                    XmlNode a = xml.SelectSingleNode(string.Format("w:sdt/w:sdtPr/w:dropDownList/w:listItem[@w:displayText='{0}']", innerText), nameSpaceManager);
+                    XmlNode a = xml.SelectSingleNode(string.Format("w:sdt/w:sdtPr/w:dropDownList/w:listItem[@w:displayText=\"{0}\"]", innerText), nameSpaceManager);
 
                     if (a.Attributes.Count > 1)
                     {
