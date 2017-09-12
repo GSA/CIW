@@ -218,7 +218,7 @@ namespace ProcessCIW
 
                     //Section 1 - Row 7
                     new MySqlParameter { ParameterName = "oPersForeignPOE", Value = ciwInformation.PortOfEntryUSCityAndState , MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
-                    new MySqlParameter { ParameterName = "oPersForeignDOE", Value = ciwInformation.DateOfEntry , MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "oPersForeignDOE", Value = ciwInformation.DateOfEntry == String.Empty ? (object)DBNull.Value : ciwInformation.DateOfEntry, MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersForeignRegistration", Value = ciwInformation.AlienRegistrationNumber , MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersCitizenCountry", Value = ciwInformation.CitzenshipCountry , MySqlDbType = MySqlDbType.VarChar, Size = 2, Direction = ParameterDirection.Input },
 
