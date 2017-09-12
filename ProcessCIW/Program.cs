@@ -26,7 +26,7 @@ namespace ProcessCIW
             stopWatch.Start();
 
             log.Info("Application Started");
-           
+
             //All action takes place here
             ProcessFiles();
 
@@ -37,7 +37,7 @@ namespace ProcessCIW
             log.Info("Application Done");
 
             Console.WriteLine("Done! " + stopWatch.ElapsedMilliseconds);
-                
+
             //End of program
             return;
         }
@@ -99,7 +99,7 @@ namespace ProcessCIW
             {
 				List<CIWData> dupes = new List<CIWData>();
                 string filePath = ConfigurationManager.AppSettings["CIWDEBUGFILELOCATION"] + ciwFile.FileName;
-                
+
                 log.Info(string.Format("Processing file {0}", filePath));
 
                 //Get data from CIW

@@ -79,7 +79,7 @@ namespace ProcessCIW.Mapping
             Map(m => m.ContractPOCAlternatePocFirstname4).Name(CIWConstants.CONTRACT_ALTERNATEPOCFIRSTNAME4);
             Map(m => m.ContractPOCAlternatePocLastname4).Name(CIWConstants.CONTRACT_ALTERNATEPOCLASTNAME4);
             Map(m => m.ContractPOCAlternatePocPhoneWork4).Name(CIWConstants.CONTRACT_ALTERNATEPOCPHONEWORK4);
-            Map(m => m.ContractPOCAlternatePocEmail4).Name(CIWConstants.CONTRACT_ALTERNATEPOCEMAIL4);           
+            Map(m => m.ContractPOCAlternatePocEmail4).Name(CIWConstants.CONTRACT_ALTERNATEPOCEMAIL4);
 
             //Section 3
             Map(m => m.RWAIAANumber).Name(CIWConstants.RWAIAA_NUMBER);
@@ -134,5 +134,5 @@ namespace ProcessCIW.Mapping
             Map(m => m.SponsorAlternatePhoneWork4).Name(CIWConstants.SPONSOR_ALTERNATEPHONEWORK4);
             Map(m => m.SponsorAlternateIsPMCORCO4).Name(CIWConstants.SPONSOR_ALTERNATEISPMCORCO4);
         }
-    }    
+    }
 }
