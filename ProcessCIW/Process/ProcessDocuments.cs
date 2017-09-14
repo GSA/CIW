@@ -159,7 +159,7 @@ class ProcessDocuments
                 sendPasswordProtection(uploaderID, fileNameHelper(fileName));
                 dupes = null;
                 errorCode = (int)ErrorCodes.password_protected;
-                log.Error(string.Format("Inserting error code {0} into upload table", ErrorCodes.password_protected));
+                log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.password_protected, (int)ErrorCodes.password_protected));
                 return null;
             }
 
@@ -183,7 +183,7 @@ class ProcessDocuments
                         sendWrongVersion(uploaderID, fileNameHelper(fileName));
                         dupes = null;
                         errorCode = (int)ErrorCodes.wrong_version;
-                        log.Error(string.Format("Inserting error code {0} into upload table", ErrorCodes.wrong_version));
+                        log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.wrong_version, (int)ErrorCodes.wrong_version));
                         return null;
                     }
                 }
@@ -193,7 +193,7 @@ class ProcessDocuments
                     sendWrongVersion(uploaderID, fileNameHelper(fileName));
                     dupes = null;
                     errorCode = (int)ErrorCodes.wrong_version;
-                    log.Error(string.Format("Inserting error code {0} into upload table", ErrorCodes.wrong_version));
+                    log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.wrong_version, (int)ErrorCodes.wrong_version));
                     return null;
                 }
 
@@ -222,7 +222,7 @@ class ProcessDocuments
                     dupes = null;
 
                     errorCode = (int)ErrorCodes.wrong_version;
-                    log.Error(string.Format("Inserting error code {0} into upload table", ErrorCodes.wrong_version));
+                    log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.wrong_version, (int)ErrorCodes.wrong_version));
                     return null;
                 }
 
@@ -416,7 +416,7 @@ class ProcessDocuments
             {
                 log.Error("Sending Wrong Version Number E-Mail");
                 sendEmails.SendWrongVersion();
-                log.Error(string.Format("Inserting error code {0} into upload table", ErrorCodes.wrong_version));
+                log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.wrong_version, (int)ErrorCodes.wrong_version));
                 return (int)ErrorCodes.wrong_version;
 
             }
@@ -430,7 +430,7 @@ class ProcessDocuments
             {
                 log.Error("Sending ARRA E-Mail");
                 sendEmails.SendARRA();
-                log.Error(string.Format("Inserting error code {0} into upload table", ErrorCodes.arra));
+                log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.arra, (int)ErrorCodes.arra));
                 return (int)ErrorCodes.arra;
             }
             else
@@ -443,7 +443,7 @@ class ProcessDocuments
             {
                 log.Error(String.Format("Duplicate user found for {0}", ciwInformation.First().FullNameForLog));
                 sendEmails.SendDuplicateUser();
-                log.Error(string.Format("Inserting error code {0} into upload table", ErrorCodes.duplicate_user));
+                log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.duplicate_user, (int)ErrorCodes.duplicate_user));
                 return (int)ErrorCodes.duplicate_user;
             }
 
@@ -471,7 +471,7 @@ class ProcessDocuments
                 //Begin sponsorship if successful
                 if (persID > 0)
                     sendEmails.SendSponsorshipEMail(persID);
-                log.Error(string.Format("Inserting error code {0} into upload table", ErrorCodes.successfully_processed));
+                log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.successfully_processed, (int)ErrorCodes.successfully_processed));
                 return (int)ErrorCodes.successfully_processed;
             }
             else
@@ -492,9 +492,9 @@ class ProcessDocuments
                 log.Info(string.Format("{0} errors returned", CountErrors(ValidationErrors)));
 
                 //send error email which contains a list of each sections errors and a list of nested fields if any
-                sendEmails.SendErrors(ValidationErrors.Item1, ValidationErrors.Item2, ValidationErrors.Item3,
-                                        ValidationErrors.Item4, ValidationErrors.Item5, ValidationErrors.Item6, ValidationErrors.Item7, ciwInformation.First().Dupes);
-                log.Error(string.Format("Inserting error code {0} into upload table", ErrorCodes.failed_validation));
+                //sendEmails.SendErrors(ValidationErrors.Item1, ValidationErrors.Item2, ValidationErrors.Item3,
+                                       // ValidationErrors.Item4, ValidationErrors.Item5, ValidationErrors.Item6, ValidationErrors.Item7, ciwInformation.First().Dupes);
+                log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.failed_validation, (int)ErrorCodes.failed_validation));
                 return (int)ErrorCodes.failed_validation;
             }
         }
