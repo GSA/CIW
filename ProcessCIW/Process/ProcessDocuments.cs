@@ -20,7 +20,7 @@ namespace ProcessCIW
 {
     public enum ErrorCodes : int
     {
-        unkknown_error = -1,
+        unknown_error = -1,
         unprocessed=0,
         successfully_processed=1,
         password_protected=-2,

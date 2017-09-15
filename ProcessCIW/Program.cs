@@ -112,8 +112,7 @@ namespace ProcessCIW
                     //Process the data retrieved from the CIW
                     processedResult = pd.ProcessCIWInformation(ciwFile.PersID, tempFile, true, dupes);
 
-                    log.Info(string.Format("ProcessCIWInformation returned with result: {0}", processedResult == 1 ? "File processed successfully" : processedResult == 0 ? "File remains unprocessed" : "File failed processing"));
-
+                    log.Info(string.Format("ProcessCIWInformation returned with result: {0}", GetErrorMessage(processedResult)));
                     //Update the status of processing the file in the database
                     pd.UpdateProcessed(ciwFile.ID, processedResult);
                 }
@@ -132,6 +131,31 @@ namespace ProcessCIW
                 {
                     log.Error(e.Message + " - " + e.InnerException);
                 }
+            }
+        }
+
+        public static string GetErrorMessage(int e)
+        {
+            switch (e)
+            {
+                case -1:
+                    return "An unknown error has occurred";
+                case 0:
+                    return "The file is unprocessed";
+                case 1:
+                    return "The file was processed successfully";
+                case -2:
+                    return "The file is password protected";
+                case -3:
+                    return "The file is the wrong version";
+                case -4:
+                    return "The file is ARRA";
+                case -5:
+                    return "The file contains a duplicate user";
+                case -6:
+                    return "The file failed validation";
+                default:
+                    return "The error code was not found in the list";
             }
         }
 
