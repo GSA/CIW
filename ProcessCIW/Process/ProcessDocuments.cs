@@ -492,8 +492,8 @@ class ProcessDocuments
                 log.Info(string.Format("{0} errors returned", CountErrors(ValidationErrors)));
 
                 //send error email which contains a list of each sections errors and a list of nested fields if any
-                //sendEmails.SendErrors(ValidationErrors.Item1, ValidationErrors.Item2, ValidationErrors.Item3,
-                                       // ValidationErrors.Item4, ValidationErrors.Item5, ValidationErrors.Item6, ValidationErrors.Item7, ciwInformation.First().Dupes);
+                sendEmails.SendErrors(ValidationErrors.Item1, ValidationErrors.Item2, ValidationErrors.Item3,
+                                       ValidationErrors.Item4, ValidationErrors.Item5, ValidationErrors.Item6, ValidationErrors.Item7, ciwInformation.First().Dupes);
                 log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.failed_validation, (int)ErrorCodes.failed_validation));
                 return (int)ErrorCodes.failed_validation;
             }
