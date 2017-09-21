@@ -18,10 +18,23 @@ using System.Xml;
 
 namespace ProcessCIW
 {
-    /// <summary>
-    /// Class that controls processing of CIW forms
-    /// </summary>
-    class ProcessDocuments
+    public enum ErrorCodes : int
+    {
+        unknown_error = -1,
+        unprocessed=0,
+        successfully_processed=1,
+        password_protected=-2,
+        wrong_version=-3,
+        arra=-4,
+        duplicate_user=-5,
+        failed_validation=-6
+    }
+
+
+/// <summary>
+/// Class that controls processing of CIW forms
+/// </summary>
+class ProcessDocuments
     {
         private static CsvConfiguration config;
         private readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -126,7 +139,7 @@ namespace ProcessCIW
         /// Get all the CIW information, create temp csv file then load that and then filter it down to the different objects
         /// </summary>
         /// <param name="fileName"></param>
-        public string GetCIWInformation(int uploaderID, string filePath, string fileName, out List<CIWData> dupes)
+        public string GetCIWInformation(int uploaderID, string filePath, string fileName, out List<CIWData> dupes, out int errorCode)
         {
             List<CIWData> ciwInformation = new List<CIWData>();
 
@@ -145,6 +158,8 @@ namespace ProcessCIW
                 log.Error(string.Format("Locked Document - {0} with inner exception:{1}", e.Message, e.InnerException));
                 sendPasswordProtection(uploaderID, fileNameHelper(fileName));
                 dupes = null;
+                errorCode = (int)ErrorCodes.password_protected;
+                log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.password_protected, (int)ErrorCodes.password_protected));
                 return null;
             }
 
@@ -167,6 +182,8 @@ namespace ProcessCIW
                         //Begin exiting if wrong version
                         sendWrongVersion(uploaderID, fileNameHelper(fileName));
                         dupes = null;
+                        errorCode = (int)ErrorCodes.wrong_version;
+                        log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.wrong_version, (int)ErrorCodes.wrong_version));
                         return null;
                     }
                 }
@@ -175,6 +192,8 @@ namespace ProcessCIW
                     //Begin exiting if no version on form
                     sendWrongVersion(uploaderID, fileNameHelper(fileName));
                     dupes = null;
+                    errorCode = (int)ErrorCodes.wrong_version;
+                    log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.wrong_version, (int)ErrorCodes.wrong_version));
                     return null;
                 }
 
@@ -202,6 +221,8 @@ namespace ProcessCIW
 
                     dupes = null;
 
+                    errorCode = (int)ErrorCodes.wrong_version;
+                    log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.wrong_version, (int)ErrorCodes.wrong_version));
                     return null;
                 }
 
@@ -216,6 +237,7 @@ namespace ProcessCIW
 
                 //Create a temp csv file of the information within the form
                 string tempFile = CreateTempFile(ciwInformation);
+                errorCode = (int)ErrorCodes.successfully_processed;
 
                 return tempFile;
             }
@@ -256,9 +278,14 @@ namespace ProcessCIW
         {
 
             int _ = fileName.LastIndexOf("_");
-            string _name = fileName.Remove(_, fileName.Length - _ - 5);
 
-            return _name;
+            if (_ < 0)
+                return fileName;
+            else
+            {
+                string _name = fileName.Remove(_, fileName.Length - _ - 5);
+                return _name;
+            }                
         }
 
         /// <summary>
@@ -389,7 +416,9 @@ namespace ProcessCIW
             {
                 log.Error("Sending Wrong Version Number E-Mail");
                 sendEmails.SendWrongVersion();
-                return -1;
+                log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.wrong_version, (int)ErrorCodes.wrong_version));
+                return (int)ErrorCodes.wrong_version;
+
             }
             else
                 log.Info(string.Format("Version OK"));
@@ -401,7 +430,8 @@ namespace ProcessCIW
             {
                 log.Error("Sending ARRA E-Mail");
                 sendEmails.SendARRA();
-                return -1;
+                log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.arra, (int)ErrorCodes.arra));
+                return (int)ErrorCodes.arra;
             }
             else
                 log.Info(string.Format("ARRA is OK"));
@@ -413,8 +443,8 @@ namespace ProcessCIW
             {
                 log.Error(String.Format("Duplicate user found for {0}", ciwInformation.First().FullNameForLog));
                 sendEmails.SendDuplicateUser();
-
-                return -1;
+                log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.duplicate_user, (int)ErrorCodes.duplicate_user));
+                return (int)ErrorCodes.duplicate_user;
             }
 
             log.Info(String.Format("No existing user found for {0}", ciwInformation.First().FullNameForLog));
@@ -441,8 +471,8 @@ namespace ProcessCIW
                 //Begin sponsorship if successful
                 if (persID > 0)
                     sendEmails.SendSponsorshipEMail(persID);
-
-                return 1;
+                log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.successfully_processed, (int)ErrorCodes.successfully_processed));
+                return (int)ErrorCodes.successfully_processed;
             }
             else
             {
@@ -463,9 +493,9 @@ namespace ProcessCIW
 
                 //send error email which contains a list of each sections errors and a list of nested fields if any
                 sendEmails.SendErrors(ValidationErrors.Item1, ValidationErrors.Item2, ValidationErrors.Item3,
-                                        ValidationErrors.Item4, ValidationErrors.Item5, ValidationErrors.Item6, ValidationErrors.Item7, ciwInformation.First().Dupes);
-
-                return -1;
+                                       ValidationErrors.Item4, ValidationErrors.Item5, ValidationErrors.Item6, ValidationErrors.Item7, ciwInformation.First().Dupes);
+                log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.failed_validation, (int)ErrorCodes.failed_validation));
+                return (int)ErrorCodes.failed_validation;
             }
         }
 
