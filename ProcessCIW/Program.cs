@@ -99,7 +99,9 @@ namespace ProcessCIW
             {
 				List<CIWData> dupes = new List<CIWData>();
                 string filePath = ConfigurationManager.AppSettings["CIWDEBUGFILELOCATION"] + ciwFile.FileName;
+
                 int errorCode;
+
                 log.Info(string.Format("Processing file {0}", filePath));
 
                 //Get data from CIW
