@@ -13,6 +13,21 @@ namespace ProcessCIW.Utilities
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
+        /// Returns false if string is white space
+        /// Return true if null or empty
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
+        public static bool IsNotWhiteSpace(string s)
+        {
+            if (s == null)
+                return true;
+            if (s.Length > 0)
+                return s.Trim().Length != 0;
+            else return true;
+        }
+
+        /// <summary>
         /// Checks if Start date is before end date and end date is later than current date
         /// </summary>
         /// <param name="contractStartDate"></param>

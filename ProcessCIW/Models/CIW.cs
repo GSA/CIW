@@ -41,6 +41,7 @@ namespace ProcessCIW.Models
         private string _SponsorAlternateEmailAddress2;
         private string _SponsorAlternateEmailAddress3;
         private string _SponsorAlternateEmailAddress4;
+        private string _ApproximiateInvestigationDate;
 
         /// <summary>
         /// Section 1
@@ -109,7 +110,11 @@ namespace ProcessCIW.Models
 
         public string PositionJobTitle { get; set; }
         public string PriorInvestigation { get; set; }
-        public string ApproximiateInvestigationDate { get; set; }
+        public string ApproximiateInvestigationDate
+        {
+            get { return _ApproximiateInvestigationDate; }
+            set { _ApproximiateInvestigationDate = value.Trim(); }
+        }
         public string AgencyAdjudicatedPriorInvestigation { get; set; }
         public string Citizen { get; set; }
         public string PortOfEntryUSCityAndState { get; set; }
