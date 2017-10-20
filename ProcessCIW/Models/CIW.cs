@@ -41,6 +41,8 @@ namespace ProcessCIW.Models
         private string _SponsorAlternateEmailAddress2;
         private string _SponsorAlternateEmailAddress3;
         private string _SponsorAlternateEmailAddress4;
+
+        //_ApproximiateInvestigationDate is the pers_prior_investigation_date
         private string _ApproximiateInvestigationDate;
 
         /// <summary>
@@ -110,6 +112,8 @@ namespace ProcessCIW.Models
 
         public string PositionJobTitle { get; set; }
         public string PriorInvestigation { get; set; }
+
+        //_ApproximiateInvestigationDate is the pers_prior_investigation_date
         public string ApproximiateInvestigationDate
         {
             get { return _ApproximiateInvestigationDate; }
