@@ -124,8 +124,6 @@ namespace ProcessCIW.Mapping
         public const string CLICK_HERE_TO_ENTER_DATE = "Click here to enter a date.";
         public const string ENTER_DATE_OF_BIRTH = "Enter Date Of Birth";
         public const string CHOOSE_AN_ITEM = "Choose an item.";
-
-        public const string CONTRACTNUMTYPEBASE = "Base Contract Number";
-        public const string CONTRACTNUMTYPETODO = "Task Order/Delivery Order Number";
+        
     }
 }
