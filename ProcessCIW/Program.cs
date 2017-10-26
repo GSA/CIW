@@ -1,5 +1,6 @@
 ﻿using Gsa.Sftp.Libraries.Utilities.Encryption;
 using ProcessCIW.Models;
+using ProcessCIW.Utilities;
 using ProcessCIW.Validation;
 using System;
 using System.Collections.Generic;
@@ -22,6 +23,10 @@ namespace ProcessCIW
 
         static void Main(string[] args)
         {
+            //Define unhandled exception delegate
+            System.AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionTrapper;
+            throw new Exception();
+
             //used during logging
             stopWatch.Start();
 
@@ -219,6 +224,36 @@ namespace ProcessCIW
                     log.Error(e.Message + " - " + e.InnerException);
                 }
             }
+        }
+
+        static void UnhandledExceptionTrapper(object sender, UnhandledExceptionEventArgs e)
+        {
+            log.Fatal("Fatal Error has occurred!");
+            log.Fatal(e.ExceptionObject.ToString());
+            log.Fatal("Terminating!");
+
+            EMail email = new EMail();
+            try
+            {
+                email.Send
+                (
+                    ConfigurationManager.AppSettings["DEFAULTEMAIL"].ToString(),        //from
+                    ConfigurationManager.AppSettings["FATALEMAIL"].ToString(),          //to
+                    "",                                                                 //cc
+                    "",                                                                 //bcc
+                    "FATAL ERROR IN CIW",                                               //subject
+                    e.ExceptionObject.ToString(),                                       //body
+                    "",                                                                 //attachments
+                    ConfigurationManager.AppSettings["SMTPSERVER"],                     //smtp
+                    false                                                               //isbodyhtml
+                );
+            }
+            catch (Exception ex)
+            {
+                log.Fatal("Fatal Email not sent due to :" + ex.Message + ex.StackTrace);
+            }            
+            
+            Environment.Exit(1);
         }
     }
 }
