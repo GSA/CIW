@@ -449,8 +449,8 @@ class ProcessDocuments
 
             log.Info(String.Format("No existing user found for {0}", ciwInformation.First().FullNameForLog));
 
-            log.Info(String.Format("Company Name Primary is : {0}", !string.IsNullOrEmpty(ciwInformation.FirstOrDefault().CompanyName) ? ciwInformation.FirstOrDefault().CompanyName : "No Company Name Primary"));
-            log.Info(String.Format("Company Name Sub is : {0}", !string.IsNullOrEmpty(ciwInformation.FirstOrDefault().CompanyNameSub) ? ciwInformation.FirstOrDefault().CompanyNameSub : "No Company Name Sub"));
+            log.Info(String.Format("Company Name Primary is : {0}", !string.IsNullOrWhiteSpace(ciwInformation.FirstOrDefault().CompanyName) ? ciwInformation.FirstOrDefault().CompanyName : "No Company Name Primary"));
+            log.Info(String.Format("Company Name Sub is : {0}", !string.IsNullOrWhiteSpace(ciwInformation.FirstOrDefault().CompanyNameSub) ? ciwInformation.FirstOrDefault().CompanyNameSub : "No Company Name Sub"));
             log.Info(String.Format("Checking if form is valid for user {0}", ciwInformation.First().FullNameForLog));
 
             ciwInformation.First().Dupes = dupes;
