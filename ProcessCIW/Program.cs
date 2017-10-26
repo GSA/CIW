@@ -24,8 +24,7 @@ namespace ProcessCIW
         static void Main(string[] args)
         {
             //Define unhandled exception delegate
-            System.AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionTrapper;
-            throw new Exception();
+            AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionTrap;
 
             //used during logging
             stopWatch.Start();
@@ -226,7 +225,7 @@ namespace ProcessCIW
             }
         }
 
-        static void UnhandledExceptionTrapper(object sender, UnhandledExceptionEventArgs e)
+        static void UnhandledExceptionTrap(object sender, UnhandledExceptionEventArgs e)
         {
             log.Fatal("Fatal Error has occurred!");
             log.Fatal(e.ExceptionObject.ToString());
