@@ -3,6 +3,7 @@ using ProcessCIW.Models;
 using System;
 using System.Configuration;
 using System.Data;
+using U = ProcessCIW.Utilities;
 
 namespace ProcessCIW
 {
@@ -212,7 +213,7 @@ namespace ProcessCIW
 
                     //Section 1 - Row 6
                     new MySqlParameter { ParameterName = "oPersPriorInvestigation", Value = ConvertYesNo(ciwInformation.PriorInvestigation), MySqlDbType = MySqlDbType.Byte, Direction = ParameterDirection.Input },
-                    new MySqlParameter { ParameterName = "oPersPriorInvestigationDate", Value = ciwInformation.ApproximiateInvestigationDate , MySqlDbType = MySqlDbType.VarChar, Size = 12, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "oPersPriorInvestigationDate", Value = U.Utilities.BeAValidDate(ciwInformation.ApproximiateInvestigationDate) ? ciwInformation.ApproximiateInvestigationDate : (object)DBNull.Value, MySqlDbType = MySqlDbType.VarChar, Size = 12, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersPriorInvestigationWhere", Value = ciwInformation.AgencyAdjudicatedPriorInvestigation , MySqlDbType = MySqlDbType.VarChar, Size = 50, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersIsCitizen", Value = ConvertYesNo(ciwInformation.Citizen) , MySqlDbType = MySqlDbType.Byte, Direction = ParameterDirection.Input },
 
