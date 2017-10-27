@@ -389,8 +389,10 @@ namespace ProcessCIW.Validation
 
             //Agency Adjudicated Prior Investigation (When No)
             When(employee => employee.PriorInvestigation.Equals("No"), () =>
-            {
+            {                
                 RuleFor(employee => employee.ApproximiateInvestigationDate)
+                        .Must(U.Utilities.IsNotWhiteSpace)
+                        .WithMessage("Approx. Investigation Date: The date that you have entered contains only spaces and is not valid")
                         .Empty()
                         .WithMessage("Prior Investigation: The information regarding your previous background investigation requires your attention, please be advised that when indicating 'No' in the Prior Investigation field, Approx. Investigation Date field must be left blank");
 
@@ -596,6 +598,9 @@ namespace ProcessCIW.Validation
                     .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Required Field");
 
                 //Contract Number Type
+                RuleFor(employee => employee.ContractNumberType)
+                    .NotEmpty()
+                    .WithMessage("Contract Number Type: Required Field");
 
                 //changes for contract dates to be used with child care changes
                 //This will be when neither is child care
