@@ -598,6 +598,9 @@ namespace ProcessCIW.Validation
                     .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Required Field");
 
                 //Contract Number Type
+                RuleFor(employee => employee.ContractNumberType)
+                    .NotEmpty()
+                    .WithMessage("Contract Number Type: Required Field");
 
                 //changes for contract dates to be used with child care changes
                 //This will be when neither is child care
