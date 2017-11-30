@@ -54,7 +54,7 @@ namespace ProcessCIW.Validation
         /// </summary>
         /// <param name="dupes"></param>
         /// <returns>bool</returns>
-        public  bool VerifyEmptyDupes(List<CIWData> dupes)
+        public bool VerifyEmptyDupes(List<CIWData> dupes)
         {
             return dupes.Count == 0;
         }
@@ -68,7 +68,7 @@ namespace ProcessCIW.Validation
         private readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
-        /// Validates if user exists
+        /// Validates if user exists (database lookup)
         /// </summary>
         public UserExistsValidator()
         {
@@ -131,8 +131,6 @@ namespace ProcessCIW.Validation
             log.Info(String.Format("NotBeADuplicateUser completed with rowsReturned:{0} and return value:{1}", cmd.Parameters["rowsReturned"].Value, result));
             return result;
         }
-
-
     }
 
     /// <summary>
@@ -147,7 +145,8 @@ namespace ProcessCIW.Validation
         {
             ValidatorOptions.CascadeMode = CascadeMode.StopOnFirstFailure;
 
-            //Last Name
+            // Validate LastName field length is less than 60 characters, is not empty (required field), and matches
+            // regex expression ^[a-zA-Z \-\‘\’\']+$
             RuleFor(employee => employee.LastName)
                     .Length(0, 60)
                     .WithMessage("Full Last Name(s)(Family): exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
@@ -156,7 +155,8 @@ namespace ProcessCIW.Validation
                     .Matches(@"^[a-zA-Z \-\‘\’\']+$")
                     .WithMessage("Full Last Name(s)(Family): Contains Invalid Characters");
 
-            //First Name
+            // Validate FirstName field length is less than 60 characters, is not empty (required field), and matches
+            // regex expression ^[a-zA-Z \-\‘\’\']+$
             RuleFor(employee => employee.FirstName)
                     .Length(0, 60)
                     .WithMessage("Full First Name(Given): exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
@@ -165,7 +165,8 @@ namespace ProcessCIW.Validation
                     .Matches(@"^[a-zA-Z \-\‘\’\']+$")
                     .WithMessage("Full First Name(Given): Contains Invalid Characters");
 
-            //Middle Name
+            // Validate MiddleName field length is less than 60 characters, is not empty (required field), and matches
+            // regex expression ^[A-Za-z \\-\\\']{1,40}|[NMN]{1,3}$
             RuleFor(employee => employee.MiddleName)
                     .Length(0, 60)
                     .WithMessage("Full Middle Name(or NMN if none): exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
@@ -174,14 +175,13 @@ namespace ProcessCIW.Validation
                     .Matches(@"^[A-Za-z \\-\\\']{1,40}|[NMN]{1,3}$")
                     .WithMessage("Full Middle Name(or NMN if none): Contains Invalid Characters");
 
-            //Suffix
-
-            //Gender
+            // Validate that the Sex (Gender) field is not empty (required field).
             RuleFor(employee => employee.Sex)
                     .NotEmpty()
                     .WithMessage("Gender: Required Field");
 
-            //Social Security Number (need to check for more than one)
+            // Validate SocialSecurityNumber field is not empty (required field), matches the regex expression,
+            // and is not a duplicate (database lookup).
             RuleFor(employee => employee.SocialSecurityNumber)
                     .NotEmpty()
                     .WithMessage("Social Security Number: Required Field")
@@ -190,116 +190,132 @@ namespace ProcessCIW.Validation
                     .Must(NotBeADuplicateSSN)
                     .WithMessage("Social Security Number: Already in GCIMS");
 
-            //Date Of Birth (Need method to make sure date is valid)
+            // Validate DateOfBirth field is not empty (required field), is a valid date, 
+            // is greater than today's date or greater than today minus 15 years.  
             RuleFor(employee => employee.DateOfBirth)
                     .NotEmpty()
                     .WithMessage("Date Of Birth: Required Field")
                     .Must(U.Utilities.BeAValidBirthDate)
                     .WithMessage("Date Of Birth: Invalid Date");
 
-            //POB:City
+            // Validate PlaceOfBirthCity field is not empty (required field) and matches the regex expression.
             RuleFor(employee => employee.PlaceOfBirthCity)
                     .NotEmpty()
                     .WithMessage("POB: City: Required Field")
                     .Matches(@"^[a-zA-Z-\. \'\‘\’]{1,75}$")
                     .WithMessage("POB: City: Contains Invalid Characters");
 
-            //POB: Country
+            // Validate PlaceOfBirthCountry field is not empty (required field).
             RuleFor(employee => employee.PlaceOfBirthCountry)
                     .NotEmpty()
                     .WithMessage("POB: Country: Required Field");
 
-            //POB: U.S. State
+            // When PlaceOfBirthCountry field is U.S., 
             When(employee => (employee.PlaceOfBirthCountry == "US"), () =>
             {
+                // validate PlaceOfBirthState field is not empty (required field).
                 RuleFor(employee => employee.PlaceOfBirthState)
                     .NotEmpty()
                     .WithMessage("POB: U.S. State: Required for the selected Country of Birth");
             });
 
+            // When PlaceOfBirthCountry field is NOT U.S., 
             When(e => e.PlaceOfBirthCountry != "US", () =>
             {
+                // validate PlaceOfBirthState field IS empty.
                 RuleFor(employee => employee.PlaceOfBirthState)
                     .Empty()
                     .WithMessage("POB: U.S. State: Leave blank when Country of Birth is not the United States");
             });
 
-            //POB: Mexico or Canada State/Province
+            // When PlaceOfBirthCountry field is Mexico or Canada, 
             When(employee => employee.PlaceOfBirthCountry == "MX" || employee.PlaceOfBirthCountry == "CA", () =>
             {
+                // validate PlaceOfBirthMexicoCanada field is not empty (required field) and is a valid state (database lookup).
                 RuleFor(employee => employee.PlaceOfBirthMexicoCanada)
                     .NotEmpty()
                     .WithMessage("POB: Mexico (State)/Canada (Province): Required for the selected Country of Birth")
                     .Must((e, x) => ValidateState(e.PlaceOfBirthMexicoCanada, e.PlaceOfBirthCountry))
                     .WithMessage("POB: Mexico (State)/Canada (Province): Selected Province/State does not match the selected Country of Birth");
-
             });
 
+            // When PlaceOfBirthCountry field is not Mexico or not Canada,
             When(employee => employee.PlaceOfBirthCountry != "MX" && employee.PlaceOfBirthCountry != "CA", () =>
             {
+                // validate PlaceOfBirthMexicoCanada field is empty.
                 RuleFor(employee => employee.PlaceOfBirthMexicoCanada)
                     .Empty()
                     .WithMessage("POB: Mexico (State)/Canada (Province): Leave blank when Country of Birth is not Canada or Mexico");
             });
 
-            //Home Address One && Home Address Two
+            // When HomeAddressOne field is not empty
             When(h => !h.HomeAddressOne.Equals(""), () =>
             {
+                // validate field matches regex expression.
                 RuleFor(employee => employee.HomeAddressOne)
                     .Matches(@"^[a-zA-Z0-9 .\\-\\\']+$")
                     .WithMessage("Home Address Street: Contains Invalid Characters");
             });
 
+            // When HomeAddressOne field and HomeAddressTwo field are not empty, 
             When(h => !h.HomeAddressOne.Equals("") && !h.HomeAddressTwo.Equals(""), () =>
             {
+                // validate HomeAddressTwo field matches regex expression.
                 RuleFor(employee => employee.HomeAddressTwo)
-                    .Matches(@"^[a-zA-Z0-9 .\\-\\\']+$")
-                    .WithMessage("Home: Address Street (Line 2): Contains Invalid Characters");
+    .Matches(@"^[a-zA-Z0-9 .\\-\\\']+$")
+    .WithMessage("Home: Address Street (Line 2): Contains Invalid Characters");
             });
 
+            // When HomeAddressOne field is empty, 
             When(h => h.HomeAddressOne.Equals(""), () =>
             {
+                // validate HomeAddressOne field is not empty.
                 RuleFor(employee => employee.HomeAddressOne)
                    .NotEmpty()
                    .WithMessage("Home Address Street: Required Field");
 
+                // validate HomeAddressTwo is empty when homeAddressOne is empty.
                 RuleFor(employee => employee.HomeAddressTwo)
                     .Empty()
                     .WithMessage("Home Address Street: Please fill out this field before filling out Address Street (line 2)");
             });
 
-            //HomeAddressCity
+            // Validate HomeAddressCity field is not empty (required field) and matches the regex expression (characters and length).
             RuleFor(employee => employee.HomeAddressCity)
                     .NotEmpty()
                     .WithMessage("Home: City: Required Field")
                     .Matches(@"^[a-zA-Z-. \'\‘\’]{1,40}$")
                     .WithMessage("Home: City: Contains Invalid Characters");
 
-            //HomeAddressCountry
+            // Validate HomeAddressCountry field is not empty (required field) and equal to US.
             RuleFor(employee => employee.HomeAddressCountry)
                     .NotEmpty()
                     .WithMessage("Home: Country: Required Field")
                     .Equal("US")
                     .WithMessage("Home: Country: Only US residents are eligible for sponsorship at this time");
 
-            //HomeAddressUSState
+            // When HomeAddressCountry field is US,
             When(employee => employee.HomeAddressCountry == "US", () =>
             {
+                // validate HomeAddressUSState field is not empty (required field)
                 RuleFor(employee => employee.HomeAddressUSState)
                     .NotEmpty()
                     .WithMessage("Home: U.S. State: State of residence required for the selected Country of Residence");
             });
 
+            // When HomeAddressCountry field is not US,
             When(employee => employee.HomeAddressCountry != "US", () =>
             {
+                //  validate HomeAddressUSState field is empty.
                 RuleFor(employee => employee.HomeAddressUSState)
                     .Empty()
                     .WithMessage("Home: U.S. State: State of residence should be left blank when Country of Residence is not the United States");
             });
 
-            //HomeAddressMexicoCanada
+            // When HomeAddressCountry field is Canada or Mexico, 
             When(employee => employee.HomeAddressCountry == "CA" || employee.HomeAddressCountry == "MX", () =>
             {
+                // validate HomeAddressMexicoStateCanadaProvince field is not empty and is a valid state (database lookup).
                 RuleFor(employee => employee.HomeAddressMexicoStateCanadaProvince)
                     .NotEmpty()
                     .WithMessage("Home: Mexico (State)/Canada (Province): Required Field")
@@ -307,28 +323,30 @@ namespace ProcessCIW.Validation
                     .WithMessage("Home: Mexico (State)/Canada (Province): Selected state/province does not match the selected Country of Residence");
             });
 
+            // When HomeAddressCountry field is not Canada and not Mexico,
             When(employee => employee.HomeAddressCountry != "CA" && employee.HomeAddressCountry != "MX", () =>
             {
+                // validate HomeAddressMexicoStateCanadaProvince field is empty.
                 RuleFor(employee => employee.HomeAddressMexicoStateCanadaProvince)
                     .Empty()
                     .WithMessage("Home: Mexico (State)/Canada (Province): Should be left blank when Country of Residence is not Canada or Mexico");
             });
 
-            //Home Address Zip US/MX
+            // When HomeAddressZip is US or Mexico, validates HomeAddressZip field is not empty and matches the regex expression.
             RuleFor(employee => employee.HomeAddressZip)
                     .NotEmpty()
                     .Matches(@"^\d{5}(-\d{4})?$")
                     .When(employee => employee.HomeAddressCountry.Equals("US") || employee.HomeAddressCountry.Equals("MX"))
                     .WithMessage("Home: Zip: Postal code provided is not valid for the selected Country of Residence");
 
-            //Home Address Zip CA
+            // When HomeAddressZip is Canada, validate HomeAddressZip field is not empty and matches the regex expression.
             RuleFor(employee => employee.HomeAddressZip)
                     .NotEmpty()
                     .Matches(@"^[ABCEGHJKLMNPRSTVXYabceghjklmnprstvxy]{1}\d{1}[A-Za-z]{1} *\d{1}[A-Za-z]{1}\d{1}$")
                     .When(employee => employee.HomeAddressCountry.Equals("CA"))
                     .WithMessage("Home: Zip: Postal code provided is not valid for the selected Country of Residence");
 
-            //Home Address Zip not US/MX/CA
+            // When HomeAddressZip is not US, Mexico, or Canada, validate HomeAddressZip field is empty.
             RuleFor(employee => employee.HomeAddressZip)
                     .Empty()
                     .When(employee => !employee.HomeAddressCountry.Equals("US") && !employee.HomeAddressCountry.Equals("MX") && !employee.HomeAddressCountry.Equals("CA"))
@@ -336,50 +354,47 @@ namespace ProcessCIW.Validation
 
             When(employee => !employee.PhoneNumberWorkCell.Equals(""), () =>
             {
-                //Phone Number (Work Cell)
                 RuleFor(employee => employee.PhoneNumberWorkCell)
-                        .NotEmpty()
-                        .Matches(@"^\(?([0-9]{3})\)?[-.●]?([0-9]{3})[-.●]?([0-9]{4})$")
-                        .WithMessage("Phone Number (Work Cell): Invalid Phone Number");
+                        .PhoneNumberWork("Work Cell");
             });
 
+            // When PhoneNumberWork is not empty, validate PhoneNumberWork is not empty and matches the regex expression.
             When(employee => !employee.PhoneNumberWork.Equals(""), () =>
             {
-                //Phone Number (Work Number)
                 RuleFor(employee => employee.PhoneNumberWork)
-                        .NotEmpty()
-                        .Matches(@"^\(?([0-9]{3})\)?[-.●]?([0-9]{3})[-.●]?([0-9]{4})$")
-                        .WithMessage("Phone Number (Work Number): Invalid Phone Number");
+                        .PhoneNumberWork("Work Number");
             });
 
-            //Personal E-Mail
+            // Validate PersonalEmailAddress is not empty (required field) and is a valid email address.
             RuleFor(employee => employee.PersonalEmailAddress)
                     .NotEmpty()
                     .WithMessage("Personal E-Mail: Required Field")
                     .EmailAddress()
                     .WithMessage("Personal E-Mail: Invalid E-Mail Address");
 
-            //Job Title
+            // Validate PositionJobTitle is not empty (required field) and matches the regex expression.
             RuleFor(employee => employee.PositionJobTitle)
                     .NotEmpty()
                     .WithMessage("Position (Job) Title: Required Field")
                     .Matches(@"^[a-zA-Z0-9 .\\-\\\']+$")
                     .WithMessage("Position (Job) Title: Contains Invalid Characters");
 
-            //Prior Investigation
+            // Validate PriorInvestigation is not empty (required field)
             RuleFor(employee => employee.PriorInvestigation)
                     .NotEmpty()
                     .WithMessage("Prior Investigation: Required Field");
 
-            //Agency Adjudicated Prior Investigation (When Yes)
+            // Agency Adjudicated Prior Investigation - When (Agency Adjudicated) PriorInvestigation is yes, 
             When(employee => employee.PriorInvestigation.Equals("Yes"), () =>
             {
+                // validate ApproximiateInvestigationDate is not empty, is a valid date, and not a future date.
                 RuleFor(employee => employee.ApproximiateInvestigationDate)
                         .NotEmpty()
                         .WithMessage("Approx. Investigation Date: Required Field")
                         .Must(U.Utilities.DateIsValidAndNotFuture)
                         .WithMessage("Approx. Investigation Date: Invalid Date");
 
+                // Validate AgencyAdjudicatedPriorInvestigation is not empty and matches the regex expression.
                 RuleFor(employee => employee.AgencyAdjudicatedPriorInvestigation)
                         .NotEmpty()
                         .WithMessage("Agency Adjudicated Prior Investigation: Required Field")
@@ -387,74 +402,76 @@ namespace ProcessCIW.Validation
                         .WithMessage("Agency Adjudicated Prior Investigation: Contains Invalid Characters");
             });
 
-            //Agency Adjudicated Prior Investigation (When No)
+            // Agency Adjudicated Prior Investigation (When No) - When PriorInvestigation is no, 
             When(employee => employee.PriorInvestigation.Equals("No"), () =>
-            {                
+            {
+                // validate ApproximiateInvestigationDate does not contain white space and is empty.               
                 RuleFor(employee => employee.ApproximiateInvestigationDate)
                         .Must(U.Utilities.IsNotWhiteSpace)
                         .WithMessage("Approx. Investigation Date: The date that you have entered contains only spaces and is not valid")
                         .Empty()
                         .WithMessage("Prior Investigation: The information regarding your previous background investigation requires your attention, please be advised that when indicating 'No' in the Prior Investigation field, Approx. Investigation Date field must be left blank");
 
+                // validate AgencyAdjudicatedPriorInvestigation is empty
                 RuleFor(employee => employee.AgencyAdjudicatedPriorInvestigation)
                         .Empty()
                         .WithMessage("Prior Investigation: The information regarding your previous background investigation requires your attention, please be advised that when indicating 'No' in the Prior Investigation field, Agency Adjudicated Prior investigation field must be left blank");
             });
 
-            //US Citizen
+            // Validate Citizen field is not empty (required field)
             RuleFor(employee => employee.Citizen)
                     .NotEmpty()
                     .WithMessage("U.S. Citizen: Required Field");
 
+            // When CitzenshipCountry is US, 
             When(e => (e.CitzenshipCountry.Equals("US")), () =>
             {
+                // validate Citizen field equals Yes.
                 RuleFor(employee => employee.Citizen)
                     .Equal("Yes")
                     .WithMessage("Citizenship Country: Citizenship Country field value contradicts the input for U.S. Citizen");
             });
 
+            // When CitzenshipCountry is not US,
             When(e => !(e.CitzenshipCountry.Equals("US")), () =>
             {
+                // validate Citizen field does not equal Yes.
                 RuleFor(employee => employee.Citizen)
                     .NotEqual("Yes")
                     .WithMessage("Citizenship Country: Citizenship Country field value contradicts the input for U.S. Citizen");
             });
 
-
-
-            //Port of Entry
+            // When Citizen is no and CitzenshipCountry is not US, 
             When(e => (e.Citizen.Equals("No") && !e.CitzenshipCountry.Equals("US")), () =>
             {
-                //Port Of Entry US City And State
+                // Port Of Entry US City And State - validate PortOfEntryUSCityAndState is not empty and matches regex expression. 
                 RuleFor(employee => employee.PortOfEntryUSCityAndState)
                     .NotEmpty()
                     .WithMessage("Port of Entry, US City and State: Required Field")
                     .Matches(@"^[a-zA-Z\-\. \'\,]{1,50}$")
                     .WithMessage("Port of Entry, US City and State: Contains Invalid Characters");
 
-                //date of entry
+                // Date of entry - validate DateOfEntry is not empty (required field), is a valid date, and not a future date.
                 RuleFor(employee => employee.DateOfEntry)
                    .NotEmpty()
                    .WithMessage("Date Of Entry: Required Field")
                    .Must(U.Utilities.DateIsValidAndNotFuture)
                    .WithMessage("Date Of Entry: Invalid Date");
 
-                //Less than 3 Yrs. U.S. Resident
+                // Less than 3 Yrs. U.S. Resident - validate LessThanThreeYearsResident is not empty (required field).
                 RuleFor(employee => employee.LessThanThreeYearsResident)
                         .NotEmpty()
                         .WithMessage("Less than 3 Yrs. U.S. Resident: Required Field");
 
-                //Alien Registration Number
+                // Alien Registration Number - validate AlienRegistrationNumber is not empty (required field) and
                 RuleFor(employee => employee.AlienRegistrationNumber)
                         .NotEmpty()
                         .WithMessage("Alien Registration #: Required Field")
                         .Matches(@"^[a-zA-Z0-9\- ]+$")
                         .WithMessage("Alien Registration #: The value provided is not a valid registration number");
-
-
             });
 
-            //Citizenship Country
+            // Citizenship Country - validate CitzenshipCountry is not empty
             RuleFor(employee => employee.CitzenshipCountry)
                     .NotEmpty()
                     .WithMessage("Citizenship Country: Required Field");
@@ -561,10 +578,6 @@ namespace ProcessCIW.Validation
 
             return true;
         }
-
-
-
-
     }
 
     /// <summary>
@@ -573,6 +586,7 @@ namespace ProcessCIW.Validation
     class ContractorValidator : AbstractValidator<CIW>
     {
         private const int YearsInTheFuture = 30;
+
         /// <summary>
         /// Contains all the validation rules for section 2
         /// </summary>
@@ -580,30 +594,32 @@ namespace ProcessCIW.Validation
         {
             RuleSet("ValidFirstAndSecondRow", () =>
             {
-                //Company Name
+                // Company Name - validate CompanyName is not empty
                 RuleFor(employee => employee.CompanyName)
                     .NotEmpty()
                     .WithMessage("Company Name (Primary): Required Field");
 
+                // When DataUniversalNumberingSystem is not empty,
                 When(e => !(e.DataUniversalNumberingSystem.Equals("")), () =>
                 {
+                    // validate DataUniversalNumberingSystem matches regex expression.
                     RuleFor(employee => employee.DataUniversalNumberingSystem)
                         .Matches(@"^[0-9]{9,9}$")
                         .WithMessage("DUNS Number: Invalid - should be only numeric and exactly 9 characters long");
                 });
 
-                // TO/DO
+                // TO/DO - validate TaskOrderDeliveryOrder is not empty
                 RuleFor(employee => employee.TaskOrderDeliveryOrder)
                     .NotEmpty()
                     .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Required Field");
 
-                //Contract Number Type
+                // Contract Number Type - validate ContractNumberType is not empty
                 RuleFor(employee => employee.ContractNumberType)
                     .NotEmpty()
                     .WithMessage("Contract Number Type: Required Field");
 
-                //changes for contract dates to be used with child care changes
-                //This will be when neither is child care
+                // changes for contract dates to be used with child care changes
+                // This will be when neither is child care
                 When((e => e.ContractorType != "Child Care" && e.InvestigationTypeRequested != "Tier 1C"), () =>
                 {
                     //Contract start date
@@ -619,13 +635,13 @@ namespace ProcessCIW.Validation
                     RuleFor(employee => employee.ContractEndDate)
                         .NotEqual("")
                         .WithMessage("Contract End Date: Required Field")
-                        .Must((c,x) => U.Utilities.BeAValidEndDate(c.ContractEndDate,YearsInTheFuture))
+                        .Must((c, x) => U.Utilities.BeAValidEndDate(c.ContractEndDate, YearsInTheFuture))
                         .WithMessage("Contract End Date: Invalid Date: date must follow mm/dd/yyyy format and be no more than 30 years in the future")
                         .Must(U.Utilities.EndIsFutureDate)
                         .WithMessage("Contract End Date: Must be a future date");
                 });
 
-                //This will be when one or the other is child care
+                // This will be when one or the other is child care
                 Unless((e => e.ContractorType != "Child Care" && e.InvestigationTypeRequested != "Tier 1C"), () =>
                 {
                     Unless((e => e.ContractorType == "Child Care" && e.InvestigationTypeRequested == "Tier 1C"), () =>
@@ -643,215 +659,229 @@ namespace ProcessCIW.Validation
                         RuleFor(employee => employee.ContractEndDate)
                             .NotEqual("")
                             .WithMessage("Contract End Date: Required Field (unless Child Care)")
-                            .Must((c,x) => U.Utilities.BeAValidEndDate(c.ContractEndDate,YearsInTheFuture))
+                            .Must((c, x) => U.Utilities.BeAValidEndDate(c.ContractEndDate, YearsInTheFuture))
                             .WithMessage("Contract End Date: Invalid Date: date must follow mm/dd/yyyy format and be no more than 30 years in the future")
                             .Must(U.Utilities.EndIsFutureDate)
                             .WithMessage("Contract End Date: Must be a future date");
                     });
                 });
 
-                //Has Option Years
+                // Has Option Years - validate is not empty (required field)
                 RuleFor(employee => employee.HasOptionYears)
                         .NotEqual("")
                         .WithMessage("Has Option Years: Required Field");
 
+                // When HasOptionYears is yes, 
                 When(e => e.HasOptionYears.Equals("Yes"), () =>
                 {
+                    // validate NumberOfOptionYears is not empty
                     RuleFor(employee => employee.NumberOfOptionYears)
                         .NotEqual("")
                         .WithMessage("Has Option Years: You have indicated the contract Has Option Years, please select a value for # Of Options Years");
                 });
 
+                // When HasOptionYears is no,
                 When(e => e.HasOptionYears.Equals("No"), () =>
                 {
+                    // validate NumberOfOptionYears is empty
                     RuleFor(employee => employee.NumberOfOptionYears)
                         .Equal("")
                         .WithMessage("Has Option Years: This field value contradicts the input for # Of Options Years");
                 });
             });
 
-            //Row 3 is required
+            const string FirstNameMessageText = "First Name";
+            const string LastNameMessageText = "Last Name";
+            var pocType = "Primary";
+
             RuleSet("ValidPOCRow1", () =>
             {
+                // Row 1 (Primary POC)
+                var fieldNumber = string.Empty;
+                
+
+                // See RuleBuilderExtensions class for rule descriptions
                 RuleFor(contractInformation => contractInformation.ContractPOCFirstName)
-                        .Length(0, 45)
-                        .WithMessage("Primary Company Point of Contact(POC) First Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
-                        .NotEmpty()
-                        .WithMessage("Primary Company Point of Contact(POC) First Name: Required Field")
-                        .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
-                        .WithMessage("Primary Company Point of Contact(POC) First Name: Contains Invalid Characters");
+                    .POCName(pocType, fieldNumber, FirstNameMessageText);
 
                 RuleFor(contractInformation => contractInformation.ContractPOCLastName)
-                        .Length(0, 45)
-                        .WithMessage("Primary Company Point of Contact(POC) Last Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
-                        .NotEmpty()
-                        .WithMessage("Primary Company Point of Contact(POC) Last Name: Required Field")
-                        .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
-                        .WithMessage("Primary Company Point of Contact(POC) Last Name: Contains Invalid Characters");
+                    .POCName(pocType, fieldNumber, LastNameMessageText);
 
                 RuleFor(contractInformation => contractInformation.ContractPOCPhoneWork)
-                        .NotEmpty()
-                        .WithMessage("Primary Company Point of Contact(POC) Work Phone Number: Required Field")
-                        .Matches(@"^\(?([0-9]{3})\)?[-.●]?([0-9]{3})[-.●]?([0-9]{4})$")
-                        .WithMessage("Primary Company Point of Contact(POC) Work Phone Number: Invalid Phone Number");
+                   .POCPhone(pocType, fieldNumber);
 
                 RuleFor(contractInformation => contractInformation.ContractPOCEMailAddress)
-                        .NotEmpty()
-                        .WithMessage("Primary Company Point of Contact(POC) E-Mail Address: Required Field")
-                        .EmailAddress()
-                        .WithMessage("Primary Company Point of Contact(POC) E-Mail Address: Invalid E-Mail Address");
+                    .POCEmail(pocType, fieldNumber);
             });
+
+            pocType = "Alternate";
 
             RuleSet("ValidPOCRow2", () =>
             {
                 //Row 2
+                var fieldNumber = "1";                
+
                 When(r => (r.ContractPOCAlternatePocFirstname1 != "" || r.ContractPOCAlternatePocLastname1 != "" ||
                            r.ContractPOCAlternatePocPhoneWork1 != "" || r.ContractPOCAlternatePocEmail1 != ""), () =>
                            {
+                               // See RuleBuilderExtensions class for rule descriptions
                                RuleFor(r => r.ContractPOCAlternatePocFirstname1)
-                                    .Length(0, 45)
-                                    .WithMessage("Alternate Company Point of Contact(POC) 1: First Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
-                                    .NotEmpty()
-                                    .WithMessage("Alternate Company Point of Contact(POC) 1: First Name: Required Field")
-                                    .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
-                                    .WithMessage("Alternate Company Point of Contact(POC) 1: First Name: Contains Invalid Characters");
+                                    .POCName(pocType, fieldNumber, FirstNameMessageText);
 
                                RuleFor(r => r.ContractPOCAlternatePocLastname1)
-                                    .Length(0, 45)
-                                    .WithMessage("Alternate Company Point of Contact(POC) 1: Last Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
-                                    .NotEmpty()
-                                    .WithMessage("Alternate Company Point of Contact(POC) 1: Last Name: Required Field")
-                                    .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
-                                    .WithMessage("Alternate Company Point of Contact(POC) 1: Last Name: Contains Invalid Characters");
+                                    .POCName(pocType, fieldNumber, LastNameMessageText);
 
                                RuleFor(r => r.ContractPOCAlternatePocPhoneWork1)
-                                       .NotEmpty()
-                                       .WithMessage("Alternate Company Point of Contact(POC) 1: Phone Number:Required Field")
-                                       .Matches(@"^\(?([0-9]{3})\)?[-.●]?([0-9]{3})[-.●]?([0-9]{4})$")
-                                       .WithMessage("Alternate Company Point of Contact(POC) 1: Phone Number:Invalid Phone Number");
+                                    .POCPhone(pocType, fieldNumber, "Phone");
 
-                               RuleFor(r => r.ContractPOCAlternatePocEmail1)
-                                       .NotEmpty()
-                                       .WithMessage("Alternate Company Point of Contact(POC) 1: E-Mail Address: Required Field")
-                                       .EmailAddress()
-                                       .WithMessage("Alternate Company Point of Contact(POC) 1: E-Mail Address: Invalid E-Mail Address");
+                               RuleFor(r => r.ContractPOCAlternatePocEmail1).POCEmail(pocType, fieldNumber);
                            });
             });
 
             RuleSet("ValidPOCRow3", () =>
             {
                 //Row 3
+                var fieldNumber = "2";
+
                 When(r => (r.ContractPOCAlternatePocFirstname2 != "" || r.ContractPOCAlternatePocLastname2 != "" ||
                            r.ContractPOCAlternatePocPhoneWork2 != "" || r.ContractPOCAlternatePocEmail2 != ""), () =>
                            {
+                               // See RuleBuilderExtensions class for rule descriptions
                                RuleFor(r => r.ContractPOCAlternatePocFirstname2)
-                                    .Length(0, 45)
-                                    .WithMessage("Alternate Company Point of Contact(POC) 2: First Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
-                                    .NotEmpty()
-                                    .WithMessage("Alternate Company Point of Contact(POC) 2: First Name: Required Field")
-                                    .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
-                                    .WithMessage("Alternate Company Point of Contact(POC) 2: First Name: Contains Invalid Characters");
+                                    .POCName(pocType, fieldNumber, FirstNameMessageText);
 
                                RuleFor(r => r.ContractPOCAlternatePocLastname2)
-                                    .Length(0, 45)
-                                    .WithMessage("Alternate Company Point of Contact(POC) 2: Last Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
-                                    .NotEmpty()
-                                    .WithMessage("Alternate Company Point of Contact(POC) 2: Last Name: Required Field")
-                                    .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
-                                    .WithMessage("Alternate Company Point of Contact(POC) 2: Last Name: Contains Invalid Characters");
+                                    .POCName(pocType, fieldNumber, LastNameMessageText);
 
                                RuleFor(r => r.ContractPOCAlternatePocPhoneWork2)
-                                       .NotEmpty()
-                                       .WithMessage("Alternate Company Point of Contact(POC) 2: Work Phone: Required Field")
-                                       .Matches(@"^\(?([0-9]{3})\)?[-.●]?([0-9]{3})[-.●]?([0-9]{4})$")
-                                       .WithMessage("Alternate Company Point of Contact(POC) 2: Work Phone: Invalid Phone Number");
+                                    .POCPhone(pocType, fieldNumber);
 
-                               RuleFor(r => r.ContractPOCAlternatePocEmail2)
-                                       .NotEmpty()
-                                       .WithMessage("Alternate Company Point of Contact(POC) 2: E-Mail Address: Required Field")
-                                       .EmailAddress()
-                                       .WithMessage("Alternate Company Point of Contact(POC) 2: E-Mail Address: Invalid E-Mail Address");
-
+                               RuleFor(r => r.ContractPOCAlternatePocEmail2).POCEmail(pocType, fieldNumber);
                            });
             });
 
             RuleSet("ValidPOCRow4", () =>
             {
                 //Row 4
+                var fieldNumber = "3";
+
                 When(r => (r.ContractPOCAlternatePocFirstname3 != "" || r.ContractPOCAlternatePocLastname3 != "" ||
                            r.ContractPOCAlternatePocPhoneWork3 != "" || r.ContractPOCAlternatePocEmail3 != ""), () =>
                            {
+                               // See RuleBuilderExtensions class for rule descriptions
                                RuleFor(r => r.ContractPOCAlternatePocFirstname3)
-                                    .Length(0, 45)
-                                    .WithMessage("Alternate Company Point of Contact(POC) 3: First Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
-                                    .NotEmpty()
-                                    .WithMessage("Alternate Company Point of Contact(POC) 3: First Name: Required Field")
-                                    .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
-                                    .WithMessage("Alternate Company Point of Contact(POC) 3: First Name: Contains Invalid Characters");
+                                    .POCName(pocType, fieldNumber, FirstNameMessageText);
 
                                RuleFor(r => r.ContractPOCAlternatePocLastname3)
-                                    .Length(0, 45)
-                                    .WithMessage("Alternate Company Point of Contact(POC) 3: Last Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
-                                    .NotEmpty()
-                                    .WithMessage("Alternate Company Point of Contact(POC) 3: Last Name: Required Field")
-                                    .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
-                                    .WithMessage("Alternate Company Point of Contact(POC) 3: Last Name: Contains Invalid Characters");
+                                    .POCName(pocType, fieldNumber, LastNameMessageText);
 
                                RuleFor(r => r.ContractPOCAlternatePocPhoneWork3)
-                                       .NotEmpty()
-                                       .WithMessage("Alternate Company Point of Contact(POC) 3: Work Phone: Required Field")
-                                       .Matches(@"^\(?([0-9]{3})\)?[-.●]?([0-9]{3})[-.●]?([0-9]{4})$")
-                                       .WithMessage("Alternate Company Point of Contact(POC) 3: Work Phone: Invalid Phone Number");
+                                    .POCPhone(pocType, fieldNumber);
 
-                               RuleFor(r => r.ContractPOCAlternatePocEmail3)
-                                       .NotEmpty()
-                                       .WithMessage("Alternate Company Point of Contact(POC) 3: E-Mail Address: Required Field")
-                                       .EmailAddress()
-                                       .WithMessage("Alternate Company Point of Contact(POC) 3: E-Mail Address: Invalid E-Mail Address");
+                               RuleFor(r => r.ContractPOCAlternatePocEmail3).POCEmail(pocType, fieldNumber);
                            });
-            });
-
+            }); 
 
             RuleSet("ValidPOCRow5", () =>
             {
                 //Row 5
+                var fieldNumber = "4";
+
                 When(r => (r.ContractPOCAlternatePocFirstname4 != "" || r.ContractPOCAlternatePocLastname4 != "" ||
                            r.ContractPOCAlternatePocPhoneWork4 != "" || r.ContractPOCAlternatePocEmail4 != ""), () =>
                            {
+                               // See RuleBuilderExtensions class for rule descriptions
                                RuleFor(r => r.ContractPOCAlternatePocFirstname4)
-                                    .Length(0, 45)
-                                    .WithMessage("Alternate Company Point of Contact(POC) 4: First Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
-                                    .NotEmpty()
-                                    .WithMessage("Alternate Company Point of Contact(POC) 4: First Name: Required Field")
-                                    .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
-                                    .WithMessage("Alternate Company Point of Contact(POC) 4: First Name: Contains Invalid Characters");
+                                    .POCName(pocType, fieldNumber, FirstNameMessageText);
 
                                RuleFor(r => r.ContractPOCAlternatePocLastname4)
-                                    .Length(0, 45)
-                                    .WithMessage("Alternate Company Point of Contact(POC) 4: Last Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
-                                    .NotEmpty()
-                                    .WithMessage("Alternate Company Point of Contact(POC) 4: Last Name: Required Field")
-                                    .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
-                                    .WithMessage("Alternate Company Point of Contact(POC) 4: Last Name: Contains Invalid Characters");
+                                    .POCName(pocType, fieldNumber, LastNameMessageText);
 
                                RuleFor(r => r.ContractPOCAlternatePocPhoneWork4)
-                                       .NotEmpty()
-                                       .WithMessage("Alternate Company Point of Contact(POC) 4: Work Phone: Required Field")
-                                       .Matches(@"^\(?([0-9]{3})\)?[-.●]?([0-9]{3})[-.●]?([0-9]{4})$")
-                                       .WithMessage("Alternate Company Point of Contact(POC) 4: Work Phone: Invalid Phone Number");
+                                    .POCPhone(pocType, fieldNumber);
 
-                               RuleFor(r => r.ContractPOCAlternatePocEmail4)
-                                       .NotEmpty()
-                                       .WithMessage("Alternate Company Point of Contact(POC) 4: E-Mail Address: Required Field")
-                                       .EmailAddress()
-                                       .WithMessage("Alternate Company Point of Contact(POC) 4: E-Mail Address: Invalid E-Mail Address");
+                               RuleFor(r => r.ContractPOCAlternatePocEmail4).POCEmail(pocType, fieldNumber);
                            });
             });
         }
+    }
 
+    /// <summary>
+    ///     Validation rules for reusability
+    /// </summary>
+    static class RuleBuilderExtensions
+    {
+        /// <summary>
+        ///     Validate primary and alternate POC's name length is less than or equal to 45 chars, not empty (required field), and mathches regex expression.
+        /// </summary>
+        /// <typeparam name="T">The type paramater</typeparam>
+        /// <param name="ruleBuilder">The <see cref="IRuleBuilder{T, TProperty}"/></param>
+        /// <param name="pocType">Primary or alternate</param>
+        /// <param name="fieldNumber">The field number</param>
+        /// <param name="fieldName">The field name used for message</param>
+        /// <returns></returns>
+        public static IRuleBuilderOptions<T, string> POCName<T>(this IRuleBuilder<T, string> ruleBuilder, string pocType, string fieldNumber, string fieldName) where T : CIW
+        {
+            var messagePrefix = $"{pocType} Company Point of Contact(POC){(!string.IsNullOrEmpty(fieldNumber) ? " " + fieldNumber + ":" : "")} {fieldName}";
 
+            return ruleBuilder.Length(0, 45)
+                              .WithMessage($"{messagePrefix}: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
+                              .NotEmpty()
+                              .WithMessage($"{messagePrefix}: Required Field")
+                              .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
+                              .WithMessage($"{messagePrefix}: Contains Invalid Characters");
+        }
 
+        /// <summary>
+        ///     Validate primary and alternate POC's phone number is not empty (required field), and mathches regex expression
+        /// </summary>
+        /// <typeparam name="T">The type paramater</typeparam>
+        /// <param name="ruleBuilder">The <see cref="IRuleBuilder{T, TProperty}"/></param>
+        /// <param name="pocType">Primary or alternate</param>
+        /// <param name="fieldNumber">The field number</param>
+        /// <param name="fieldName">The field name used for message</param>
+        /// <returns></returns>
+        public static IRuleBuilderOptions<T, string> POCPhone<T>(this IRuleBuilder<T, string> ruleBuilder, string pocType, string fieldNumber, string phoneNumberType = "Work Phone") where T : CIW
+        {
+            var messagePrefix = $"{pocType} Company Point of Contact(POC){(!string.IsNullOrEmpty(fieldNumber) ? " " + fieldNumber + ":" : "")} {phoneNumberType} Number:";
 
+            return ruleBuilder.NotEmpty()
+                              .WithMessage($"{messagePrefix} Required Field")
+                              .Matches(@"^\(?([0-9]{3})\)?[-.●]?([0-9]{3})[-.●]?([0-9]{4})$")
+                              .WithMessage($"{messagePrefix} Invalid Phone Number");
+        }
+
+        /// <summary>
+        ///     Validate primary and alternate POC's feild is not empty (required field) and is a valid email address.
+        /// </summary>
+        /// <typeparam name="T">The type paramater</typeparam>
+        /// <param name="ruleBuilder">The <see cref="IRuleBuilder{T, TProperty}"/></param>
+        /// <param name="pocType">Primary or alternate</param>
+        /// <param name="fieldNumber">The row number</param>>
+        /// <returns></returns>
+        public static IRuleBuilderOptions<T, string> POCEmail<T>(this IRuleBuilder<T, string> ruleBuilder, string pocType, string fieldNumber) where T : CIW
+        {
+            var messagePrefix = $"{pocType} Company Point of Contact(POC){(!string.IsNullOrEmpty(fieldNumber) ? " " + fieldNumber + ":" : "")} E-Mail Address:";
+
+            return ruleBuilder.NotEmpty()
+                              .WithMessage($"{messagePrefix} Required Field")
+                              .EmailAddress()
+                              .WithMessage($"{messagePrefix} Invalid E-Mail Address");
+        }
+
+        /// <summary>
+        ///     Validate PhoneNumberWork (work cell or work number) is not empty and matches the regex expression
+        /// </summary>
+        /// <typeparam name="T">The type paramater</typeparam>
+        /// <param name="ruleBuilder">The <see cref="IRuleBuilder{T, TProperty}"/></param
+        /// <param name="phoneNumberType">Work cell or work number</param>
+        /// <returns></returns>
+        public static IRuleBuilderOptions<T, string> PhoneNumberWork<T>(this IRuleBuilder<T, string> ruleBuilder, string phoneNumberType) where T : CIW
+        {
+           return ruleBuilder.NotEmpty()
+                             .Matches(@"^\(?([0-9]{3})\)?[-.●]?([0-9]{3})[-.●]?([0-9]{4})$")
+                             .WithMessage($"Phone Number ({phoneNumberType}): Invalid Phone Number");
+        }
     }
 
     /// <summary>
@@ -866,10 +896,12 @@ namespace ProcessCIW.Validation
         {
             When(r => !r.RWAIAANumber.Equals(""), () =>
             {
+                // Validate RWAIAANumber matches regex expression
                 RuleFor(employee => employee.RWAIAANumber)
                         .Matches(@"^[a-zA-Z0-9\-\s]{3,20}$")
                         .WithMessage("RWA/IAA Number: Invalid - RWA/IAA Numbers are alphanumeric and must be between 3 and 20 characters in length");
 
+                // Validate RWAIAAAgency is not empty
                 RuleFor(e => e.RWAIAAAgency)
                     .NotEmpty()
                     .WithMessage("RWA/IAA Agency: When providing an RWA/IAA Number, an RWA/IAA Agency must also be provided");
@@ -1206,7 +1238,7 @@ namespace ProcessCIW.Validation
         ValidationResult section4 = new ValidationResult();
         ValidationResult section5 = new ValidationResult();
         ValidationResult section6 = new ValidationResult();
-		ValidationResult nested = new ValidationResult();
+        ValidationResult nested = new ValidationResult();
 
         public ValidateCIW()
         {
@@ -1263,42 +1295,42 @@ namespace ProcessCIW.Validation
             log.Info(String.Format("Section 1 validation completed with {0} errors", section1.Errors.Count));
 
             if (section1.Errors.Count > 0)
-                PrintToLog(section1.Errors,1);
+                PrintToLog(section1.Errors, 1);
 
             //Section 2
             ValidateContractInformation(ciwInformation);
             log.Info(String.Format("Section 2 validation completed with {0} errors", section2.Errors.Count));
 
             if (section2.Errors.Count > 0)
-                PrintToLog(section2.Errors,2);
+                PrintToLog(section2.Errors, 2);
 
             //Section 3
             ValidateRWAIAAInformation(ciwInformation);
             log.Info(String.Format("Section 3 validation completed with {0} errors", section3.Errors.Count));
 
             if (section3.Errors.Count > 0)
-                PrintToLog(section3.Errors,3);
+                PrintToLog(section3.Errors, 3);
 
             //Section 4
             ValidateProjectLocationInformation(ciwInformation);
             log.Info(String.Format("Section 4 validation completed with {0} errors", section4.Errors.Count));
 
             if (section4.Errors.Count > 0)
-                PrintToLog(section4.Errors,4);
+                PrintToLog(section4.Errors, 4);
 
             //Section 5
             ValidateInvestigationRequested(ciwInformation);
             log.Info(String.Format("Section 5 validation completed with {0} errors", section5.Errors.Count));
 
             if (section5.Errors.Count > 0)
-                PrintToLog(section5.Errors,5);
+                PrintToLog(section5.Errors, 5);
 
             //Section 6
             ValidateGSARequestionOfficialInformation(ciwInformation);
             log.Info(String.Format("Section 6 validation completed with {0} errors", section6.Errors.Count));
 
             if (section6.Errors.Count > 0)
-                PrintToLog(section6.Errors,6);
+                PrintToLog(section6.Errors, 6);
 
             //Verify all sections are valid and return result
             if ((section1.IsValid && section2.IsValid && section3.IsValid && section4.IsValid && section5.IsValid && section6.IsValid) == false)
