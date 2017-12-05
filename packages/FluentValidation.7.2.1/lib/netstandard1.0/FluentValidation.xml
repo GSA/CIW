@@ -375,7 +375,6 @@
             Specifies a custom error message resource to use when validation fails.
             </summary>
             <param name="rule">The current rule</param>
-            <param name="resourceSelector">The resource to use as an expression, eg () => Messages.MyResource</param>
             <param name="resourceName">Name of resource</param>
             <param name="formatArgs">Custom message format args</param>
             <param name="resourceType">Type of resource representing a resx file</param>
@@ -499,7 +498,7 @@
         </member>
         <member name="T:FluentValidation.Resources.LanguageManager">
             <summary>
-            Allows the default error message translations to be managed. 
+            Allows the default error message translations to be managed.
             </summary>
         </member>
         <member name="M:FluentValidation.Resources.LanguageManager.#ctor">
@@ -514,7 +513,7 @@
         </member>
         <member name="P:FluentValidation.Resources.LanguageManager.Culture">
             <summary>
-            Default culture to use for all requests to the LanguageManager. If not specified, uses the current UI culture. 
+            Default culture to use for all requests to the LanguageManager. If not specified, uses the current UI culture.
             </summary>
         </member>
         <member name="M:FluentValidation.Resources.LanguageManager.GetSupportedLanguages">
@@ -525,7 +524,7 @@
         </member>
         <member name="M:FluentValidation.Resources.LanguageManager.Clear">
             <summary>
-            Removes all languages except the default. 
+            Removes all languages except the default.
             </summary>
         </member>
         <member name="M:FluentValidation.Resources.LanguageManager.GetString(System.String,System.Globalization.CultureInfo)">
@@ -600,7 +599,6 @@
             </summary>
             <param name="resourceType">The resource type</param>
             <param name="resourceName">The resource name</param>
-            <param name="resourceAccessorBuilder">Strategy used to construct the resource accessor</param>
         </member>
         <member name="M:FluentValidation.Resources.LocalizedStringSource.#ctor(System.Type,System.String,FluentValidation.Resources.IResourceAccessorBuilder)">
             <summary>
@@ -659,7 +657,6 @@
             Creates a OverridableLocalizedStringSource from an expression: () => MyResources.SomeResourceName
             </summary>
             <param name="expression">The expression </param>
-            <param name="resourceProviderSelectionStrategy">Strategy used to construct the resource accessor</param>
             <returns>Error message source</returns>
         </member>
         <member name="T:FluentValidation.Resources.ResourceAccessor">
@@ -850,6 +847,7 @@
             </summary>
             <typeparam name="T">Type of object being validated</typeparam>
             <param name="ruleBuilder">The rule builder on which the validator should be defined</param>
+            <param name="maximumLength"></param>
             <returns></returns>
         </member>
         <member name="M:FluentValidation.DefaultValidatorExtensions.MinimumLength``1(FluentValidation.IRuleBuilder{``0,System.String},System.Int32)">
@@ -859,6 +857,7 @@
             </summary>
             <typeparam name="T">Type of object being validated</typeparam>
             <param name="ruleBuilder">The rule builder on which the validator should be defined</param>
+            <param name="minimumLength"></param>
             <returns></returns>
         </member>
         <member name="M:FluentValidation.DefaultValidatorExtensions.Matches``1(FluentValidation.IRuleBuilder{``0,System.String},System.Func{``0,System.String})">
@@ -1470,6 +1469,26 @@
             <param name="ruleBuilder">The rule builder on which the validator should be defined</param>
             <returns></returns>
         </member>
+        <member name="M:FluentValidation.DefaultValidatorExtensions.Custom``2(FluentValidation.IRuleBuilder{``0,``1},System.Action{``1,FluentValidation.Validators.CustomContext})">
+            <summary>
+            Defines a custom validation rule
+            </summary>
+            <typeparam name="T"></typeparam>
+            <typeparam name="TProperty"></typeparam>
+            <param name="ruleBuilder"></param>
+            <param name="action"></param>
+            <returns></returns>
+        </member>
+        <member name="M:FluentValidation.DefaultValidatorExtensions.CustomAsync``2(FluentValidation.IRuleBuilder{``0,``1},System.Func{``1,FluentValidation.Validators.CustomContext,System.Threading.CancellationToken,System.Threading.Tasks.Task})">
+            <summary>
+            Defines a custom validation rule
+            </summary>
+            <typeparam name="T"></typeparam>
+            <typeparam name="TProperty"></typeparam>
+            <param name="ruleBuilder"></param>
+            <param name="action"></param>
+            <returns></returns>
+        </member>
         <member name="T:FluentValidation.DefaultValidatorOptions">
             <summary>
             Default options that can be used to configure a validator.
@@ -1998,6 +2017,11 @@
         <member name="M:FluentValidation.Internal.MemberNameValidatorSelector.#ctor(System.Collections.Generic.IEnumerable{System.String})">
             <summary>
             Creates a new instance of MemberNameValidatorSelector.
+            </summary>
+        </member>
+        <member name="P:FluentValidation.Internal.MemberNameValidatorSelector.MemberNames">
+            <summary>
+            Member names that are validated.
             </summary>
         </member>
         <member name="M:FluentValidation.Internal.MemberNameValidatorSelector.CanExecute(FluentValidation.IValidationRule,System.String,FluentValidation.ValidationContext)">
@@ -2632,7 +2656,6 @@
         <member name="P:FluentValidation.Results.ValidationFailure.FormattedMessagePlaceholderValues">
             <summary>
             Gets or sets the formatted message placeholder values.
-            Similar placeholders are defined in fluent validation library (check documentation)
             </summary>
         </member>
         <member name="P:FluentValidation.Results.ValidationFailure.ResourceName">
@@ -2778,6 +2801,11 @@
             Whether this is a child context
             </summary>
         </member>
+        <member name="P:FluentValidation.ValidationContext.IsChildCollectionContext">
+            <summary>
+            Whether this is a child collection context.
+            </summary>
+        </member>
         <member name="M:FluentValidation.ValidationContext.Clone(FluentValidation.Internal.PropertyChain,System.Object,FluentValidation.Internal.IValidatorSelector)">
             <summary>
             Creates a new ValidationContext based on this one
@@ -2790,6 +2818,13 @@
         <member name="M:FluentValidation.ValidationContext.CloneForChildValidator(System.Object)">
             <summary>
             Creates a new validation context for use with a child validator
+            </summary>
+            <param name="instanceToValidate"></param>
+            <returns></returns>
+        </member>
+        <member name="M:FluentValidation.ValidationContext.CloneForChildCollectionValidator(System.Object)">
+            <summary>
+            Creates a new validation context for use with a child collection validator
             </summary>
             <param name="instanceToValidate"></param>
             <returns></returns>
@@ -2965,6 +3000,11 @@
             Customizations of validator selector
             </summary>
         </member>
+        <member name="P:FluentValidation.ValidatorOptions.MessageFormatterFactory">
+            <summary>
+            Specifies a factory for creating MessageFormatter instances.
+            </summary>
+        </member>
         <member name="P:FluentValidation.ValidatorOptions.PropertyNameResolver">
             <summary>
             Pluggable logic for resolving property names
@@ -3009,16 +3049,14 @@
             <summary>
             </summary>
             <param name="value"></param>
-            <param name="resourceName"></param>
-            <param name="resourceType"></param>
+            <param name="errorSource"></param>
         </member>
         <member name="M:FluentValidation.Validators.AbstractComparisonValidator.#ctor(System.Func{System.Object,System.Object},System.Reflection.MemberInfo,FluentValidation.Resources.IStringSource)">
             <summary>
             </summary>
             <param name="valueToCompareFunc"></param>
             <param name="member"></param>
-            <param name="resourceName"></param>
-            <param name="resourceType"></param>
+            <param name="errorSource"></param>
         </member>
         <member name="M:FluentValidation.Validators.AbstractComparisonValidator.IsValid(FluentValidation.Validators.PropertyValidatorContext)">
             <summary>
@@ -3147,13 +3185,6 @@
             A custom property validator.
             This interface should not be implemented directly in your code as it is subject to change.
             Please inherit from <see cref="T:FluentValidation.Validators.PropertyValidator">PropertyValidator</see> instead.
-            </summary>
-        </member>
-        <member name="P:FluentValidation.Validators.IPropertyValidator.CustomMessageFormatArguments">
-            <summary>
-            Custom message arguments. 
-            Arg 1: Instance being validated
-            Arg 2: Property value
             </summary>
         </member>
         <member name="M:FluentValidation.Validators.PropertyValidator.PrepareMessageFormatterForValidationError(FluentValidation.Validators.PropertyValidatorContext)">
