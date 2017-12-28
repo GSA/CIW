@@ -2,40 +2,35 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-[assembly: InternalsVisibleTo("ProcessCIW.Tests")]
-// General Information about an assembly is controlled through the following
+// General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("ProcessCIW")]
+[assembly: AssemblyTitle("ProcessCIW.Tests")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("GSA")]
-[assembly: AssemblyProduct("ProcessCIW")]
-[assembly: AssemblyCopyright("Copyright © GSA 2014")]
+[assembly: AssemblyProduct("ProcessCIW.Tests")]
+[assembly: AssemblyCopyright("Copyright © GSA 2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
-//Required for log4net to work
-[assembly: log4net.Config.XmlConfigurator(Watch = true)]
-
-// Setting ComVisible to false makes the types in this assembly not visible
-// to COM components.  If you need to access a type in this assembly from
+// Setting ComVisible to false makes the types in this assembly not visible 
+// to COM components.  If you need to access a type in this assembly from 
 // COM, set the ComVisible attribute to true on that type.
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("484db4ec-ab9f-4f13-b288-ef32ccb78440")]
+[assembly: Guid("f728d8a7-211e-40ab-94f5-c44575f7d0b0")]
 
 // Version information for an assembly consists of the following four values:
 //
 //      Major Version
-//      Minor Version
+//      Minor Version 
 //      Build Number
 //      Revision
 //
-// You can specify all the values or you can default the Build and Revision Numbers
+// You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-// [assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyVersion("2.0.*")]
+[assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
