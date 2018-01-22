@@ -115,18 +115,18 @@ namespace ProcessCIW
 
                     log.Info(string.Format("ProcessCIWInformation returned with result: {0}", GetErrorMessage(processedResult)));
                     //Update the status of processing the file in the database
-                    //pd.UpdateProcessed(ciwFile.ID, processedResult);
+                    pd.UpdateProcessed(ciwFile.ID, processedResult);
                 }
                 else
                 {
                     //Mark the file as failed in the database
-                    //pd.UpdateProcessed(ciwFile.ID, errorCode);
+                    pd.UpdateProcessed(ciwFile.ID, errorCode);
                 }
 
                 try
                 {
                     //Delete the original file
-                    //Utilities.Utilities.DeleteFiles(new List<string> { filePath });
+                    Utilities.Utilities.DeleteFiles(new List<string> { filePath });
                 }
                 catch (IOException e)
                 {
@@ -205,12 +205,12 @@ namespace ProcessCIW
                 }
                 else
                     //Mark the file as failed in the database
-                    //pd.UpdateProcessed(ciwFile.ID, errorCode);
+                    pd.UpdateProcessed(ciwFile.ID, errorCode);
 
                 try
                 {
                     //Delete the original and decrypted file
-                    //Utilities.Utilities.DeleteFiles(new List<string> { filePath, decryptedFile });
+                    Utilities.Utilities.DeleteFiles(new List<string> { filePath, decryptedFile });
                 }
                 catch (IOException e)
                 {
