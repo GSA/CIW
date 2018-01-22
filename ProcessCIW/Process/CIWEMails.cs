@@ -226,19 +226,7 @@ namespace ProcessCIW.Process
                     log.Info(String.Format("GetUploaderInformation completed with PrefixedName:{0} UploaderWorkEmail:{1} UploaderMajorOrg:{2}", prefixedName, uploaderWorkEMail, uploaderMajorOrg));
                 }
             }
-        }
-
-        /// <summary>
-        /// Called when CIW is Child care worker
-        /// </summary>
-        //public void SendChildCareWorker()                 *** No references ***
-        //{
-        //    emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "Tier1CError.html");
-
-        //    log.Info(string.Format("Sending child care worker E-Mail"));
-
-        //    SendEMail(FormatSubject());
-        //}
+        }        
 
         /// <summary>
         /// Called when CIW is Wrong version
