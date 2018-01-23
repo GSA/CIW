@@ -139,7 +139,8 @@ class ProcessDocuments
         /// Get all the CIW information, create temp csv file then load that and then filter it down to the different objects
         /// </summary>
         /// <param name="fileName"></param>
-        public string GetCIWInformation(int uploaderID, string filePath, string fileName, out List<CIWData> dupes, out int errorCode)
+
+        public string GetCIWInformation(int uploaderID, string filePath, string fileName, out int errorCode)
         {
             List<CIWData> ciwInformation = new List<CIWData>();
 
@@ -157,7 +158,6 @@ class ProcessDocuments
             {
                 log.Error(string.Format("Locked Document - {0} with inner exception:{1}", e.Message, e.InnerException));
                 sendPasswordProtection(uploaderID, fileNameHelper(fileName));
-                dupes = null;
                 errorCode = (int)ErrorCodes.password_protected;
                 log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.password_protected, (int)ErrorCodes.password_protected));
                 return null;
@@ -181,7 +181,6 @@ class ProcessDocuments
                     {
                         //Begin exiting if wrong version
                         sendWrongVersion(uploaderID, fileNameHelper(fileName));
-                        dupes = null;
                         errorCode = (int)ErrorCodes.wrong_version;
                         log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.wrong_version, (int)ErrorCodes.wrong_version));
                         return null;
@@ -191,7 +190,6 @@ class ProcessDocuments
                 {
                     //Begin exiting if no version on form
                     sendWrongVersion(uploaderID, fileNameHelper(fileName));
-                    dupes = null;
                     errorCode = (int)ErrorCodes.wrong_version;
                     log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.wrong_version, (int)ErrorCodes.wrong_version));
                     return null;
@@ -200,33 +198,46 @@ class ProcessDocuments
                 try
                 {
                     //Gets all data on the form via tags
-                    log.Info(string.Format("Parsing XML and searching for nested fields."));
-                    ciwInformation = docPart.Document.Descendants<SdtBlock>()
+                    log.Info(string.Format("Parsing XML."));
+                    //docpart.document.firstchild is the entire xml document
+                    //if we get the child elements we get a list of first children which should be 9
+                    //we select the 3rd child which is the main table that gets filled out
+                    var docTable = docPart.Document.FirstChild.ChildElements[2];
+                    //the first 2 children of this table are grid settings and properties which we dont care about right now
+                    docTable.RemoveAllChildren<TableGrid>();
+                    docTable.RemoveAllChildren<TableProperties>();
+                    //now we have 29 children of type w:tr which are the rows of the table
+                    //select all the table cells inside the current table that arent a section header. 
+                    //currently headers start with a number so excluded those
+                    var tableCells = docTable.Descendants<TableCell>().Except(docTable.Descendants<TableCell>().Where( x => "0123456789".Contains(x.InnerText.Trim().Substring(0,1))));
+
+                    //Grab the version cell and add it to ciwInformation
+                    var versionNode = xml.SelectSingleNode(string.Format("w:body/w:tbl/w:tr/w:tc/w:tbl/w:tr/w:tc"), nameSpaceManager).NextSibling;
+                    ciwInformation.Add(new CIWData { InnerText = versionNode.InnerText, TagName = versionNode.ChildNodes[1].ChildNodes[0].ChildNodes[1].Attributes[0].Value });
+
+                    //get all table cells and add them after the version in ciwInformation
+                    ciwInformation.AddRange( tableCells
                                         .Select
                                             (
                                                 s =>
                                                     new CIWData
                                                     {
-                                                        TagName = s.GetFirstChild<SdtProperties>().GetFirstChild<Tag>().Val,
-                                                        InnerText = ParseXML(s.InnerText, s.OuterXml),
-                                                        Child = getNestedChild(s.OuterXml)
-
+                                                        TagName = s.ChildElements.OfType<SdtBlock>().FirstOrDefault().GetFirstChild<SdtProperties>().GetFirstChild<Tag>().Val,
+                                                        InnerText =ParseXML( s.ChildElements.OfType<SdtBlock>().FirstOrDefault().InnerText, s.OuterXml),
                                                     }
-                                            ).ToList();
+                                            ).ToList());
                 }
                 catch (Exception e)
                 {
                     log.Error(string.Format("XML Parsing Failed - {0} with inner exception: {1}", e.Message, e.InnerException));
                     sendWrongVersion(uploaderID, fileNameHelper(fileName));
 
-                    dupes = null;
 
                     errorCode = (int)ErrorCodes.wrong_version;
                     log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.wrong_version, (int)ErrorCodes.wrong_version));
                     return null;
                 }
 
-                dupes = ciwInformation.Where(c => c.Child != String.Empty).ToList();
 
                 //used in log
                 string lastFirst = (ciwInformation.FirstOrDefault(c => c.TagName == "Employee-LastName").InnerText ?? "null") + ", " + (ciwInformation.FirstOrDefault(c => c.TagName == "Employee-FirstName").InnerText ?? "null");
@@ -278,7 +289,6 @@ class ProcessDocuments
         {
 
             int _ = fileName.LastIndexOf("_");
-
             if (_ < 0)
                 return fileName;
             else
@@ -287,30 +297,7 @@ class ProcessDocuments
                 return _name;
             }                
         }
-
-        /// <summary>
-        /// gets any nested children in the current node
-        /// </summary>
-        /// <param name="outerXML"></param>
-        /// <returns>Nested child or empty string</returns>
-        public string getNestedChild(string outerXML)
-        {
-            XmlDocument xml = new XmlDocument();
-            if (!String.IsNullOrEmpty(outerXML))
-            {
-                xml.InnerXml = outerXML;
-            }
-            XmlNamespaceManager nameSpaceManager = new XmlNamespaceManager(xml.NameTable);
-            nameSpaceManager.AddNamespace("w", "http://schemas.openxmlformats.org/wordprocessingml/2006/main");
-            var node = xml.SelectSingleNode(string.Format("w:sdt/w:sdtContent/w:p/w:sdt/w:sdtPr/w:tag"), nameSpaceManager);
-            if (node == null)
-            {
-                node = xml.SelectSingleNode(string.Format("w:sdt/w:sdtContent/w:sdt/w:sdtPr/w:tag"), nameSpaceManager);
-
-            }
-            return node != null ? node.Attributes[0].Value : string.Empty;
-        }
-
+                
         /// <summary>
         /// Retrieves the node
         /// </summary>
@@ -343,7 +330,7 @@ class ProcessDocuments
             {
                 if (!String.IsNullOrEmpty(innerText))
                 {
-                    XmlNode a = xml.SelectSingleNode(string.Format("w:sdt/w:sdtPr/w:dropDownList/w:listItem[@w:displayText=\"{0}\"]", innerText), nameSpaceManager);
+                    XmlNode a = xml.SelectSingleNode(string.Format("w:tc/w:sdt/w:sdtPr/w:dropDownList/w:listItem[@w:displayText=\"{0}\"]", innerText), nameSpaceManager);
 
                     if (a.Attributes.Count > 1)
                     {
@@ -375,9 +362,8 @@ class ProcessDocuments
         /// <param name="uploaderID"></param>
         /// <param name="filePath"></param>
         /// <param name="isDebug"></param>
-        /// <param name="dupes"></param>
         /// <returns>Int success code</returns>
-        public int ProcessCIWInformation(int uploaderID, string filePath, bool isDebug, List<CIWData> dupes)
+        public int ProcessCIWInformation(int uploaderID, string filePath, bool isDebug)
         {
             log.Info("Processing CIW");
 
@@ -453,11 +439,10 @@ class ProcessDocuments
             log.Info(String.Format("Company Name Sub is : {0}", !string.IsNullOrWhiteSpace(ciwInformation.FirstOrDefault().CompanyNameSub) ? ciwInformation.FirstOrDefault().CompanyNameSub : "No Company Name Sub"));
             log.Info(String.Format("Checking if form is valid for user {0}", ciwInformation.First().FullNameForLog));
 
-            ciwInformation.First().Dupes = dupes;
+            
 
             //Validation is called inside if statement
-            //Short circuit evaluation of If statement removed so we can always get list of all errors
-            if (validate.IsFormValid(ciwInformation) & validate.IsNested(ciwInformation))
+            if (validate.IsFormValid(ciwInformation))
             {
                 log.Info(String.Format("Form is valid for user {0}", ciwInformation.First().FullNameForLog));
 
@@ -483,8 +468,8 @@ class ProcessDocuments
                 //E-Mail Failure Template
                 //Send error email
                 Tuple<ValidationResult, ValidationResult, ValidationResult,
-                        ValidationResult, ValidationResult, ValidationResult, ValidationResult> ValidationErrors = new Tuple<ValidationResult, ValidationResult, ValidationResult,
-                                                                                                            ValidationResult, ValidationResult, ValidationResult, ValidationResult>(null, null, null,
+                        ValidationResult, ValidationResult, ValidationResult> ValidationErrors = new Tuple<ValidationResult, ValidationResult, ValidationResult,
+                                                                                                            ValidationResult, ValidationResult, ValidationResult>(null, null,
                                                                                                                                                                 null, null, null, null);
 
                 log.Info(string.Format("Getting errors"));
@@ -493,9 +478,9 @@ class ProcessDocuments
 
                 log.Info(string.Format("{0} errors returned", CountErrors(ValidationErrors)));
 
-                //send error email which contains a list of each sections errors and a list of nested fields if any
+                //send error email which contains a list of each sections errors
                 sendEmails.SendErrors(ValidationErrors.Item1, ValidationErrors.Item2, ValidationErrors.Item3,
-                                       ValidationErrors.Item4, ValidationErrors.Item5, ValidationErrors.Item6, ValidationErrors.Item7, ciwInformation.First().Dupes);
+                                       ValidationErrors.Item4, ValidationErrors.Item5, ValidationErrors.Item6);
                 log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.failed_validation, (int)ErrorCodes.failed_validation));
                 return (int)ErrorCodes.failed_validation;
             }
@@ -506,9 +491,9 @@ class ProcessDocuments
         /// </summary>
         /// <param name="t"></param>
         /// <returns>Count of errors</returns>
-        private int CountErrors(Tuple<ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult> t)
+        private int CountErrors(Tuple<ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult> t)
         {
-            var count = t.Item1.Errors.Count + t.Item2.Errors.Count + t.Item3.Errors.Count + t.Item4.Errors.Count + t.Item5.Errors.Count + t.Item6.Errors.Count + t.Item7.Errors.Count;
+            var count = t.Item1.Errors.Count + t.Item2.Errors.Count + t.Item3.Errors.Count + t.Item4.Errors.Count + t.Item5.Errors.Count + t.Item6.Errors.Count;
             return count;
         }
 

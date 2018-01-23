@@ -404,9 +404,7 @@ namespace ProcessCIW.Models
         //List of GSAPOC's to iterate  through, checking for non empty lines
         public List<POC.GSAPOC> GSAPOC { get; set; }
 
-        //List of Nested fields used for a certain type of CIW errors
-        public List<CIWData> Dupes { get; set; }
-
+        
         /// <summary>
         /// Property utilizing stringbuilder to generate a name string pre-pended with "Invalid CIW - " for email purposes
         /// </summary>
