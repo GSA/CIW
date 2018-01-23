@@ -143,7 +143,6 @@ class ProcessDocuments
         public string GetCIWInformation(int uploaderID, string filePath, string fileName, out int errorCode)
         {
             List<CIWData> ciwInformation = new List<CIWData>();
-
             log.Info(String.Format("Getting information from file {0}", filePath));
 
             //Check for password protection
