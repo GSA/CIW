@@ -13,54 +13,6 @@ using U = ProcessCIW.Utilities;
 namespace ProcessCIW.Validation
 {
     /// <summary>
-    /// Fluent Validation class to validate if tags are nested
-    /// </summary>
-	class HasNestedTagsValidator : AbstractValidator<CIW>
-    {
-        /// <summary>
-        /// Tests if any nested tags
-        /// </summary>
-        public HasNestedTagsValidator()
-        {
-            RuleFor(c => c.Dupes)
-                .Must((e, x) => VerifyEmptyDupes(e.Dupes));
-        }
-
-        /// <summary>
-        /// Creates a string of nested tags
-        /// </summary>
-        /// <param name="dupes"></param>
-        /// <returns>string of nested tags</returns>
-        public static string getCIWDataChildString(List<CIWData> dupes)
-        {
-            string _dupes = "";
-            foreach (var x in dupes)
-            {
-                if (dupes.LastOrDefault().Equals(x))
-                {
-                    _dupes += x.TagName;
-                }
-                else
-                {
-                    _dupes += x.TagName;
-                    _dupes += ", ";
-                }
-            }
-            return _dupes;
-        }
-
-        /// <summary>
-        /// Returns if dupes equals 0
-        /// </summary>
-        /// <param name="dupes"></param>
-        /// <returns>bool</returns>
-        public  bool VerifyEmptyDupes(List<CIWData> dupes)
-        {
-            return dupes.Count == 0;
-        }
-    }
-
-    /// <summary>
     /// Fluent Validation class to validate if user exists
     /// </summary>
     class UserExistsValidator : AbstractValidator<CIW>
@@ -1206,33 +1158,9 @@ namespace ProcessCIW.Validation
         ValidationResult section4 = new ValidationResult();
         ValidationResult section5 = new ValidationResult();
         ValidationResult section6 = new ValidationResult();
-		ValidationResult nested = new ValidationResult();
 
         public ValidateCIW()
         {
-        }
-
-        /// <summary>
-        /// Calls validation to check for nested fields
-        /// </summary>
-        /// <param name="ciwInformation"></param>
-        /// <returns></returns>
-		public bool IsNested(List<CIW> ciwInformation)
-        {
-            log.Info(string.Format("Checking if Fields are nested"));
-
-            HasNestedTagsValidator validator = new HasNestedTagsValidator();
-
-            nested = validator.Validate(ciwInformation.First());
-
-            bool nestedIsValid = nested.IsValid;
-
-            if (nestedIsValid)
-                log.Info(string.Format("No nested field(s)"));
-            else
-                log.Error(string.Format("Nested field(s) found"));
-
-            return nestedIsValid;
         }
 
         /// <summary>
@@ -1324,9 +1252,9 @@ namespace ProcessCIW.Validation
         /// Gets all errors
         /// </summary>
         /// <returns>Tuple of errors</returns>
-        public Tuple<ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult> GetErrors()
+        public Tuple<ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult> GetErrors()
         {
-            return new Tuple<ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult>(section1, section2, section3, section4, section5, section6, nested);
+            return new Tuple<ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult>(section1, section2, section3, section4, section5, section6);
         }
 
         /// <summary>
