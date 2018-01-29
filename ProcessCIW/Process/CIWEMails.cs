@@ -404,7 +404,7 @@ namespace ProcessCIW.Process
             }
             catch (Exception ex)
             {
-                log.Error("E-Mailing: " + ex.Message + " - " + ex.InnerException);
+                log.Error("Error E-Mailing Sponsorship: " + ex.Message + " - " + ex.InnerException);
             }
         }
     }
