@@ -94,6 +94,7 @@ namespace ProcessCIW
         private static void ProcessDebugFiles(List<UnprocessedFiles> filesForProcessing)
         {
             int processedResult;
+            int insertedPersId=0;
 
             foreach (var ciwFile in filesForProcessing)
             {
@@ -111,17 +112,17 @@ namespace ProcessCIW
                     log.Info(string.Format("GetCIWInformation returned with temp file {0}.", tempFile));
 
                     //Process the data retrieved from the CIW
-                    processedResult = pd.ProcessCIWInformation(ciwFile.PersID, tempFile, true);
+                    processedResult = pd.ProcessCIWInformation(ciwFile.PersID, tempFile, true, out insertedPersId);
 
 
                     log.Info(string.Format("ProcessCIWInformation returned with result: {0}", GetErrorMessage(processedResult)));
                     //Update the status of processing the file in the database
-                    pd.UpdateProcessed(ciwFile.ID, processedResult);
+                    pd.UpdateProcessed(ciwFile.ID, processedResult, insertedPersId);
                 }
                 else
                 {
                     //Mark the file as failed in the database
-                    pd.UpdateProcessed(ciwFile.ID, errorCode);
+                    pd.UpdateProcessed(ciwFile.ID, errorCode, insertedPersId);
                 }
 
                 try
@@ -168,6 +169,7 @@ namespace ProcessCIW
         private static void ProcessProdFiles(List<UnprocessedFiles> filesForProcessing)
         {
             int processedResult;
+            int insertedPersId = 0;
 
             foreach (var ciwFile in filesForProcessing)
             {
@@ -196,15 +198,15 @@ namespace ProcessCIW
                     log.Info(string.Format("GetCIWInformation returned with temp file {0}.", tempFile));
 
                     //Processes data retrieved from CIW
-                    processedResult = pd.ProcessCIWInformation(ciwFile.PersID, tempFile, true);
+                    processedResult = pd.ProcessCIWInformation(ciwFile.PersID, tempFile, true, out insertedPersId);
                     log.Info(string.Format("ProcessCIWInformation returned with result: {0}", processedResult == 1 ? "File processed successfully" : processedResult == 0 ? "File remains unprocessed" : "File failed processing"));
 
                     //Mark status of processed file in the database
-                    pd.UpdateProcessed(ciwFile.ID, processedResult);
+                    pd.UpdateProcessed(ciwFile.ID, processedResult, insertedPersId);
                 }
                 else
                     //Mark the file as failed in the database
-                    pd.UpdateProcessed(ciwFile.ID, errorCode);
+                    pd.UpdateProcessed(ciwFile.ID, errorCode, insertedPersId);
 
                 try
                 {
