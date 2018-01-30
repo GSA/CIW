@@ -139,6 +139,7 @@ class ProcessDocuments
         /// Get all the CIW information, create temp csv file then load that and then filter it down to the different objects
         /// </summary>
         /// <param name="fileName"></param>
+
         public string GetCIWInformation(int uploaderID, string filePath, string fileName, out int errorCode)
         {
             List<CIWData> ciwInformation = new List<CIWData>();
@@ -288,7 +289,6 @@ class ProcessDocuments
         {
 
             int _ = fileName.LastIndexOf("_");
-
             if (_ < 0)
                 return fileName;
             else
