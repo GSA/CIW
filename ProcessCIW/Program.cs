@@ -25,7 +25,7 @@ namespace ProcessCIW
         {
             //Define unhandled exception delegate
             AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionTrap;
-
+            
             //used during logging
             stopWatch.Start();
 
@@ -225,12 +225,20 @@ namespace ProcessCIW
             }
         }
 
+        private static string PrepareFatalErrorBody(string error)
+        {
+            string body = File.ReadAllText(ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"].ToString() + "FatalError.html");
+            body = body.Replace("[ERRORMESSAGE]", error);
+            body = body.Replace("[DATETIME]", DateTime.Now.ToString());
+            return body;
+        }
+
         static void UnhandledExceptionTrap(object sender, UnhandledExceptionEventArgs e)
         {
             log.Fatal("Fatal Error has occurred!");
             log.Fatal(e.ExceptionObject.ToString());
             log.Fatal("Terminating!");
-
+            
             EMail email = new EMail();
             try
             {
@@ -241,10 +249,10 @@ namespace ProcessCIW
                     "",                                                                 //cc
                     "",                                                                 //bcc
                     "FATAL ERROR IN CIW",                                               //subject
-                    e.ExceptionObject.ToString(),                                       //body
+                    PrepareFatalErrorBody(e.ExceptionObject.ToString()),                //body
                     "",                                                                 //attachments
                     ConfigurationManager.AppSettings["SMTPSERVER"],                     //smtp
-                    false                                                               //isbodyhtml
+                    true                                                                //isbodyhtml
                 );
             }
             catch (Exception ex)
