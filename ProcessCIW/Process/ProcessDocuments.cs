@@ -156,10 +156,10 @@ class ProcessDocuments
             }
             catch (FileFormatException e)
             {
-                log.Error(string.Format("Locked Document - {0} with inner exception:{1}", e.Message, e.InnerException));
+                log.Warn(string.Format("Locked Document - {0} with inner exception:{1}", e.Message, e.InnerException));
                 sendPasswordProtection(uploaderID, fileNameHelper(fileName));
                 errorCode = (int)ErrorCodes.password_protected;
-                log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.password_protected, (int)ErrorCodes.password_protected));
+                log.Warn(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.password_protected, (int)ErrorCodes.password_protected));
                 return null;
             }
 
@@ -182,7 +182,7 @@ class ProcessDocuments
                         //Begin exiting if wrong version
                         sendWrongVersion(uploaderID, fileNameHelper(fileName));
                         errorCode = (int)ErrorCodes.wrong_version;
-                        log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.wrong_version, (int)ErrorCodes.wrong_version));
+                        log.Warn(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.wrong_version, (int)ErrorCodes.wrong_version));
                         return null;
                     }
                 }
@@ -191,7 +191,7 @@ class ProcessDocuments
                     //Begin exiting if no version on form
                     sendWrongVersion(uploaderID, fileNameHelper(fileName));
                     errorCode = (int)ErrorCodes.wrong_version;
-                    log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.wrong_version, (int)ErrorCodes.wrong_version));
+                    log.Warn(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.wrong_version, (int)ErrorCodes.wrong_version));
                     return null;
                 }
 
@@ -229,12 +229,12 @@ class ProcessDocuments
                 }
                 catch (Exception e)
                 {
-                    log.Error(string.Format("XML Parsing Failed - {0} with inner exception: {1}", e.Message, e.InnerException));
+                    log.Warn(string.Format("XML Parsing Failed - {0} with inner exception: {1}", e.Message, e.InnerException));
                     sendWrongVersion(uploaderID, fileNameHelper(fileName));
 
 
                     errorCode = (int)ErrorCodes.wrong_version;
-                    log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.wrong_version, (int)ErrorCodes.wrong_version));
+                    log.Warn(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.wrong_version, (int)ErrorCodes.wrong_version));
                     return null;
                 }
 
@@ -400,9 +400,9 @@ class ProcessDocuments
             //Check version and begin exit if wrong version
             if (ciwInformation.First().VersionNumber != ConfigurationManager.AppSettings["VERSION"])
             {
-                log.Error("Sending Wrong Version Number E-Mail");
+                log.Warn("Sending Wrong Version Number E-Mail");
                 sendEmails.SendWrongVersion();
-                log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.wrong_version, (int)ErrorCodes.wrong_version));
+                log.Warn(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.wrong_version, (int)ErrorCodes.wrong_version));
                 return (int)ErrorCodes.wrong_version;
 
             }
@@ -414,9 +414,9 @@ class ProcessDocuments
             //Check if ARRA contractor and begin exit if ARRA
             if (ciwInformation.First().ArraLongTermContractor == "Yes")
             {
-                log.Error("Sending ARRA E-Mail");
+                log.Warn("Sending ARRA E-Mail");
                 sendEmails.SendARRA();
-                log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.arra, (int)ErrorCodes.arra));
+                log.Warn(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.arra, (int)ErrorCodes.arra));
                 return (int)ErrorCodes.arra;
             }
             else
@@ -427,9 +427,9 @@ class ProcessDocuments
             //Check if duplicate and begin exit if duplicate exists
             if (!validate.IsDuplicate(ciwInformation))
             {
-                log.Error(String.Format("Duplicate user found for {0}", ciwInformation.First().FullNameForLog));
+                log.Warn(String.Format("Duplicate user found for {0}", ciwInformation.First().FullNameForLog));
                 sendEmails.SendDuplicateUser();
-                log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.duplicate_user, (int)ErrorCodes.duplicate_user));
+                log.Warn(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.duplicate_user, (int)ErrorCodes.duplicate_user));
                 return (int)ErrorCodes.duplicate_user;
             }
 
@@ -458,12 +458,12 @@ class ProcessDocuments
                 //Begin sponsorship if successful
                 if (persID > 0)
                     sendEmails.SendSponsorshipEMail(persID);
-                log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.successfully_processed, (int)ErrorCodes.successfully_processed));
+                log.Info(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.successfully_processed, (int)ErrorCodes.successfully_processed));
                 return (int)ErrorCodes.successfully_processed;
             }
             else
             {
-                log.Error(String.Format("Form failed validation for user {0}", ciwInformation.First().FullNameForLog));
+                log.Warn(String.Format("Form failed validation for user {0}", ciwInformation.First().FullNameForLog));
 
                 //E-Mail Failure Template
                 //Send error email
@@ -481,7 +481,7 @@ class ProcessDocuments
                 //send error email which contains a list of each sections errors
                 sendEmails.SendErrors(ValidationErrors.Item1, ValidationErrors.Item2, ValidationErrors.Item3,
                                        ValidationErrors.Item4, ValidationErrors.Item5, ValidationErrors.Item6);
-                log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.failed_validation, (int)ErrorCodes.failed_validation));
+                log.Warn(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.failed_validation, (int)ErrorCodes.failed_validation));
                 return (int)ErrorCodes.failed_validation;
             }
         }
