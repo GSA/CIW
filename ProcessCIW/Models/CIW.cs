@@ -57,6 +57,10 @@ namespace ProcessCIW.Models
             set { _VersionNumber = value; }
         }
 
+        public string PlaceOfBirthCountryName { get; set; }
+        public string HomeCountryName { get; set; }
+        public string CitizenCountryName { get; set; }
+
         public string FirstName { get; set; }
         public string MiddleName { get; set; }
         public string LastName { get; set; }
