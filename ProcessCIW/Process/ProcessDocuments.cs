@@ -420,9 +420,10 @@ class ProcessDocuments
 
         private void ApplyFipsCodes(ref List<CIW> ciw, DataSet ds)
         {
-            ciw[0].HomeAddressCountry = ds.Tables[0].Rows[0].ItemArray[0].ToString();
-            ciw[0].CitzenshipCountry = ds.Tables[1].Rows[0].ItemArray[0].ToString();
-            ciw[0].PlaceOfBirthCountry = ds.Tables[2].Rows[0].ItemArray[0].ToString();
+            ciw[0].PlaceOfBirthCountry = ds.Tables[0].Rows[0].ItemArray[0].ToString();
+            ciw[0].HomeAddressCountry = ds.Tables[1].Rows[0].ItemArray[0].ToString();
+            ciw[0].CitzenshipCountry = ds.Tables[2].Rows[0].ItemArray[0].ToString();
+            
         }
 
         /// <summary>
