@@ -52,6 +52,53 @@ class ProcessDocuments
             config.IsHeaderCaseSensitive = false;
             config.TrimFields = false;
         }
+                
+        private DataSet GetFipsCodeFromCountryName(string placeOfBirthCountryName, string homeCountryName, string citizenshipCountryName)
+        {
+            DataSet DS = new DataSet();
+
+            log.Info("Getting fips code from database");
+            MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString());
+            try
+            {
+                using (conn)
+                {                    
+                    using (MySqlCommand cmd = new MySqlCommand("uspGetFipsCode"))
+                    {
+                        using (MySqlDataAdapter DA = new MySqlDataAdapter(cmd))
+                        {
+                            cmd.Connection = conn;
+                            cmd.CommandType = CommandType.StoredProcedure;
+                            cmd.Parameters.Clear();
+
+                            MySqlParameter[] userParameters = new MySqlParameter[]
+                            {
+                            new MySqlParameter { ParameterName = "placeOfBirthCountryNameShort", Value = placeOfBirthCountryName, MySqlDbType = MySqlDbType.VarChar, Size = 60, Direction = ParameterDirection.Input },
+                            new MySqlParameter { ParameterName = "homeCountryName", Value = homeCountryName, MySqlDbType = MySqlDbType.VarChar, Size = 60, Direction = ParameterDirection.Input },
+                            new MySqlParameter { ParameterName = "citizenshipCountryName", Value = citizenshipCountryName, MySqlDbType = MySqlDbType.VarChar, Size = 60, Direction = ParameterDirection.Input },
+
+                            new MySqlParameter { ParameterName = "SQLExceptionWarning", MySqlDbType = MySqlDbType.VarChar, Direction = ParameterDirection.Output }
+                            };
+
+                            cmd.Parameters.AddRange(userParameters);
+
+                            conn.Open();
+                            DA.Fill(DS);
+
+
+                            log.Info(String.Format("Get Fips code returned {0}, {1}, and {2}", DS.Tables[0].Rows[0].ItemArray[0].ToString(), DS.Tables[1].Rows[0].ItemArray[0].ToString(), DS.Tables[2].Rows[0].ItemArray[0].ToString()));
+
+                            return DS;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error(ex.Message + " - " + ex.InnerException);
+                throw;
+            }
+        }
 
         /// <summary>
         /// Gets a list of unprocessed files by calling a stored procedure
@@ -215,6 +262,21 @@ class ProcessDocuments
                     var versionNode = xml.SelectSingleNode(string.Format("w:body/w:tbl/w:tr/w:tc/w:tbl/w:tr/w:tc"), nameSpaceManager).NextSibling;
                     ciwInformation.Add(new CIWData { InnerText = versionNode.InnerText, TagName = versionNode.ChildNodes[1].ChildNodes[0].ChildNodes[1].Attributes[0].Value });
 
+                    //get pob country name
+                    var placeOfBirthCountryNode = xml.FirstChild.ChildNodes[2].ChildNodes[4].ChildNodes[4];                    
+                    var pobTagname = placeOfBirthCountryNode.ChildNodes[2].FirstChild.ChildNodes[1].Attributes[0].Value;
+                    ciwInformation.Add(new CIWData { InnerText = placeOfBirthCountryNode.LastChild.InnerText, TagName = pobTagname + "2" });
+
+                    //get home country name
+                    var homeCountry = xml.FirstChild.ChildNodes[2].ChildNodes[6].ChildNodes[2].LastChild.InnerText;
+                    var homeTag = xml.FirstChild.ChildNodes[2].ChildNodes[6].ChildNodes[2].ChildNodes[2].FirstChild.ChildNodes[1].Attributes[0].Value;
+                    ciwInformation.Add(new CIWData { InnerText=homeCountry, TagName=homeTag+"2" });
+                    
+                    //get citizenship country
+                    var citizenCountry = xml.FirstChild.ChildNodes[2].ChildNodes[9].ChildNodes[4].ChildNodes[2].InnerText;
+                    var citizenTag = xml.FirstChild.ChildNodes[2].ChildNodes[9].ChildNodes[4].ChildNodes[2].FirstChild.ChildNodes[1].Attributes[0].Value;
+                    ciwInformation.Add(new CIWData { InnerText=citizenCountry, TagName=citizenTag+"2" });
+
                     //get all table cells and add them after the version in ciwInformation
                     ciwInformation.AddRange( tableCells
                                         .Select
@@ -356,6 +418,14 @@ class ProcessDocuments
             return ciwInformation.First().ContractorType == "Child Care" || ciwInformation.First().InvestigationTypeRequested == "Tier 1C";
         }
 
+        private void ApplyFipsCodes(ref List<CIW> ciw, DataSet ds)
+        {
+            ciw[0].PlaceOfBirthCountry = ds.Tables[0].Rows[0].ItemArray[0].ToString();
+            ciw[0].HomeAddressCountry = ds.Tables[1].Rows[0].ItemArray[0].ToString();
+            ciw[0].CitzenshipCountry = ds.Tables[2].Rows[0].ItemArray[0].ToString();
+            
+        }
+
         /// <summary>
         /// Processes data after CIW converted to CSV
         /// </summary>
@@ -376,6 +446,10 @@ class ProcessDocuments
 
             //Gets list of CIW's after mapping from csv files
             ciwInformation = GetFileData<CIW, CIWMapping>(filePath, config);
+
+            DataSet fipsCodes = GetFipsCodeFromCountryName(ciwInformation[0].PlaceOfBirthCountryName, ciwInformation[0].HomeCountryName, ciwInformation[0].CitizenCountryName);
+
+            ApplyFipsCodes(ref ciwInformation, fipsCodes);
 
             CIWEMails sendEmails = new CIWEMails(uploaderID, ciwInformation.First().FirstName, ciwInformation.First().MiddleName,
                                                  ciwInformation.First().LastName, ciwInformation.First().Suffix, Path.GetFileName(filePath),
