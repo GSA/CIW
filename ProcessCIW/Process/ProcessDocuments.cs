@@ -85,9 +85,14 @@ class ProcessDocuments
                             conn.Open();
                             DA.Fill(DS);
 
-
-                            log.Info(String.Format("Get Fips code returned {0}, {1}, and {2}", DS.Tables[0].Rows[0].ItemArray[0].ToString(), DS.Tables[1].Rows[0].ItemArray[0].ToString(), DS.Tables[2].Rows[0].ItemArray[0].ToString()));
-
+                            if(DS.Tables[0].Rows.Count > 0 && DS.Tables[1].Rows.Count > 0 && DS.Tables[2].Rows.Count > 0)
+                            {
+                                log.Info(String.Format("Get Fips code returned {0}, {1}, and {2}", DS.Tables[0].Rows[0].ItemArray[0].ToString(), DS.Tables[1].Rows[0].ItemArray[0].ToString(), DS.Tables[2].Rows[0].ItemArray[0].ToString()));
+                            }
+                            else
+                            {
+                                log.Warn("Dataset has an empty row. Can be caused by not selecting a country.");
+                            }
                             return DS;
                         }
                     }
@@ -420,10 +425,9 @@ class ProcessDocuments
 
         private void ApplyFipsCodes(ref List<CIW> ciw, DataSet ds)
         {
-            ciw[0].PlaceOfBirthCountry = ds.Tables[0].Rows[0].ItemArray[0].ToString();
-            ciw[0].HomeAddressCountry = ds.Tables[1].Rows[0].ItemArray[0].ToString();
-            ciw[0].CitzenshipCountry = ds.Tables[2].Rows[0].ItemArray[0].ToString();
-            
+            ciw[0].PlaceOfBirthCountry = ds.Tables[0].Rows.Count > 0 ? ds.Tables[0].Rows[0].ItemArray[0].ToString() : string.Empty;
+            ciw[0].HomeAddressCountry = ds.Tables[1].Rows.Count > 0 ? ds.Tables[1].Rows[0].ItemArray[0].ToString() : string.Empty;
+            ciw[0].CitzenshipCountry = ds.Tables[2].Rows.Count > 0 ? ds.Tables[2].Rows[0].ItemArray[0].ToString() : string.Empty;
         }
 
         /// <summary>
