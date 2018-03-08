@@ -113,7 +113,6 @@ namespace ProcessCIW
                     //Process the data retrieved from the CIW
                     processedResult = pd.ProcessCIWInformation(ciwFile.PersID, tempFile, true);
 
-
                     log.Info(string.Format("ProcessCIWInformation returned with result: {0}", GetErrorMessage(processedResult)));
                     //Update the status of processing the file in the database
                     pd.UpdateProcessed(ciwFile.ID, processedResult);
@@ -197,6 +196,7 @@ namespace ProcessCIW
 
                     //Processes data retrieved from CIW
                     processedResult = pd.ProcessCIWInformation(ciwFile.PersID, tempFile, true);
+
                     log.Info(string.Format("ProcessCIWInformation returned with result: {0}", processedResult == 1 ? "File processed successfully" : processedResult == 0 ? "File remains unprocessed" : "File failed processing"));
 
                     //Mark status of processed file in the database
