@@ -386,9 +386,9 @@ namespace ProcessCIW.Process
             {
                 log.Info("Begin Sponsorship E-Mail");
                 log.Info(string.Format("Sending Sponsorship E-Mail using ID: {0}", id));
-                log.Info(string.Format("Using Default Email: {0}", defaultEMail ));
-                log.Info(string.Format("Subject: {0}", subject));
-                log.Info(string.Format("Zonal email is: {0}",zonalEMail));
+                log.Info(string.Format("Using Default Email: {0}", ConfigurationManager.AppSettings["DEFAULTEMAIL"] ));
+                //log.Info(string.Format("Subject: {0}", subject));
+                //log.Info(string.Format("Zonal email is: {0}",zonalEMail));
                 log.Info(string.Format("isChildCareWorker: {0}", isChildCareWorker));
 
                 sendNotification = new Suitability.SendNotification(
