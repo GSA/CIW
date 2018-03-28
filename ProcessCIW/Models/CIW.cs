@@ -15,6 +15,9 @@ namespace ProcessCIW.Models
         del TrimPhone = new del(Utilities.Utilities.TrimPhoneNum);
 
         //List of backing fields
+        private string _FirstName;
+        private string _MiddleName;
+        private string _LastName;
         private string _PhoneNumberWork;
         private string _PhoneNumberWorkCell;
         private string _ContractPOCPhoneWork;
@@ -61,9 +64,22 @@ namespace ProcessCIW.Models
         public string HomeCountryName { get; set; }
         public string CitizenCountryName { get; set; }
 
-        public string FirstName { get; set; }
-        public string MiddleName { get; set; }
-        public string LastName { get; set; }
+        //Trim 3 name parts
+        public string FirstName
+        {
+            get { return _FirstName; }
+            set { _FirstName = value.Trim(); }
+        }
+        public string MiddleName
+        {
+            get { return _MiddleName; }
+            set { _MiddleName = value.Trim(); }
+        }
+        public string LastName
+        {
+            get { return _LastName; }
+            set { _LastName = value.Trim(); }
+        }
 
         //If suffix value is "N/A", stores an empty string
         public string Suffix
