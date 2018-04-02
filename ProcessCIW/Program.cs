@@ -106,13 +106,13 @@ namespace ProcessCIW
                 //Get data from CIW
                 string tempFile = pd.GetCIWInformation(ciwFile.PersID, filePath, ciwFile.FileName, out errorCode);
 
-
                 if (tempFile != null)
                 {
                     log.Info(string.Format("GetCIWInformation returned with temp file {0}.", tempFile));
 
                     //Process the data retrieved from the CIW
                     processedResult = pd.ProcessCIWInformation(ciwFile.PersID, tempFile, true);
+
                     log.Info(string.Format("ProcessCIWInformation returned with result: {0}", GetErrorMessage(processedResult)));
                     //Update the status of processing the file in the database
                     pd.UpdateProcessed(ciwFile.ID, processedResult);
@@ -189,7 +189,6 @@ namespace ProcessCIW
 
                 //Gets data from CIW
                 string tempFile = pd.GetCIWInformation(ciwFile.PersID, decryptedFile, ciwFile.FileName, out errorCode);
-
 
                 if (tempFile != null)
                 {
