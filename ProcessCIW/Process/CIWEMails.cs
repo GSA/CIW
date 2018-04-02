@@ -381,9 +381,15 @@ namespace ProcessCIW.Process
         /// <param name="id"></param>
         public void SendSponsorshipEMail(int id)
         {
+            
             try
             {
                 log.Info("Begin Sponsorship E-Mail");
+                log.Info(string.Format("Sending Sponsorship E-Mail using ID: {0}", id));
+                log.Info(string.Format("Using Default Email: {0}", ConfigurationManager.AppSettings["DEFAULTEMAIL"] ));
+                //log.Info(string.Format("Subject: {0}", subject));
+                //log.Info(string.Format("Zonal email is: {0}",zonalEMail));
+                log.Info(string.Format("isChildCareWorker: {0}", isChildCareWorker));
 
                 sendNotification = new Suitability.SendNotification(
                                     ConfigurationManager.AppSettings["DEFAULTEMAIL"],
@@ -393,10 +399,12 @@ namespace ProcessCIW.Process
                                     ConfigurationManager.AppSettings["ONBOARDINGLOCATION"]);
 
                 sendNotification.SendSponsorshipNotification();
+
+                log.Info("Finished sending sponsorship notification");
             }
             catch (Exception ex)
             {
-                log.Error("E-Mailing: " + ex.Message + " - " + ex.InnerException);
+                log.Error("Error E-Mailing Sponsorship: " + ex.Message + " - " + ex.InnerException);
             }
         }
     }

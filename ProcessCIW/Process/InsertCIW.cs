@@ -244,7 +244,7 @@ namespace ProcessCIW
                     //Not on CIW
 	                new MySqlParameter { ParameterName = "PersGUID", Value = persGuid, MySqlDbType=MySqlDbType.VarChar, Size=36, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "PersHashedSSN", Value = hashedSSNFull, MySqlDbType=MySqlDbType.VarBinary, Size=32, Direction = ParameterDirection.Input },
-                    new MySqlParameter { ParameterName = "PersHashedSSNLastFour", Value = hashedSSNFour, MySqlDbType=MySqlDbType.VarChar, Size=40, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "PersHashedSSNLastFour", Value = hashedSSNFour, MySqlDbType=MySqlDbType.VarBinary, Size=32, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "UploaderID", Value = uploaderID, MySqlDbType=MySqlDbType.Int32, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "PersID", MySqlDbType=MySqlDbType.Int32, Direction = ParameterDirection.Output },
                     new MySqlParameter { ParameterName = "SQLExceptionWarning", MySqlDbType=MySqlDbType.VarChar, Size=4000, Direction = ParameterDirection.Output },
