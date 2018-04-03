@@ -559,6 +559,7 @@ class ProcessDocuments
                 sendEmails.SendErrors(ValidationErrors.Item1, ValidationErrors.Item2, ValidationErrors.Item3,
                                        ValidationErrors.Item4, ValidationErrors.Item5, ValidationErrors.Item6);
                 log.Warn(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.failed_validation, (int)ErrorCodes.failed_validation));
+
                 return (int)ErrorCodes.failed_validation;
             }
         }
