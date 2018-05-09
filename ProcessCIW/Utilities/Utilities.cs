@@ -179,9 +179,7 @@ namespace ProcessCIW.Utilities
             byte[] hashedSSN = null;
 
             SHA256 shaM = new SHA256Managed();
-
-            ssn = ssn.Replace("-", string.Empty).Trim();
-
+            
             //Using UTF8 because this only contains ASCII text
             hashedSSN = shaM.ComputeHash(Encoding.UTF8.GetBytes(ssn));
 

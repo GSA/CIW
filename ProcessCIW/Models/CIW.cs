@@ -44,6 +44,7 @@ namespace ProcessCIW.Models
         private string _SponsorAlternateEmailAddress2;
         private string _SponsorAlternateEmailAddress3;
         private string _SponsorAlternateEmailAddress4;
+        private string _SocialSecurityNumber;
 
         //_ApproximiateInvestigationDate is the pers_prior_investigation_date
         private string _ApproximiateInvestigationDate;
@@ -89,7 +90,11 @@ namespace ProcessCIW.Models
         }
 
         public string Sex { get; set; } 
-        public string SocialSecurityNumber { get; set; }
+        public string SocialSecurityNumber
+        {
+            get { return _SocialSecurityNumber; }
+            set { _SocialSecurityNumber = value.Replace("-", string.Empty).Replace(" ", string.Empty).Trim(); }
+        }
         public string DateOfBirth { get; set; }
         public string PlaceOfBirthCity { get; set; }
         public string PlaceOfBirthCountry { get; set; }
