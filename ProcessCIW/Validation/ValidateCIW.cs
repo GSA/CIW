@@ -61,7 +61,7 @@ namespace ProcessCIW.Validation
                         MySqlParameter[] userParameters = new MySqlParameter[]
                         {
                             new MySqlParameter { ParameterName = "lastName", Value = lastName, MySqlDbType = MySqlDbType.VarChar, Size = 60, Direction = ParameterDirection.Input },
-                            new MySqlParameter { ParameterName = "personSSN", Value = ssn.Replace("-","").Replace(" ", ""), MySqlDbType = MySqlDbType.VarChar, Size = 20, Direction = ParameterDirection.Input },
+                            new MySqlParameter { ParameterName = "personSSN", Value = ssn, MySqlDbType = MySqlDbType.VarChar, Size = 20, Direction = ParameterDirection.Input },
                             new MySqlParameter { ParameterName = "personDOB", Value = U.Utilities.FormatDate(dob), MySqlDbType = MySqlDbType.VarChar, Size = 20, Direction = ParameterDirection.Input },
                             new MySqlParameter { ParameterName = "rowsReturned", MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Output }
                         };
@@ -441,7 +441,7 @@ namespace ProcessCIW.Validation
 
                         MySqlParameter[] userParameters = new MySqlParameter[]
                         {
-                            new MySqlParameter { ParameterName = "personSSN", Value = ssn.Replace("-","").Replace(" ", ""), MySqlDbType = MySqlDbType.VarChar, Size = 20, Direction = ParameterDirection.Input },
+                            new MySqlParameter { ParameterName = "personSSN", Value = ssn, MySqlDbType = MySqlDbType.VarChar, Size = 20, Direction = ParameterDirection.Input },
                             new MySqlParameter { ParameterName = "duplicateSSN", MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Output }
                         };
 
