@@ -105,7 +105,7 @@ namespace ProcessCIW.Validation
                     .WithMessage("Full Last Name(s)(Family): exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
                     .NotEmpty()
                     .WithMessage("Full Last Name(s)(Family): Required Field")
-                    .Matches(@"^[a-zA-Z \-\‘\’\']+$")
+                    .Matches(@"^[a-zA-Z \-\‘\’\'\`]+$")
                     .WithMessage("Full Last Name(s)(Family): Contains Invalid Characters");
 
             //First Name
@@ -114,7 +114,7 @@ namespace ProcessCIW.Validation
                     .WithMessage("Full First Name(Given): exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
                     .NotEmpty()
                     .WithMessage("Full First Name(Given): Required Field")
-                    .Matches(@"^[a-zA-Z \-\‘\’\']+$")
+                    .Matches(@"^[a-zA-Z \-\‘\’\'\`]+$")
                     .WithMessage("Full First Name(Given): Contains Invalid Characters");
 
             //Middle Name
@@ -123,7 +123,7 @@ namespace ProcessCIW.Validation
                     .WithMessage("Full Middle Name(or NMN if none): exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
                     .NotEmpty()
                     .WithMessage("Full Middle Name(or NMN if none): Required Field")
-                    .Matches(@"^[A-Za-z \\-\\\']{1,40}|[NMN]{1,3}$")
+                    .Matches(@"^[A-Za-z \-\‘\’\'\`]{1,40}|[NMN]{1,3}$")
                     .WithMessage("Full Middle Name(or NMN if none): Contains Invalid Characters");
 
             //Suffix
@@ -630,7 +630,7 @@ namespace ProcessCIW.Validation
                         .WithMessage("Primary Company Point of Contact(POC) First Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
                         .NotEmpty()
                         .WithMessage("Primary Company Point of Contact(POC) First Name: Required Field")
-                        .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
+                        .Matches(@"^[a-zA-Z \-\‘\’\'\`]{1,45}$")
                         .WithMessage("Primary Company Point of Contact(POC) First Name: Contains Invalid Characters");
 
                 RuleFor(contractInformation => contractInformation.ContractPOCLastName)
@@ -638,7 +638,7 @@ namespace ProcessCIW.Validation
                         .WithMessage("Primary Company Point of Contact(POC) Last Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
                         .NotEmpty()
                         .WithMessage("Primary Company Point of Contact(POC) Last Name: Required Field")
-                        .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
+                        .Matches(@"^[a-zA-Z \-\‘\’\'\`]{1,45}$")
                         .WithMessage("Primary Company Point of Contact(POC) Last Name: Contains Invalid Characters");
 
                 RuleFor(contractInformation => contractInformation.ContractPOCPhoneWork)
@@ -665,7 +665,7 @@ namespace ProcessCIW.Validation
                                     .WithMessage("Alternate Company Point of Contact(POC) 1: First Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
                                     .NotEmpty()
                                     .WithMessage("Alternate Company Point of Contact(POC) 1: First Name: Required Field")
-                                    .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
+                                    .Matches(@"^[a-zA-Z \-\‘\’\'\`]{1,45}$")
                                     .WithMessage("Alternate Company Point of Contact(POC) 1: First Name: Contains Invalid Characters");
 
                                RuleFor(r => r.ContractPOCAlternatePocLastname1)
@@ -673,7 +673,7 @@ namespace ProcessCIW.Validation
                                     .WithMessage("Alternate Company Point of Contact(POC) 1: Last Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
                                     .NotEmpty()
                                     .WithMessage("Alternate Company Point of Contact(POC) 1: Last Name: Required Field")
-                                    .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
+                                    .Matches(@"^[a-zA-Z \-\‘\’\'\`]{1,45}$")
                                     .WithMessage("Alternate Company Point of Contact(POC) 1: Last Name: Contains Invalid Characters");
 
                                RuleFor(r => r.ContractPOCAlternatePocPhoneWork1)
@@ -701,7 +701,7 @@ namespace ProcessCIW.Validation
                                     .WithMessage("Alternate Company Point of Contact(POC) 2: First Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
                                     .NotEmpty()
                                     .WithMessage("Alternate Company Point of Contact(POC) 2: First Name: Required Field")
-                                    .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
+                                    .Matches(@"^[a-zA-Z \-\‘\’\'\`]{1,45}$")
                                     .WithMessage("Alternate Company Point of Contact(POC) 2: First Name: Contains Invalid Characters");
 
                                RuleFor(r => r.ContractPOCAlternatePocLastname2)
@@ -709,7 +709,7 @@ namespace ProcessCIW.Validation
                                     .WithMessage("Alternate Company Point of Contact(POC) 2: Last Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
                                     .NotEmpty()
                                     .WithMessage("Alternate Company Point of Contact(POC) 2: Last Name: Required Field")
-                                    .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
+                                    .Matches(@"^[a-zA-Z \-\‘\’\'\`]{1,45}$")
                                     .WithMessage("Alternate Company Point of Contact(POC) 2: Last Name: Contains Invalid Characters");
 
                                RuleFor(r => r.ContractPOCAlternatePocPhoneWork2)
@@ -738,7 +738,7 @@ namespace ProcessCIW.Validation
                                     .WithMessage("Alternate Company Point of Contact(POC) 3: First Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
                                     .NotEmpty()
                                     .WithMessage("Alternate Company Point of Contact(POC) 3: First Name: Required Field")
-                                    .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
+                                    .Matches(@"^[a-zA-Z \-\‘\’\'\`]{1,45}$")
                                     .WithMessage("Alternate Company Point of Contact(POC) 3: First Name: Contains Invalid Characters");
 
                                RuleFor(r => r.ContractPOCAlternatePocLastname3)
@@ -746,7 +746,7 @@ namespace ProcessCIW.Validation
                                     .WithMessage("Alternate Company Point of Contact(POC) 3: Last Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
                                     .NotEmpty()
                                     .WithMessage("Alternate Company Point of Contact(POC) 3: Last Name: Required Field")
-                                    .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
+                                    .Matches(@"^[a-zA-Z \-\‘\’\'\`]{1,45}$")
                                     .WithMessage("Alternate Company Point of Contact(POC) 3: Last Name: Contains Invalid Characters");
 
                                RuleFor(r => r.ContractPOCAlternatePocPhoneWork3)
@@ -775,7 +775,7 @@ namespace ProcessCIW.Validation
                                     .WithMessage("Alternate Company Point of Contact(POC) 4: First Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
                                     .NotEmpty()
                                     .WithMessage("Alternate Company Point of Contact(POC) 4: First Name: Required Field")
-                                    .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
+                                    .Matches(@"^[a-zA-Z \-\‘\’\'\`]{1,45}$")
                                     .WithMessage("Alternate Company Point of Contact(POC) 4: First Name: Contains Invalid Characters");
 
                                RuleFor(r => r.ContractPOCAlternatePocLastname4)
@@ -783,7 +783,7 @@ namespace ProcessCIW.Validation
                                     .WithMessage("Alternate Company Point of Contact(POC) 4: Last Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
                                     .NotEmpty()
                                     .WithMessage("Alternate Company Point of Contact(POC) 4: Last Name: Required Field")
-                                    .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
+                                    .Matches(@"^[a-zA-Z \-\‘\’\'\`]{1,45}$")
                                     .WithMessage("Alternate Company Point of Contact(POC) 4: Last Name: Contains Invalid Characters");
 
                                RuleFor(r => r.ContractPOCAlternatePocPhoneWork4)
