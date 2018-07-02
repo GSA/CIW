@@ -45,6 +45,9 @@ namespace ProcessCIW.Models
         private string _SponsorAlternateEmailAddress3;
         private string _SponsorAlternateEmailAddress4;
         private string _SocialSecurityNumber;
+        private string _HomeAddressOne;
+        private string _HomeAddressTwo;
+        private string _HomeAddressCity;
 
         //_ApproximiateInvestigationDate is the pers_prior_investigation_date
         private string _ApproximiateInvestigationDate;
@@ -100,9 +103,23 @@ namespace ProcessCIW.Models
         public string PlaceOfBirthCountry { get; set; }
         public string PlaceOfBirthState { get; set; }
         public string PlaceOfBirthMexicoCanada { get; set; }
-        public string HomeAddressOne { get; set; }
-        public string HomeAddressTwo { get; set; }
-        public string HomeAddressCity { get; set; }
+
+        //Remove # sign from addresses, mso does not support, 7-2-2018
+        public string HomeAddressOne
+        {
+            get { return _HomeAddressOne; }
+            set { _HomeAddressOne = value.Replace("#", string.Empty); }
+        }
+        public string HomeAddressTwo
+        {
+            get { return _HomeAddressTwo; }
+            set { _HomeAddressTwo = value.Replace("#", string.Empty); }
+        }
+        public string HomeAddressCity
+        {
+            get { return _HomeAddressCity; }
+            set { _HomeAddressCity = value.Replace("#", string.Empty); }
+        }
         public string HomeAddressCountry { get; set; }
         public string HomeAddressUSState { get; set; }
         public string HomeAddressMexicoStateCanadaProvince { get; set; }
