@@ -12,7 +12,9 @@ namespace ProcessCIW.Models
     class CIW
     {
         delegate string del(string s);
-        del TrimPhone = new del(Utilities.Utilities.TrimPhoneNum);
+        readonly del TrimPhone = new del(Utilities.Utilities.TrimPhoneNum);
+        readonly del TrimPound = new del(Utilities.Utilities.TrimPoundSign);
+        readonly del CleanSsn = new del(Utilities.Utilities.CleanSsn);
 
         //List of backing fields
         private string _FirstName;
@@ -96,7 +98,7 @@ namespace ProcessCIW.Models
         public string SocialSecurityNumber
         {
             get { return _SocialSecurityNumber; }
-            set { _SocialSecurityNumber = value.Replace("-", string.Empty).Replace(" ", string.Empty).Trim(); }
+            set { _SocialSecurityNumber = CleanSsn(value); }
         }
         public string DateOfBirth { get; set; }
         public string PlaceOfBirthCity { get; set; }
@@ -108,18 +110,19 @@ namespace ProcessCIW.Models
         public string HomeAddressOne
         {
             get { return _HomeAddressOne; }
-            set { _HomeAddressOne = value.Replace("#", string.Empty); }
+            set { _HomeAddressOne = TrimPound(value); }
         }
         public string HomeAddressTwo
         {
             get { return _HomeAddressTwo; }
-            set { _HomeAddressTwo = value.Replace("#", string.Empty); }
+            set { _HomeAddressTwo = TrimPound(value); }
         }
         public string HomeAddressCity
         {
             get { return _HomeAddressCity; }
-            set { _HomeAddressCity = value.Replace("#", string.Empty); }
+            set { _HomeAddressCity = TrimPound(value); }
         }
+
         public string HomeAddressCountry { get; set; }
         public string HomeAddressUSState { get; set; }
         public string HomeAddressMexicoStateCanadaProvince { get; set; }
@@ -444,38 +447,7 @@ namespace ProcessCIW.Models
         public List<POC.VendorPOC> VendorPOC { get; set; }
 
         //List of GSAPOC's to iterate  through, checking for non empty lines
-        public List<POC.GSAPOC> GSAPOC { get; set; }
-
-        
-        /// <summary>
-        /// Property utilizing stringbuilder to generate a name string pre-pended with "Invalid CIW - " for email purposes
-        /// </summary>
-        //public string FullName                    *** no references ***
-        //{
-        //    get
-        //    {
-        //        StringBuilder fullName = new StringBuilder();
-
-        //        fullName.Append("Invalid CIW - ");
-        //        fullName.Append(LastName);
-        //        fullName.Append(" ");
-
-        //        if (!Suffix.Equals("N/A"))
-        //        {
-        //            fullName.Append(Suffix);
-        //        }
-
-        //        fullName.Append(",");
-        //        fullName.Append(" ");
-        //        fullName.Append(FirstName);
-        //        fullName.Append(" ");
-
-        //        if (!MiddleName.Equals("NMN"))
-        //            fullName.Append(MiddleName);
-
-        //        return fullName.ToString();
-        //    }
-        //}
+        public List<POC.GSAPOC> GSAPOC { get; set; }       
 
         /// <summary>
         /// Property utilizing StringBuilder to genererate a name field to be used in logging
