@@ -169,6 +169,16 @@ namespace ProcessCIW.Utilities
             return Regex.Replace(s, "[^0-9]", "");
         }
 
+        public static string TrimPoundSign(string s)
+        {
+            return s.Replace("#", string.Empty);
+        }
+
+        public static string CleanSsn(string s)
+        {
+            return s.Replace("-", string.Empty).Replace(" ", string.Empty).Trim();
+        }        
+
         /// <summary>
         /// SHA256 Hash of the SSN, pass in the full 9 or the last 4
         /// </summary>
