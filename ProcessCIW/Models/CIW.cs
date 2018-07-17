@@ -12,9 +12,14 @@ namespace ProcessCIW.Models
     class CIW
     {
         delegate string del(string s);
-        del TrimPhone = new del(Utilities.Utilities.TrimPhoneNum);
+        readonly del TrimPhone = new del(Utilities.Utilities.TrimPhoneNum);
+        readonly del TrimPound = new del(Utilities.Utilities.TrimPoundSign);
+        readonly del CleanSsn = new del(Utilities.Utilities.CleanSsn);
 
         //List of backing fields
+        private string _FirstName;
+        private string _MiddleName;
+        private string _LastName;
         private string _PhoneNumberWork;
         private string _PhoneNumberWorkCell;
         private string _ContractPOCPhoneWork;
@@ -41,6 +46,13 @@ namespace ProcessCIW.Models
         private string _SponsorAlternateEmailAddress2;
         private string _SponsorAlternateEmailAddress3;
         private string _SponsorAlternateEmailAddress4;
+        private string _SocialSecurityNumber;
+        private string _HomeAddressOne;
+        private string _HomeAddressTwo;
+        private string _HomeAddressCity;
+
+        //_ApproximiateInvestigationDate is the pers_prior_investigation_date
+        private string _ApproximiateInvestigationDate;
 
         /// <summary>
         /// Section 1
@@ -54,9 +66,26 @@ namespace ProcessCIW.Models
             set { _VersionNumber = value; }
         }
 
-        public string FirstName { get; set; }
-        public string MiddleName { get; set; }
-        public string LastName { get; set; }
+        public string PlaceOfBirthCountryName { get; set; }
+        public string HomeCountryName { get; set; }
+        public string CitizenCountryName { get; set; }
+
+        //Trim 3 name parts
+        public string FirstName
+        {
+            get { return _FirstName; }
+            set { _FirstName = value.Trim(); }
+        }
+        public string MiddleName
+        {
+            get { return _MiddleName; }
+            set { _MiddleName = value.Trim(); }
+        }
+        public string LastName
+        {
+            get { return _LastName; }
+            set { _LastName = value.Trim(); }
+        }
 
         //If suffix value is "N/A", stores an empty string
         public string Suffix
@@ -66,15 +95,34 @@ namespace ProcessCIW.Models
         }
 
         public string Sex { get; set; } 
-        public string SocialSecurityNumber { get; set; }
+        public string SocialSecurityNumber
+        {
+            get { return _SocialSecurityNumber; }
+            set { _SocialSecurityNumber = CleanSsn(value); }
+        }
         public string DateOfBirth { get; set; }
         public string PlaceOfBirthCity { get; set; }
         public string PlaceOfBirthCountry { get; set; }
         public string PlaceOfBirthState { get; set; }
         public string PlaceOfBirthMexicoCanada { get; set; }
-        public string HomeAddressOne { get; set; }
-        public string HomeAddressTwo { get; set; }
-        public string HomeAddressCity { get; set; }
+
+        //Remove # sign from addresses, mso does not support, 7-2-2018
+        public string HomeAddressOne
+        {
+            get { return _HomeAddressOne; }
+            set { _HomeAddressOne = TrimPound(value); }
+        }
+        public string HomeAddressTwo
+        {
+            get { return _HomeAddressTwo; }
+            set { _HomeAddressTwo = TrimPound(value); }
+        }
+        public string HomeAddressCity
+        {
+            get { return _HomeAddressCity; }
+            set { _HomeAddressCity = TrimPound(value); }
+        }
+
         public string HomeAddressCountry { get; set; }
         public string HomeAddressUSState { get; set; }
         public string HomeAddressMexicoStateCanadaProvince { get; set; }
@@ -109,7 +157,13 @@ namespace ProcessCIW.Models
 
         public string PositionJobTitle { get; set; }
         public string PriorInvestigation { get; set; }
-        public string ApproximiateInvestigationDate { get; set; }
+
+        //_ApproximiateInvestigationDate is the pers_prior_investigation_date
+        public string ApproximiateInvestigationDate
+        {
+            get { return _ApproximiateInvestigationDate; }
+            set { _ApproximiateInvestigationDate = value.Trim(); }
+        }
         public string AgencyAdjudicatedPriorInvestigation { get; set; }
         public string Citizen { get; set; }
         public string PortOfEntryUSCityAndState { get; set; }
@@ -393,40 +447,7 @@ namespace ProcessCIW.Models
         public List<POC.VendorPOC> VendorPOC { get; set; }
 
         //List of GSAPOC's to iterate  through, checking for non empty lines
-        public List<POC.GSAPOC> GSAPOC { get; set; }
-
-        //List of Nested fields used for a certain type of CIW errors
-        public List<CIWData> Dupes { get; set; }
-
-        /// <summary>
-        /// Property utilizing stringbuilder to generate a name string pre-pended with "Invalid CIW - " for email purposes
-        /// </summary>
-        //public string FullName                    *** no references ***
-        //{
-        //    get
-        //    {
-        //        StringBuilder fullName = new StringBuilder();
-
-        //        fullName.Append("Invalid CIW - ");
-        //        fullName.Append(LastName);
-        //        fullName.Append(" ");
-
-        //        if (!Suffix.Equals("N/A"))
-        //        {
-        //            fullName.Append(Suffix);
-        //        }
-
-        //        fullName.Append(",");
-        //        fullName.Append(" ");
-        //        fullName.Append(FirstName);
-        //        fullName.Append(" ");
-
-        //        if (!MiddleName.Equals("NMN"))
-        //            fullName.Append(MiddleName);
-
-        //        return fullName.ToString();
-        //    }
-        //}
+        public List<POC.GSAPOC> GSAPOC { get; set; }       
 
         /// <summary>
         /// Property utilizing StringBuilder to genererate a name field to be used in logging

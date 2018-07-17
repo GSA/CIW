@@ -101,7 +101,6 @@ namespace ProcessCIW
 
             foreach (var ciwFile in filesForProcessing)
             {
-				List<CIWData> dupes = new List<CIWData>();
                 string filePath = ConfigurationManager.AppSettings["CIWDEBUGFILELOCATION"] + ciwFile.FileName;
 
                 int errorCode;
@@ -109,14 +108,14 @@ namespace ProcessCIW
                 log.Info(string.Format("Processing file {0}", filePath));
 
                 //Get data from CIW
-                string tempFile = pd.GetCIWInformation(ciwFile.PersID, filePath, ciwFile.FileName, out dupes, out errorCode);
+                string tempFile = pd.GetCIWInformation(ciwFile.PersID, filePath, ciwFile.FileName, out errorCode);
 
                 if (tempFile != null)
                 {
-                    log.Info(string.Format("GetCIWInformation returned with temp file {0} and had {1} nested field(s).", tempFile, dupes.Count));
+                    log.Info(string.Format("GetCIWInformation returned with temp file {0}.", tempFile));
 
                     //Process the data retrieved from the CIW
-                    processedResult = pd.ProcessCIWInformation(ciwFile.PersID, tempFile, true, dupes);
+                    processedResult = pd.ProcessCIWInformation(ciwFile.PersID, tempFile, true);
 
                     log.Info(string.Format("ProcessCIWInformation returned with result: {0}", GetErrorMessage(processedResult)));
                     //Update the status of processing the file in the database
@@ -175,7 +174,6 @@ namespace ProcessCIW
 
             foreach (var ciwFile in filesForProcessing)
             {
-				List<CIWData> dupes;
                 string filePath = ConfigurationManager.AppSettings["CIWPRODUCTIONFILELOCATION"] + ciwFile.FileName;
                 int errorCode;
                 log.Info(string.Format("Processing file {0}", filePath));
@@ -194,15 +192,14 @@ namespace ProcessCIW
                 buffer.WriteToFile(decryptedFile, Cryptography.Security.Decrypt, true);
 
                 //Gets data from CIW
-                string tempFile = pd.GetCIWInformation(ciwFile.PersID, decryptedFile, ciwFile.FileName, out dupes, out errorCode);
+                string tempFile = pd.GetCIWInformation(ciwFile.PersID, decryptedFile, ciwFile.FileName, out errorCode);
 
                 if (tempFile != null)
                 {
-
-                    log.Info(string.Format("GetCIWInformation returned with temp file {0} and had {1} nested field(s).", tempFile, dupes.Count));
+                    log.Info(string.Format("GetCIWInformation returned with temp file {0}.", tempFile));
 
                     //Processes data retrieved from CIW
-                    processedResult = pd.ProcessCIWInformation(ciwFile.PersID, tempFile, true, dupes);
+                    processedResult = pd.ProcessCIWInformation(ciwFile.PersID, tempFile, true);
 
                     log.Info(string.Format("ProcessCIWInformation returned with result: {0}", processedResult == 1 ? "File processed successfully" : processedResult == 0 ? "File remains unprocessed" : "File failed processing"));
 

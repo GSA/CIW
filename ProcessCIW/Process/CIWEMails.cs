@@ -226,19 +226,7 @@ namespace ProcessCIW.Process
                     log.Info(String.Format("GetUploaderInformation completed with PrefixedName:{0} UploaderWorkEmail:{1} UploaderMajorOrg:{2}", prefixedName, uploaderWorkEMail, uploaderMajorOrg));
                 }
             }
-        }
-
-        /// <summary>
-        /// Called when CIW is Child care worker
-        /// </summary>
-        //public void SendChildCareWorker()                 *** No references ***
-        //{
-        //    emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "Tier1CError.html");
-
-        //    log.Info(string.Format("Sending child care worker E-Mail"));
-
-        //    SendEMail(FormatSubject());
-        //}
+        }        
 
         /// <summary>
         /// Called when CIW is Wrong version
@@ -300,13 +288,13 @@ namespace ProcessCIW.Process
         /// <param name="s6"></param>
         /// <param name="nested_Err"></param>
         /// <param name="nested_List"></param>
-        public void SendErrors(ValidationResult s1, ValidationResult s2, ValidationResult s3, ValidationResult s4, ValidationResult s5, ValidationResult s6, ValidationResult nested_Err, List<CIWData> nested_List)
+        public void SendErrors(ValidationResult s1, ValidationResult s2, ValidationResult s3, ValidationResult s4, ValidationResult s5, ValidationResult s6)
         {
             log.Info(string.Format("Preparing to send errors - generating email body"));
 
             emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "Errors.html");
 
-            emailBody = emailBody.Replace("[GENERAL]", AddNestedErrors(nested_Err.Errors, nested_List));
+            emailBody = emailBody.Replace("[GENERAL]", "");
             emailBody = emailBody.Replace("[SECTION1]", AddErrors(s1.Errors));
             emailBody = emailBody.Replace("[SECTION2]", AddErrors(s2.Errors));
             emailBody = emailBody.Replace("[SECTION3]", AddErrors(s3.Errors));
@@ -393,9 +381,15 @@ namespace ProcessCIW.Process
         /// <param name="id"></param>
         public void SendSponsorshipEMail(int id)
         {
+            
             try
             {
                 log.Info("Begin Sponsorship E-Mail");
+                log.Info(string.Format("Sending Sponsorship E-Mail using ID: {0}", id));
+                log.Info(string.Format("Using Default Email: {0}", ConfigurationManager.AppSettings["DEFAULTEMAIL"] ));
+                //log.Info(string.Format("Subject: {0}", subject));
+                //log.Info(string.Format("Zonal email is: {0}",zonalEMail));
+                log.Info(string.Format("isChildCareWorker: {0}", isChildCareWorker));
 
                 sendNotification = new Suitability.SendNotification(
                                     ConfigurationManager.AppSettings["DEFAULTEMAIL"],
@@ -405,10 +399,12 @@ namespace ProcessCIW.Process
                                     ConfigurationManager.AppSettings["ONBOARDINGLOCATION"]);
 
                 sendNotification.SendSponsorshipNotification();
+
+                log.Info("Finished sending sponsorship notification");
             }
             catch (Exception ex)
             {
-                log.Error("E-Mailing: " + ex.Message + " - " + ex.InnerException);
+                log.Error("Error E-Mailing Sponsorship: " + ex.Message + " - " + ex.InnerException);
             }
         }
     }

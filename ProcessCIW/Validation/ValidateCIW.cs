@@ -13,54 +13,6 @@ using U = ProcessCIW.Utilities;
 namespace ProcessCIW.Validation
 {
     /// <summary>
-    /// Fluent Validation class to validate if tags are nested
-    /// </summary>
-	class HasNestedTagsValidator : AbstractValidator<CIW>
-    {
-        /// <summary>
-        /// Tests if any nested tags
-        /// </summary>
-        public HasNestedTagsValidator()
-        {
-            RuleFor(c => c.Dupes)
-                .Must((e, x) => VerifyEmptyDupes(e.Dupes));
-        }
-
-        /// <summary>
-        /// Creates a string of nested tags
-        /// </summary>
-        /// <param name="dupes"></param>
-        /// <returns>string of nested tags</returns>
-        public static string getCIWDataChildString(List<CIWData> dupes)
-        {
-            string _dupes = "";
-            foreach (var x in dupes)
-            {
-                if (dupes.LastOrDefault().Equals(x))
-                {
-                    _dupes += x.TagName;
-                }
-                else
-                {
-                    _dupes += x.TagName;
-                    _dupes += ", ";
-                }
-            }
-            return _dupes;
-        }
-
-        /// <summary>
-        /// Returns if dupes equals 0
-        /// </summary>
-        /// <param name="dupes"></param>
-        /// <returns>bool</returns>
-        public  bool VerifyEmptyDupes(List<CIWData> dupes)
-        {
-            return dupes.Count == 0;
-        }
-    }
-
-    /// <summary>
     /// Fluent Validation class to validate if user exists
     /// </summary>
     class UserExistsValidator : AbstractValidator<CIW>
@@ -109,7 +61,7 @@ namespace ProcessCIW.Validation
                         MySqlParameter[] userParameters = new MySqlParameter[]
                         {
                             new MySqlParameter { ParameterName = "lastName", Value = lastName, MySqlDbType = MySqlDbType.VarChar, Size = 60, Direction = ParameterDirection.Input },
-                            new MySqlParameter { ParameterName = "personSSN", Value = ssn.Replace("-","").Replace(" ", ""), MySqlDbType = MySqlDbType.VarChar, Size = 20, Direction = ParameterDirection.Input },
+                            new MySqlParameter { ParameterName = "personSSN", Value = ssn, MySqlDbType = MySqlDbType.VarChar, Size = 20, Direction = ParameterDirection.Input },
                             new MySqlParameter { ParameterName = "personDOB", Value = U.Utilities.FormatDate(dob), MySqlDbType = MySqlDbType.VarChar, Size = 20, Direction = ParameterDirection.Input },
                             new MySqlParameter { ParameterName = "rowsReturned", MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Output }
                         };
@@ -153,7 +105,7 @@ namespace ProcessCIW.Validation
                     .WithMessage("Full Last Name(s)(Family): exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
                     .NotEmpty()
                     .WithMessage("Full Last Name(s)(Family): Required Field")
-                    .Matches(@"^[a-zA-Z \-\‘\’\']+$")
+                    .Matches(@"^[a-zA-Z \-\‘\’\'\`]+$")
                     .WithMessage("Full Last Name(s)(Family): Contains Invalid Characters");
 
             //First Name
@@ -162,7 +114,7 @@ namespace ProcessCIW.Validation
                     .WithMessage("Full First Name(Given): exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
                     .NotEmpty()
                     .WithMessage("Full First Name(Given): Required Field")
-                    .Matches(@"^[a-zA-Z \-\‘\’\']+$")
+                    .Matches(@"^[a-zA-Z \-\‘\’\'\`]+$")
                     .WithMessage("Full First Name(Given): Contains Invalid Characters");
 
             //Middle Name
@@ -171,7 +123,7 @@ namespace ProcessCIW.Validation
                     .WithMessage("Full Middle Name(or NMN if none): exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
                     .NotEmpty()
                     .WithMessage("Full Middle Name(or NMN if none): Required Field")
-                    .Matches(@"^[A-Za-z \\-\\\']{1,40}|[NMN]{1,3}$")
+                    .Matches(@"^[A-Za-z \-\‘\’\'\`]{1,40}|[NMN]{1,3}$")
                     .WithMessage("Full Middle Name(or NMN if none): Contains Invalid Characters");
 
             //Suffix
@@ -389,8 +341,10 @@ namespace ProcessCIW.Validation
 
             //Agency Adjudicated Prior Investigation (When No)
             When(employee => employee.PriorInvestigation.Equals("No"), () =>
-            {
+            {                
                 RuleFor(employee => employee.ApproximiateInvestigationDate)
+                        .Must(U.Utilities.IsNotWhiteSpace)
+                        .WithMessage("Approx. Investigation Date: The date that you have entered contains only spaces and is not valid")
                         .Empty()
                         .WithMessage("Prior Investigation: The information regarding your previous background investigation requires your attention, please be advised that when indicating 'No' in the Prior Investigation field, Approx. Investigation Date field must be left blank");
 
@@ -487,7 +441,7 @@ namespace ProcessCIW.Validation
 
                         MySqlParameter[] userParameters = new MySqlParameter[]
                         {
-                            new MySqlParameter { ParameterName = "personSSN", Value = ssn.Replace("-","").Replace(" ", ""), MySqlDbType = MySqlDbType.VarChar, Size = 20, Direction = ParameterDirection.Input },
+                            new MySqlParameter { ParameterName = "personSSN", Value = ssn, MySqlDbType = MySqlDbType.VarChar, Size = 20, Direction = ParameterDirection.Input },
                             new MySqlParameter { ParameterName = "duplicateSSN", MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Output }
                         };
 
@@ -596,6 +550,9 @@ namespace ProcessCIW.Validation
                     .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Required Field");
 
                 //Contract Number Type
+                RuleFor(employee => employee.ContractNumberType)
+                    .NotEmpty()
+                    .WithMessage("Contract Number Type: Required Field");
 
                 //changes for contract dates to be used with child care changes
                 //This will be when neither is child care
@@ -673,7 +630,7 @@ namespace ProcessCIW.Validation
                         .WithMessage("Primary Company Point of Contact(POC) First Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
                         .NotEmpty()
                         .WithMessage("Primary Company Point of Contact(POC) First Name: Required Field")
-                        .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
+                        .Matches(@"^[a-zA-Z \-\‘\’\'\`]{1,45}$")
                         .WithMessage("Primary Company Point of Contact(POC) First Name: Contains Invalid Characters");
 
                 RuleFor(contractInformation => contractInformation.ContractPOCLastName)
@@ -681,7 +638,7 @@ namespace ProcessCIW.Validation
                         .WithMessage("Primary Company Point of Contact(POC) Last Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
                         .NotEmpty()
                         .WithMessage("Primary Company Point of Contact(POC) Last Name: Required Field")
-                        .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
+                        .Matches(@"^[a-zA-Z \-\‘\’\'\`]{1,45}$")
                         .WithMessage("Primary Company Point of Contact(POC) Last Name: Contains Invalid Characters");
 
                 RuleFor(contractInformation => contractInformation.ContractPOCPhoneWork)
@@ -708,7 +665,7 @@ namespace ProcessCIW.Validation
                                     .WithMessage("Alternate Company Point of Contact(POC) 1: First Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
                                     .NotEmpty()
                                     .WithMessage("Alternate Company Point of Contact(POC) 1: First Name: Required Field")
-                                    .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
+                                    .Matches(@"^[a-zA-Z \-\‘\’\'\`]{1,45}$")
                                     .WithMessage("Alternate Company Point of Contact(POC) 1: First Name: Contains Invalid Characters");
 
                                RuleFor(r => r.ContractPOCAlternatePocLastname1)
@@ -716,7 +673,7 @@ namespace ProcessCIW.Validation
                                     .WithMessage("Alternate Company Point of Contact(POC) 1: Last Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
                                     .NotEmpty()
                                     .WithMessage("Alternate Company Point of Contact(POC) 1: Last Name: Required Field")
-                                    .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
+                                    .Matches(@"^[a-zA-Z \-\‘\’\'\`]{1,45}$")
                                     .WithMessage("Alternate Company Point of Contact(POC) 1: Last Name: Contains Invalid Characters");
 
                                RuleFor(r => r.ContractPOCAlternatePocPhoneWork1)
@@ -744,7 +701,7 @@ namespace ProcessCIW.Validation
                                     .WithMessage("Alternate Company Point of Contact(POC) 2: First Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
                                     .NotEmpty()
                                     .WithMessage("Alternate Company Point of Contact(POC) 2: First Name: Required Field")
-                                    .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
+                                    .Matches(@"^[a-zA-Z \-\‘\’\'\`]{1,45}$")
                                     .WithMessage("Alternate Company Point of Contact(POC) 2: First Name: Contains Invalid Characters");
 
                                RuleFor(r => r.ContractPOCAlternatePocLastname2)
@@ -752,7 +709,7 @@ namespace ProcessCIW.Validation
                                     .WithMessage("Alternate Company Point of Contact(POC) 2: Last Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
                                     .NotEmpty()
                                     .WithMessage("Alternate Company Point of Contact(POC) 2: Last Name: Required Field")
-                                    .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
+                                    .Matches(@"^[a-zA-Z \-\‘\’\'\`]{1,45}$")
                                     .WithMessage("Alternate Company Point of Contact(POC) 2: Last Name: Contains Invalid Characters");
 
                                RuleFor(r => r.ContractPOCAlternatePocPhoneWork2)
@@ -781,7 +738,7 @@ namespace ProcessCIW.Validation
                                     .WithMessage("Alternate Company Point of Contact(POC) 3: First Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
                                     .NotEmpty()
                                     .WithMessage("Alternate Company Point of Contact(POC) 3: First Name: Required Field")
-                                    .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
+                                    .Matches(@"^[a-zA-Z \-\‘\’\'\`]{1,45}$")
                                     .WithMessage("Alternate Company Point of Contact(POC) 3: First Name: Contains Invalid Characters");
 
                                RuleFor(r => r.ContractPOCAlternatePocLastname3)
@@ -789,7 +746,7 @@ namespace ProcessCIW.Validation
                                     .WithMessage("Alternate Company Point of Contact(POC) 3: Last Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
                                     .NotEmpty()
                                     .WithMessage("Alternate Company Point of Contact(POC) 3: Last Name: Required Field")
-                                    .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
+                                    .Matches(@"^[a-zA-Z \-\‘\’\'\`]{1,45}$")
                                     .WithMessage("Alternate Company Point of Contact(POC) 3: Last Name: Contains Invalid Characters");
 
                                RuleFor(r => r.ContractPOCAlternatePocPhoneWork3)
@@ -818,7 +775,7 @@ namespace ProcessCIW.Validation
                                     .WithMessage("Alternate Company Point of Contact(POC) 4: First Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
                                     .NotEmpty()
                                     .WithMessage("Alternate Company Point of Contact(POC) 4: First Name: Required Field")
-                                    .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
+                                    .Matches(@"^[a-zA-Z \-\‘\’\'\`]{1,45}$")
                                     .WithMessage("Alternate Company Point of Contact(POC) 4: First Name: Contains Invalid Characters");
 
                                RuleFor(r => r.ContractPOCAlternatePocLastname4)
@@ -826,7 +783,7 @@ namespace ProcessCIW.Validation
                                     .WithMessage("Alternate Company Point of Contact(POC) 4: Last Name: exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
                                     .NotEmpty()
                                     .WithMessage("Alternate Company Point of Contact(POC) 4: Last Name: Required Field")
-                                    .Matches(@"^[a-zA-Z'\-\s]{1,45}$")
+                                    .Matches(@"^[a-zA-Z \-\‘\’\'\`]{1,45}$")
                                     .WithMessage("Alternate Company Point of Contact(POC) 4: Last Name: Contains Invalid Characters");
 
                                RuleFor(r => r.ContractPOCAlternatePocPhoneWork4)
@@ -1201,33 +1158,9 @@ namespace ProcessCIW.Validation
         ValidationResult section4 = new ValidationResult();
         ValidationResult section5 = new ValidationResult();
         ValidationResult section6 = new ValidationResult();
-		ValidationResult nested = new ValidationResult();
 
         public ValidateCIW()
         {
-        }
-
-        /// <summary>
-        /// Calls validation to check for nested fields
-        /// </summary>
-        /// <param name="ciwInformation"></param>
-        /// <returns></returns>
-		public bool IsNested(List<CIW> ciwInformation)
-        {
-            log.Info(string.Format("Checking if Fields are nested"));
-
-            HasNestedTagsValidator validator = new HasNestedTagsValidator();
-
-            nested = validator.Validate(ciwInformation.First());
-
-            bool nestedIsValid = nested.IsValid;
-
-            if (nestedIsValid)
-                log.Info(string.Format("No nested field(s)"));
-            else
-                log.Error(string.Format("Nested field(s) found"));
-
-            return nestedIsValid;
         }
 
         /// <summary>
@@ -1319,9 +1252,9 @@ namespace ProcessCIW.Validation
         /// Gets all errors
         /// </summary>
         /// <returns>Tuple of errors</returns>
-        public Tuple<ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult> GetErrors()
+        public Tuple<ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult> GetErrors()
         {
-            return new Tuple<ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult>(section1, section2, section3, section4, section5, section6, nested);
+            return new Tuple<ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult>(section1, section2, section3, section4, section5, section6);
         }
 
         /// <summary>
@@ -1348,11 +1281,11 @@ namespace ProcessCIW.Validation
                 //Print values only if not section 1 unless PropertyName is job title or part of name
                 if (section != 1 || rule.PropertyName == "PositionJobTitle" || rule.PropertyName == "LastName" || rule.PropertyName == "FirstName" || rule.PropertyName == "MiddleName")
                 {
-                    log.Error(string.Format("{0} failed with attempted value {1}", rule.PropertyName, String.IsNullOrWhiteSpace(rule.AttemptedValue.ToString()) ? "Empty" : '"' + rule.AttemptedValue.ToString() + '"'));
+                    log.Warn(string.Format("{0} failed with attempted value {1}", rule.PropertyName, String.IsNullOrWhiteSpace(rule.AttemptedValue.ToString()) ? "Empty" : '"' + rule.AttemptedValue.ToString() + '"'));
                 }
                 else
                 {
-                    log.Error(string.Format("{0} failed with attempted value {1}", rule.PropertyName, rule.AttemptedValue == null ? "Null" : rule.AttemptedValue.Equals("") ? "Empty" : "PII"));
+                    log.Warn(string.Format("{0} failed with attempted value {1}", rule.PropertyName, rule.AttemptedValue == null ? "Null" : rule.AttemptedValue.Equals("") ? "Empty" : "PII"));
                 }
             }
         }

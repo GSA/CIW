@@ -13,6 +13,21 @@ namespace ProcessCIW.Utilities
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
+        /// Returns false if string is white space
+        /// Return true if null or empty
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
+        public static bool IsNotWhiteSpace(string s)
+        {
+            if (s == null)
+                return true;
+            if (s.Length > 0)
+                return s.Trim().Length != 0;
+            else return true;
+        }
+
+        /// <summary>
         /// Checks if Start date is before end date and end date is later than current date
         /// </summary>
         /// <param name="contractStartDate"></param>
@@ -121,7 +136,7 @@ namespace ProcessCIW.Utilities
 
             if (DateTime.TryParse(date, out _birthDate))
             {
-                if ((_birthDate > DateTime.Now) || (_birthDate >= DateTime.Now.AddYears(-15)))
+                if ( (_birthDate > DateTime.Now) || (_birthDate >= DateTime.Now.AddYears(-15)) || (_birthDate < new DateTime(1900,1,1)) )
                     return false;
             }
             else
@@ -154,6 +169,16 @@ namespace ProcessCIW.Utilities
             return Regex.Replace(s, "[^0-9]", "");
         }
 
+        public static string TrimPoundSign(string s)
+        {
+            return s.Replace("#", string.Empty);
+        }
+
+        public static string CleanSsn(string s)
+        {
+            return s.Replace("-", string.Empty).Replace(" ", string.Empty).Trim();
+        }        
+
         /// <summary>
         /// SHA256 Hash of the SSN, pass in the full 9 or the last 4
         /// </summary>
@@ -164,9 +189,7 @@ namespace ProcessCIW.Utilities
             byte[] hashedSSN = null;
 
             SHA256 shaM = new SHA256Managed();
-
-            ssn = ssn.Replace("-", string.Empty).Trim();
-
+            
             //Using UTF8 because this only contains ASCII text
             hashedSSN = shaM.ComputeHash(Encoding.UTF8.GetBytes(ssn));
 
