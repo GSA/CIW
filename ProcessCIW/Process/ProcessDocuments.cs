@@ -581,16 +581,8 @@ class ProcessDocuments
         /// <param name="ciwData"></param>
         private string CreateTempFile(List<CIWData> ciwData)
         {
-             //Get first and last name
-            string first = ciwData.First(c => c.TagName == "Employee-FirstName").InnerText;
-            string last = ciwData.First(c => c.TagName == "Employee-LastName").InnerText;
-
-            //If either is null or empty then use placeholder name
-            first = (first == null ? "FirstNameNull" : (first == "" ? "FirstNameEmpty" : first));
-            last = (last == null ? "LastNameNull" : (last == "" ? "LastNameEmpty" : last));
-
-            //uses first 20 characters of first and last name and adds time stamp to end and then .csv
-            string csvFileName = first.Length >= 20 ? first.Substring(0, 20) : first.Substring(0, first.Length) + "_" + (last.Length >= 20 ? last.Substring(0, 20) : last.Substring(0, last.Length)) + "_" + DateTime.Now.ToString("MMddyyyy_HHmmss") + ".csv";
+            Guid guid = Guid.NewGuid();
+            string csvFileName = guid + ".csv";
 
             log.Info("CIW Info Count: " + ciwData.Count);
 
