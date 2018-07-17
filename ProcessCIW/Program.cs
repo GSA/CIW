@@ -25,7 +25,7 @@ namespace ProcessCIW
         {
             //Define unhandled exception delegate
             AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionTrap;
-            
+                        
             //used during logging
             stopWatch.Start();
 
@@ -222,6 +222,13 @@ namespace ProcessCIW
             }
         }
 
+        private static string GetErrorRecursive(Exception e)
+        {
+            if (e.InnerException == null)
+                return e.Message + '\n' + e.StackTrace;
+            else return e.Message + '\n' + e.StackTrace + '\n' + GetErrorRecursive(e.InnerException);
+        }
+
         private static string PrepareFatalErrorBody(string error)
         {
             string body = File.ReadAllText(ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"].ToString() + "FatalError.html");
@@ -232,6 +239,7 @@ namespace ProcessCIW
 
         static void UnhandledExceptionTrap(object sender, UnhandledExceptionEventArgs e)
         {
+            Exception ex = e.ExceptionObject as Exception;
             log.Fatal("Fatal Error has occurred!");
             log.Fatal(e.ExceptionObject.ToString());
             log.Fatal("Terminating!");
@@ -246,15 +254,15 @@ namespace ProcessCIW
                     "",                                                                 //cc
                     "",                                                                 //bcc
                     "FATAL ERROR IN CIW",                                               //subject
-                    PrepareFatalErrorBody(e.ExceptionObject.ToString()),                //body
+                    PrepareFatalErrorBody(GetErrorRecursive(ex)),                       //body
                     "",                                                                 //attachments
                     ConfigurationManager.AppSettings["SMTPSERVER"],                     //smtp
                     true                                                                //isbodyhtml
                 );
             }
-            catch (Exception ex)
+            catch (Exception x)
             {
-                log.Fatal("Fatal Email not sent due to :" + ex.Message + ex.StackTrace);
+                log.Fatal("Fatal Email not sent due to :" + x.Message + x.StackTrace);
             }            
             
             Environment.Exit(1);
