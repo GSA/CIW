@@ -1,5 +1,4 @@
-﻿
-namespace ProcessCIW.Models
+﻿namespace ProcessCIW.Models
 {
     /// <summary>
     /// POC class represents a single line of either VendorPOC's or GSAPOC's from the CIW form

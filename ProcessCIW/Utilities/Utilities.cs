@@ -1,6 +1,6 @@
-﻿using System;
+﻿using ProcessCIW.Interface;
+using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -8,9 +8,9 @@ using System.Text.RegularExpressions;
 
 namespace ProcessCIW.Utilities
 {
-    sealed class Utilities
+    sealed class Utilities : IUtilities
     {
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         /// Returns false if string is white space
@@ -18,7 +18,7 @@ namespace ProcessCIW.Utilities
         /// </summary>
         /// <param name="s"></param>
         /// <returns></returns>
-        public static bool IsNotWhiteSpace(string s)
+        public bool IsNotWhiteSpace(string s)
         {
             if (s == null)
                 return true;
@@ -33,7 +33,7 @@ namespace ProcessCIW.Utilities
         /// <param name="contractStartDate"></param>
         /// <param name="contractEndDate"></param>
         /// <returns>Bool</returns>
-        public static bool StartBeforeEnd(string StartDate, string EndDate)
+        public bool StartBeforeEnd(string StartDate, string EndDate)
         {
             //parse into datetime or icomparable data type then check if StartDate < EndDate
             //Note: string is comparable but strings in mm/dd/yyyy format cannot be compared properly
@@ -56,7 +56,7 @@ namespace ProcessCIW.Utilities
         /// </summary>
         /// <param name="End"></param>
         /// <returns></returns>
-        public static bool EndIsFutureDate(string End)
+        public bool EndIsFutureDate(string End)
         {
             //parse into datetime or icomparable data type then check if EndDate > DateTime.Now.Date
             //Note: string is comparable but strings in mm/dd/yyyy format cannot be compared properly
@@ -78,7 +78,7 @@ namespace ProcessCIW.Utilities
         /// </summary>
         /// <param name="Start"></param>
         /// <returns>Bool</returns>
-        public static bool BeAValidEndDate(string End,int NumOfYearsInTheFuture)
+        public bool BeAValidEndDate(string End,int NumOfYearsInTheFuture)
         {
             //parse into datetime or icomparable data type
             DateTime EndDate;
@@ -98,7 +98,7 @@ namespace ProcessCIW.Utilities
         /// </summary>
         /// <param name="Date"></param>
         /// <returns></returns>
-        public static bool DateIsValidAndNotFuture(string Date)
+        public bool DateIsValidAndNotFuture(string Date)
         {
             DateTime _Date;
             DateTime Today = DateTime.Now.Date;
@@ -118,7 +118,7 @@ namespace ProcessCIW.Utilities
         /// </summary>
         /// <param name="date"></param>
         /// <returns>Bool</returns>
-        public static bool BeAValidDate(string date)
+        public bool BeAValidDate(string date)
         {
             DateTime _date;
 
@@ -130,7 +130,7 @@ namespace ProcessCIW.Utilities
         /// </summary>
         /// <param name="date"></param>
         /// <returns>Bool</returns>
-        public static bool BeAValidBirthDate(string date)
+        public bool BeAValidBirthDate(string date)
         {
             DateTime _birthDate;
 
@@ -150,7 +150,7 @@ namespace ProcessCIW.Utilities
         /// </summary>
         /// <param name="birthDate"></param>
         /// <returns></returns>
-        public static string FormatDate(string birthDate)
+        public string FormatDate(string birthDate)
         {
             DateTime dateOfBirth;
 
@@ -164,17 +164,17 @@ namespace ProcessCIW.Utilities
         /// </summary>
         /// <param name="s"></param>
         /// <returns></returns>
-        public static string TrimPhoneNum(string s)
+        public string TrimPhoneNum(string s)
         {
             return Regex.Replace(s, "[^0-9]", "");
         }
 
-        public static string TrimPoundSign(string s)
+        public string TrimPoundSign(string s)
         {
             return s.Replace("#", string.Empty);
         }
 
-        public static string CleanSsn(string s)
+        public string CleanSsn(string s)
         {
             return s.Replace("-", string.Empty).Replace(" ", string.Empty).Trim();
         }        
@@ -212,7 +212,7 @@ namespace ProcessCIW.Utilities
         /// Deletes all files in the list of files passed in
         /// </summary>
         /// <param name="filesToDelete"></param>
-        public static void DeleteFiles(List<string> filesToDelete)
+        public void DeleteFiles(List<string> filesToDelete)
         {
             foreach (var file in filesToDelete)
             {

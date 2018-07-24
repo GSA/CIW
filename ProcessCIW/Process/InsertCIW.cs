@@ -1,9 +1,9 @@
 ﻿using MySql.Data.MySqlClient;
+using ProcessCIW.Interface;
 using ProcessCIW.Models;
 using System;
 using System.Configuration;
 using System.Data;
-using U = ProcessCIW.Utilities;
 
 namespace ProcessCIW
 {
@@ -12,12 +12,12 @@ namespace ProcessCIW
     /// </summary>
     class InsertCIW
     {
-        MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString());
+        readonly MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString());
         MySqlCommand cmd = new MySqlCommand();
         MySqlTransaction trans;
-        CIW ciwInformation = new CIW();
-        int uploaderID;
-        Utilities.Utilities u = new Utilities.Utilities();
+        readonly CIW ciwInformation;
+        readonly int uploaderID;
+        readonly IUtilities U = new Utilities.Utilities();
         private readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
@@ -27,7 +27,7 @@ namespace ProcessCIW
         /// <param name="uploaderID"></param>
         public InsertCIW(CIW newUser, int uploaderID)
         {
-            this.ciwInformation = newUser;
+            ciwInformation = newUser;
             this.uploaderID = uploaderID;
         }
 
@@ -60,7 +60,7 @@ namespace ProcessCIW
 
                         using (trans)
                         {
-                            log.Info(String.Format("Inserting user {0}", ciwInformation.FullNameForLog));
+                            log.Info(string.Format("Inserting user {0}", ciwInformation.FullNameForLog));
 
                             //Call stored procedure "CIW_InsertPerson" and assign to personID
                             personID = InsertNewUser(cmd, "CIW_InsertPerson");
@@ -75,12 +75,12 @@ namespace ProcessCIW
                             //Continue on success
                             if (personID > 0)
                             {
-                                log.Info(String.Format("{0} inserted with id {1}", ciwInformation.FullNameForLog, personID));
+                                log.Info(string.Format("{0} inserted with id {1}", ciwInformation.FullNameForLog, personID));
                                 int contractID = 0;
 
                                 if (ciwInformation.ContractorType == "Child Care" || ciwInformation.InvestigationTypeRequested == "Tier 1C")
                                 {
-                                    log.Info(String.Format("Inserting/Retrieving Child Care/Tier 1C contract header"));
+                                    log.Info("Inserting/Retrieving Child Care/Tier 1C contract header");
 
                                     //Insert Contract header of child care worker or tier 1C and assign return value to contractID
                                     contractID = InsertContractHeaderChildCare(cmd, "CIW_InsertContractHeader_ChildCare");
@@ -163,16 +163,17 @@ namespace ProcessCIW
         /// <param name="storedProcedure"></param>
         /// <returns>ID of new user</returns>
         private int InsertNewUser(MySqlCommand cmd, string storedProcedure)
-        {
+        {           
+
             cmd.CommandText = storedProcedure;
             cmd.Parameters.Clear();
 
             string persGuid = System.Guid.NewGuid().ToString();
-            Byte[] hashedSSNFull = { };
-            Byte[] hashedSSNFour = { };
+            Byte[] hashedSSNFull;
+            Byte[] hashedSSNFour;
 
-            hashedSSNFull = u.HashSSN(ciwInformation.SocialSecurityNumber);
-            hashedSSNFour = u.HashSSN(ciwInformation.SocialSecurityNumber.Substring(ciwInformation.SocialSecurityNumber.Length - 4));
+            hashedSSNFull = U.HashSSN(ciwInformation.SocialSecurityNumber);
+            hashedSSNFour = U.HashSSN(ciwInformation.SocialSecurityNumber.Substring(ciwInformation.SocialSecurityNumber.Length - 4));
 
             MySqlParameter[] UserParamters = new MySqlParameter[]
                 {
@@ -213,7 +214,7 @@ namespace ProcessCIW
 
                     //Section 1 - Row 6
                     new MySqlParameter { ParameterName = "oPersPriorInvestigation", Value = ConvertYesNo(ciwInformation.PriorInvestigation), MySqlDbType = MySqlDbType.Byte, Direction = ParameterDirection.Input },
-                    new MySqlParameter { ParameterName = "oPersPriorInvestigationDate", Value = U.Utilities.BeAValidDate(ciwInformation.ApproximiateInvestigationDate) ? ciwInformation.ApproximiateInvestigationDate : (object)DBNull.Value, MySqlDbType = MySqlDbType.VarChar, Size = 12, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "oPersPriorInvestigationDate", Value = U.BeAValidDate(ciwInformation.ApproximiateInvestigationDate) ? ciwInformation.ApproximiateInvestigationDate : (object)DBNull.Value, MySqlDbType = MySqlDbType.VarChar, Size = 12, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersPriorInvestigationWhere", Value = ciwInformation.AgencyAdjudicatedPriorInvestigation , MySqlDbType = MySqlDbType.VarChar, Size = 50, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersIsCitizen", Value = ConvertYesNo(ciwInformation.Citizen) , MySqlDbType = MySqlDbType.Byte, Direction = ParameterDirection.Input },
 
@@ -304,7 +305,7 @@ namespace ProcessCIW
             cmd.ExecuteNonQuery();
 
             //Returns the Contract ID
-            log.Info(String.Format("InsertOrUpdateContractHeader completed with ContractId:{0} and SqlException:{1}", cmd.Parameters["ContractID"].Value, cmd.Parameters["SQLExceptionWarning"].Value));
+            log.Info(string.Format("InsertOrUpdateContractHeader completed with ContractId:{0} and SqlException:{1}", cmd.Parameters["ContractID"].Value, cmd.Parameters["SQLExceptionWarning"].Value));
 
             return (int)cmd.Parameters["ContractID"].Value;
         }
@@ -334,7 +335,7 @@ namespace ProcessCIW
             cmd.Parameters.AddRange(ContractHeaderParameters);
             cmd.ExecuteNonQuery();
             //Returns the Contract ID
-            log.Info(String.Format("InsertContractHeader_ChildCare completed with ContractId:{0} and SqlException:{1}", cmd.Parameters["ContractID"].Value, cmd.Parameters["SQLExceptionWarning"].Value));
+            log.Info(string.Format("InsertContractHeader_ChildCare completed with ContractId:{0} and SqlException:{1}", cmd.Parameters["ContractID"].Value, cmd.Parameters["SQLExceptionWarning"].Value));
             return (int)cmd.Parameters["ContractID"].Value;
         }
 
@@ -385,7 +386,7 @@ namespace ProcessCIW
         /// <param name="phone"></param>
         /// <param name="email"></param>
         /// <returns>Number of rows affected</returns>
-        private int InsertVendorPOC(MySqlCommand cmd, string storedProcedure, int personId, int contractId, string fName, string lName, string phone, string email)
+        private void InsertVendorPOC(MySqlCommand cmd, string storedProcedure, int personId, int contractId, string fName, string lName, string phone, string email)
         {
             cmd.CommandText = storedProcedure;
 
@@ -412,8 +413,6 @@ namespace ProcessCIW
 
             log.Info(String.Format("InsertVendorPOC completed with Result:{0} and SqlException:{1}", cmd.Parameters["Result"].Value, cmd.Parameters["SQLExceptionWarning"].Value));
 
-            //Returns 'Result' from stored procedure that indicates number of rows affected
-            return (int)cmd.Parameters["Result"].Value;
         }
 
         /// <summary>
@@ -426,7 +425,7 @@ namespace ProcessCIW
         /// <param name="email"></param>
         /// <param name="roleTypeId"></param>
         /// <returns>Number of rows affected</returns>
-        private int InsertGSAPOC(MySqlCommand cmd, string storedProcedure, int personId, int contractId, string email, string roleTypeId)
+        private void InsertGSAPOC(MySqlCommand cmd, string storedProcedure, int personId, int contractId, string email, string roleTypeId)
         {
             cmd.CommandText = storedProcedure;
 
@@ -448,10 +447,7 @@ namespace ProcessCIW
             cmd.ExecuteNonQuery();
 
             log.Info(String.Format("InsertGSAPOC completed with Result:{0} and SqlException:{1}", cmd.Parameters["Result"].Value, cmd.Parameters["SQLExceptionWarning"].Value));
-
-            //Returns 'Result' from stored procedure that indicates number of rows affected
-            return (int)cmd.Parameters["Result"].Value;
-
+            
         }
 
         /// <summary>

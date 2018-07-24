@@ -1,7 +1,7 @@
 ﻿using Gsa.Sftp.Libraries.Utilities.Encryption;
+using ProcessCIW.Interface;
 using ProcessCIW.Models;
 using ProcessCIW.Utilities;
-using ProcessCIW.Validation;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -16,7 +16,11 @@ namespace ProcessCIW
 
         private static Stopwatch stopWatch = new Stopwatch();
 
-        private static ProcessDocuments pd = new ProcessDocuments();
+        private static IProcessDocuments pd = new ProcessDocuments();
+
+        private static readonly IDataAccess da = DataAccess.GetInstance();
+
+        private static readonly IUtilities U = new Utilities.Utilities();
 
         //Need better naming namespace and convention here
         private static Utilities.Utilities u = new Utilities.Utilities();
@@ -43,7 +47,6 @@ namespace ProcessCIW
             Console.WriteLine("Done! " + stopWatch.ElapsedMilliseconds);
 
             //End of program
-            return;
         }
 
         /// <summary>
@@ -51,16 +54,16 @@ namespace ProcessCIW
         /// </summary>
         private static void ProcessFiles()
         {
-            List<UnprocessedFiles> uf = new List<UnprocessedFiles>();
+            List<UnprocessedFiles> uf;
 
-			log.Info(string.Format("Getting unprocessed files"));
-            uf = pd.GetUnprocessedFiles();
+			log.Info("Getting unprocessed files");
+            uf = da.GetUnprocessedFiles();
 
             foreach (string oldCSVFiles in Directory.EnumerateFiles(ConfigurationManager.AppSettings["TEMPFOLDER"], "*.csv"))
             {
                 try
                 {
-                    log.Info(string.Format("Deleting old CSV file (0).", oldCSVFiles));
+                    log.Info(string.Format("Deleting old CSV file {0}.", oldCSVFiles));
                     File.Delete(oldCSVFiles);
                 }
                 catch (IOException e)
@@ -87,8 +90,6 @@ namespace ProcessCIW
                 log.Info("Processing Prod Files");
                 ProcessProdFiles(uf);
             }
-
-            return;
         }
 
         /// <summary>
@@ -119,18 +120,18 @@ namespace ProcessCIW
 
                     log.Info(string.Format("ProcessCIWInformation returned with result: {0}", GetErrorMessage(processedResult)));
                     //Update the status of processing the file in the database
-                    pd.UpdateProcessed(ciwFile.ID, processedResult);
+                    da.UpdateProcessed(ciwFile.ID, processedResult);
                 }
                 else
                 {
                     //Mark the file as failed in the database
-                    pd.UpdateProcessed(ciwFile.ID, errorCode);
+                    da.UpdateProcessed(ciwFile.ID, errorCode);
                 }
 
                 try
                 {
                     //Delete the original file
-                    Utilities.Utilities.DeleteFiles(new List<string> { filePath });
+                    U.DeleteFiles(new List<string> { filePath });
                 }
                 catch (IOException e)
                 {
@@ -204,16 +205,16 @@ namespace ProcessCIW
                     log.Info(string.Format("ProcessCIWInformation returned with result: {0}", processedResult == 1 ? "File processed successfully" : processedResult == 0 ? "File remains unprocessed" : "File failed processing"));
 
                     //Mark status of processed file in the database
-                    pd.UpdateProcessed(ciwFile.ID, processedResult);
+                    da.UpdateProcessed(ciwFile.ID, processedResult);
                 }
                 else
                     //Mark the file as failed in the database
-                    pd.UpdateProcessed(ciwFile.ID, errorCode);
+                    da.UpdateProcessed(ciwFile.ID, errorCode);
 
                 try
                 {
                     //Delete the original and decrypted file
-                    Utilities.Utilities.DeleteFiles(new List<string> { filePath, decryptedFile });
+                    U.DeleteFiles(new List<string> { filePath, decryptedFile });
                 }
                 catch (IOException e)
                 {

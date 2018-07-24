@@ -3,10 +3,11 @@ using CsvHelper.Configuration;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using FluentValidation.Results;
-using MySql.Data.MySqlClient;
+using ProcessCIW.Interface;
 using ProcessCIW.Mapping;
 using ProcessCIW.Models;
 using ProcessCIW.Process;
+using ProcessCIW.Utilities;
 using ProcessCIW.Validation;
 using System;
 using System.Collections.Generic;
@@ -34,11 +35,11 @@ namespace ProcessCIW
 /// <summary>
 /// Class that controls processing of CIW forms
 /// </summary>
-class ProcessDocuments
+class ProcessDocuments : IProcessDocuments
     {
         private static CsvConfiguration config;
         private readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
+        private readonly IDataAccess da = DataAccess.GetInstance();
         /// <summary>
         /// Constructor that sets up CsvConfiguration which is part of CsvHelper
         /// </summary>
@@ -51,141 +52,7 @@ class ProcessDocuments
             config.WillThrowOnMissingField = false;
             config.IsHeaderCaseSensitive = false;
             config.TrimFields = false;
-        }
-                
-        private DataSet GetFipsCodeFromCountryName(string placeOfBirthCountryName, string homeCountryName, string citizenshipCountryName)
-        {
-            DataSet DS = new DataSet();
-
-            log.Info("Getting fips code from database");
-            MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString());
-            try
-            {
-                using (conn)
-                {                    
-                    using (MySqlCommand cmd = new MySqlCommand("uspGetFipsCode"))
-                    {
-                        using (MySqlDataAdapter DA = new MySqlDataAdapter(cmd))
-                        {
-                            cmd.Connection = conn;
-                            cmd.CommandType = CommandType.StoredProcedure;
-                            cmd.Parameters.Clear();
-
-                            MySqlParameter[] userParameters = new MySqlParameter[]
-                            {
-                            new MySqlParameter { ParameterName = "placeOfBirthCountryNameShort", Value = placeOfBirthCountryName, MySqlDbType = MySqlDbType.VarChar, Size = 60, Direction = ParameterDirection.Input },
-                            new MySqlParameter { ParameterName = "homeCountryName", Value = homeCountryName, MySqlDbType = MySqlDbType.VarChar, Size = 60, Direction = ParameterDirection.Input },
-                            new MySqlParameter { ParameterName = "citizenshipCountryName", Value = citizenshipCountryName, MySqlDbType = MySqlDbType.VarChar, Size = 60, Direction = ParameterDirection.Input },
-
-                            new MySqlParameter { ParameterName = "SQLExceptionWarning", MySqlDbType = MySqlDbType.VarChar, Direction = ParameterDirection.Output }
-                            };
-
-                            cmd.Parameters.AddRange(userParameters);
-
-                            conn.Open();
-                            DA.Fill(DS);
-
-                            if(DS.Tables[0].Rows.Count > 0 && DS.Tables[1].Rows.Count > 0 && DS.Tables[2].Rows.Count > 0)
-                            {
-                                log.Info(String.Format("Get Fips code returned {0}, {1}, and {2}", DS.Tables[0].Rows[0].ItemArray[0].ToString(), DS.Tables[1].Rows[0].ItemArray[0].ToString(), DS.Tables[2].Rows[0].ItemArray[0].ToString()));
-                            }
-                            else
-                            {
-                                log.Warn("Dataset has an empty row. Can be caused by not selecting a country.");
-                            }
-                            return DS;
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                log.Error(ex.Message + " - " + ex.InnerException);
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// Gets a list of unprocessed files by calling a stored procedure
-        /// </summary>
-        /// <returns>List of unprocessed files</returns>
-        public List<UnprocessedFiles> GetUnprocessedFiles()
-        {
-            MySqlCommand cmd = new MySqlCommand();
-
-            List<UnprocessedFiles> uf = new List<UnprocessedFiles>();
-
-            using (MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString()))
-            {
-                conn.Open();
-
-                using (cmd)
-                {
-                    MySqlDataReader unprocessedFiles;
-
-                    cmd.Connection = conn;
-                    cmd.CommandText = "CIW_Unprocessed";
-                    cmd.CommandType = CommandType.StoredProcedure;
-
-                    cmd.Parameters.Add("SQLExceptionWarning", MySqlDbType.VarChar, 4000);
-
-                    unprocessedFiles = cmd.ExecuteReader();
-
-                    while (unprocessedFiles.Read())
-                    {
-                        uf.Add(
-                                new UnprocessedFiles
-                                {
-                                    ID = (int)unprocessedFiles[0],
-                                    PersID = (int)unprocessedFiles[1],
-                                    FileName = unprocessedFiles[2].ToString()
-                                }
-                              );
-                    }
-                }
-            }
-
-            log.Info(string.Format("CIW_Unprocessed returned with {0} unprocessed files and SQLExceptionWarning:{1}", uf.Count, cmd.Parameters["SQLExceptionWarning"].Value));
-
-            return uf;
-        }
-
-        /// <summary>
-        /// Updates upload table after finished processing by calling stored procedure
-        /// </summary>
-        /// <param name="documentID"></param>
-        /// <param name="processedResult"></param>
-        public void UpdateProcessed(int documentID, int processedResult)
-        {
-            MySqlCommand cmd = new MySqlCommand();
-
-            log.Info(string.Format("Updating processed document {0} with result {1}", documentID, processedResult));
-
-            using (MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString()))
-            {
-                conn.Open();
-
-                using (cmd)
-                {
-                    cmd.Connection = conn;
-                    cmd.CommandText = "CIW_UpdateProcessed";
-                    cmd.CommandType = CommandType.StoredProcedure;
-
-                    MySqlParameter[] ProcessedParameters = new MySqlParameter[]
-                    {
-                        new MySqlParameter { ParameterName = "documentID", Value = documentID, MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Input },
-                        new MySqlParameter { ParameterName = "processedResult", Value = processedResult, MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Input },
-                        new MySqlParameter { ParameterName = "SQLExceptionWarning", MySqlDbType=MySqlDbType.VarChar, Size=4000, Direction = ParameterDirection.Output },
-                    };
-
-                    cmd.Parameters.AddRange(ProcessedParameters);
-
-                    cmd.ExecuteNonQuery();
-
-                    log.Info(string.Format("CIW_UpdateProcessed completed and error message: {0}", cmd.Parameters["SQLExceptionWarning"].Value));
-                }
-            }
-        }
+        }        
 
         /// <summary>
         /// Get all the CIW information, create temp csv file then load that and then filter it down to the different objects
@@ -443,14 +310,14 @@ class ProcessDocuments
             //Create validation object
             ValidateCIW validate = new Validation.ValidateCIW();
 
-            List<CIW> ciwInformation = new List<CIW>();
+            List<CIW> ciwInformation;
 
-            log.Info(string.Format("Getting file data from temp csv file."));
+            log.Info("Getting file data from temp csv file.");
 
             //Gets list of CIW's after mapping from csv files
             ciwInformation = GetFileData<CIW, CIWMapping>(filePath, config);
 
-            DataSet fipsCodes = GetFipsCodeFromCountryName(ciwInformation[0].PlaceOfBirthCountryName, ciwInformation[0].HomeCountryName, ciwInformation[0].CitizenCountryName);
+            DataSet fipsCodes = da.GetFipsCodeFromCountryName(ciwInformation[0].PlaceOfBirthCountryName, ciwInformation[0].HomeCountryName, ciwInformation[0].CitizenCountryName);
 
             ApplyFipsCodes(ref ciwInformation, fipsCodes);
 

@@ -1,14 +1,12 @@
 ﻿using FluentValidation;
 using FluentValidation.Results;
-using MySql.Data.MySqlClient;
+using ProcessCIW.Interface;
 using ProcessCIW.Mapping;
 using ProcessCIW.Models;
+using ProcessCIW.Utilities;
 using System;
 using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
 using System.Linq;
-using U = ProcessCIW.Utilities;
 
 namespace ProcessCIW.Validation
 {
@@ -17,74 +15,19 @@ namespace ProcessCIW.Validation
     /// </summary>
     class UserExistsValidator : AbstractValidator<CIW>
     {
-        private readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
+        private readonly IDataAccess da;
+        
         /// <summary>
         /// Validates if user exists
         /// </summary>
         public UserExistsValidator()
         {
+            da = DataAccess.GetInstance();
+
             RuleFor(employee => employee.LastName)
-                    .Must((o, LastName) => NotBeADuplicateUser(o.LastName, o.DateOfBirth, o.SocialSecurityNumber))
+                    .Must((o, LastName) => da.NotBeADuplicateUser(o.LastName, o.DateOfBirth, o.SocialSecurityNumber))
                     .WithMessage("Duplicate User Found!");
         }
-
-        /// <summary>
-        /// Calls stored procedure that checks if a duplicate user exists
-        /// </summary>
-        /// <param name="lastName"></param>
-        /// <param name="dob"></param>
-        /// <param name="ssn"></param>
-        /// <returns></returns>
-        private bool NotBeADuplicateUser(string lastName, string dob, string ssn)
-        {
-            //Need global connection check.
-            MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString());
-            MySqlCommand cmd = new MySqlCommand();
-            Boolean result;
-            try
-            {
-                using (conn)
-                {
-                    if (conn.State == ConnectionState.Closed)
-                        conn.Open();
-
-                    using (cmd)
-                    {
-                        cmd.Connection = conn;
-                        cmd.CommandType = CommandType.StoredProcedure;
-
-                        cmd.CommandText = "CIW_DoesUserExist";
-
-                        cmd.Parameters.Clear();
-
-                        MySqlParameter[] userParameters = new MySqlParameter[]
-                        {
-                            new MySqlParameter { ParameterName = "lastName", Value = lastName, MySqlDbType = MySqlDbType.VarChar, Size = 60, Direction = ParameterDirection.Input },
-                            new MySqlParameter { ParameterName = "personSSN", Value = ssn, MySqlDbType = MySqlDbType.VarChar, Size = 20, Direction = ParameterDirection.Input },
-                            new MySqlParameter { ParameterName = "personDOB", Value = U.Utilities.FormatDate(dob), MySqlDbType = MySqlDbType.VarChar, Size = 20, Direction = ParameterDirection.Input },
-                            new MySqlParameter { ParameterName = "rowsReturned", MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Output }
-                        };
-
-                        cmd.Parameters.AddRange(userParameters);
-
-                        cmd.ExecuteNonQuery();
-
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                log.Error(ex.Message + " - " + ex.InnerException);
-                return false;
-            }
-
-            result = ((int)cmd.Parameters["rowsReturned"].Value == 0);
-            log.Info(String.Format("NotBeADuplicateUser completed with rowsReturned:{0} and return value:{1}", cmd.Parameters["rowsReturned"].Value, result));
-            return result;
-        }
-
-
     }
 
     /// <summary>
@@ -92,6 +35,9 @@ namespace ProcessCIW.Validation
     /// </summary>
     class EmployeeValidator : AbstractValidator<CIW>
     {
+        private readonly IDataAccess da = DataAccess.GetInstance();
+        private readonly IUtilities U = new Utilities.Utilities();
+
         /// <summary>
         /// Contains all the validation rules for Section 1 of the CIW
         /// </summary>
@@ -125,9 +71,7 @@ namespace ProcessCIW.Validation
                     .WithMessage("Full Middle Name(or NMN if none): Required Field")
                     .Matches(@"^[A-Za-z \-\‘\’\'\`]{1,40}|[NMN]{1,3}$")
                     .WithMessage("Full Middle Name(or NMN if none): Contains Invalid Characters");
-
-            //Suffix
-
+            
             //Gender
             RuleFor(employee => employee.Sex)
                     .NotEmpty()
@@ -139,14 +83,14 @@ namespace ProcessCIW.Validation
                     .WithMessage("Social Security Number: Required Field")
                     .Matches(@"^(?!000|666)[0-9]{3}([ -]?)(?!00)[0-9]{2}\1(?!0000)[0-9]{4}$")
                     .WithMessage("Social Security Number: Invalid Format")
-                    .Must(NotBeADuplicateSSN)
+                    .Must(da.NotBeADuplicateSSN)
                     .WithMessage("Social Security Number: Already in GCIMS");
 
             //Date Of Birth (Need method to make sure date is valid)
             RuleFor(employee => employee.DateOfBirth)
                     .NotEmpty()
                     .WithMessage("Date Of Birth: Required Field")
-                    .Must(U.Utilities.BeAValidBirthDate)
+                    .Must(U.BeAValidBirthDate)
                     .WithMessage("Date Of Birth: Invalid Date");
 
             //POB:City
@@ -182,7 +126,7 @@ namespace ProcessCIW.Validation
                 RuleFor(employee => employee.PlaceOfBirthMexicoCanada)
                     .NotEmpty()
                     .WithMessage("POB: Mexico (State)/Canada (Province): Required for the selected Country of Birth")
-                    .Must((e, x) => ValidateState(e.PlaceOfBirthMexicoCanada, e.PlaceOfBirthCountry))
+                    .Must((e, x) => da.ValidateState(e.PlaceOfBirthMexicoCanada, e.PlaceOfBirthCountry))
                     .WithMessage("POB: Mexico (State)/Canada (Province): Selected Province/State does not match the selected Country of Birth");
 
             });
@@ -255,7 +199,7 @@ namespace ProcessCIW.Validation
                 RuleFor(employee => employee.HomeAddressMexicoStateCanadaProvince)
                     .NotEmpty()
                     .WithMessage("Home: Mexico (State)/Canada (Province): Required Field")
-                    .Must((e, x) => ValidateState(e.HomeAddressMexicoStateCanadaProvince, e.HomeAddressCountry))
+                    .Must((e, x) => da.ValidateState(e.HomeAddressMexicoStateCanadaProvince, e.HomeAddressCountry))
                     .WithMessage("Home: Mexico (State)/Canada (Province): Selected state/province does not match the selected Country of Residence");
             });
 
@@ -329,7 +273,7 @@ namespace ProcessCIW.Validation
                 RuleFor(employee => employee.ApproximiateInvestigationDate)
                         .NotEmpty()
                         .WithMessage("Approx. Investigation Date: Required Field")
-                        .Must(U.Utilities.DateIsValidAndNotFuture)
+                        .Must(U.DateIsValidAndNotFuture)
                         .WithMessage("Approx. Investigation Date: Invalid Date");
 
                 RuleFor(employee => employee.AgencyAdjudicatedPriorInvestigation)
@@ -343,7 +287,7 @@ namespace ProcessCIW.Validation
             When(employee => employee.PriorInvestigation.Equals("No"), () =>
             {                
                 RuleFor(employee => employee.ApproximiateInvestigationDate)
-                        .Must(U.Utilities.IsNotWhiteSpace)
+                        .Must(U.IsNotWhiteSpace)
                         .WithMessage("Approx. Investigation Date: The date that you have entered contains only spaces and is not valid")
                         .Empty()
                         .WithMessage("Prior Investigation: The information regarding your previous background investigation requires your attention, please be advised that when indicating 'No' in the Prior Investigation field, Approx. Investigation Date field must be left blank");
@@ -372,8 +316,6 @@ namespace ProcessCIW.Validation
                     .WithMessage("Citizenship Country: Citizenship Country field value contradicts the input for U.S. Citizen");
             });
 
-
-
             //Port of Entry
             When(e => (e.Citizen.Equals("No") && !e.CitzenshipCountry.Equals("US")), () =>
             {
@@ -388,7 +330,7 @@ namespace ProcessCIW.Validation
                 RuleFor(employee => employee.DateOfEntry)
                    .NotEmpty()
                    .WithMessage("Date Of Entry: Required Field")
-                   .Must(U.Utilities.DateIsValidAndNotFuture)
+                   .Must(U.DateIsValidAndNotFuture)
                    .WithMessage("Date Of Entry: Invalid Date");
 
                 //Less than 3 Yrs. U.S. Resident
@@ -411,112 +353,6 @@ namespace ProcessCIW.Validation
                     .NotEmpty()
                     .WithMessage("Citizenship Country: Required Field");
         }
-
-        /// <summary>
-        /// Calls stored procedure to check if SSN is duplicate
-        /// </summary>
-        /// <param name="ssn"></param>
-        /// <returns></returns>
-        private bool NotBeADuplicateSSN(string ssn)
-        {
-            //Need global connection check.
-            MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString());
-            MySqlCommand cmd = new MySqlCommand();
-
-            try
-            {
-                using (conn)
-                {
-                    if (conn.State == ConnectionState.Closed)
-                        conn.Open();
-
-                    using (cmd)
-                    {
-                        cmd.Connection = conn;
-                        cmd.CommandType = CommandType.StoredProcedure;
-
-                        cmd.CommandText = "CIW_DuplicateSSNFound";
-
-                        cmd.Parameters.Clear();
-
-                        MySqlParameter[] userParameters = new MySqlParameter[]
-                        {
-                            new MySqlParameter { ParameterName = "personSSN", Value = ssn, MySqlDbType = MySqlDbType.VarChar, Size = 20, Direction = ParameterDirection.Input },
-                            new MySqlParameter { ParameterName = "duplicateSSN", MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Output }
-                        };
-
-                        cmd.Parameters.AddRange(userParameters);
-
-                        cmd.ExecuteNonQuery();
-
-                        if ((int)cmd.Parameters["duplicateSSN"].Value > 0)
-                            return false;
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Calls stored procedure to help validate if state and country codes for Mexico/Canada match
-        /// </summary>
-        /// <param name="state"></param>
-        /// <param name="country"></param>
-        /// <returns></returns>
-        private bool ValidateState(string state, string country)
-        {
-            MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString());
-            MySqlCommand cmd = new MySqlCommand();
-
-            try
-            {
-                using (conn)
-                {
-                    if (conn.State == ConnectionState.Closed)
-                        conn.Open();
-
-                    using (cmd)
-                    {
-                        cmd.Connection = conn;
-                        cmd.CommandType = CommandType.StoredProcedure;
-
-                        cmd.CommandText = "CIW_ValidateStateNonUS";
-
-                        cmd.Parameters.Clear();
-
-                        MySqlParameter[] userParameters = new MySqlParameter[]
-                        {
-                            new MySqlParameter { ParameterName = "State", Value = state, MySqlDbType = MySqlDbType.VarChar, Size = 2, Direction = ParameterDirection.Input },
-                            new MySqlParameter { ParameterName = "CountryMXCA", Value = country, MySqlDbType = MySqlDbType.VarChar, Size = 2, Direction = ParameterDirection.Input },
-
-                            new MySqlParameter { ParameterName = "IsValid", MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Output }
-                        };
-
-                        cmd.Parameters.AddRange(userParameters);
-
-                        cmd.ExecuteNonQuery();
-
-                        if ((int)cmd.Parameters["IsValid"].Value != 1)
-                            return false;
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-
-
-
     }
 
     /// <summary>
@@ -524,6 +360,7 @@ namespace ProcessCIW.Validation
     /// </summary>
     class ContractorValidator : AbstractValidator<CIW>
     {
+        private readonly IUtilities U = new Utilities.Utilities();
         private const int YearsInTheFuture = 30;
         /// <summary>
         /// Contains all the validation rules for section 2
@@ -562,18 +399,18 @@ namespace ProcessCIW.Validation
                     RuleFor(employee => employee.ContractStartDate)
                         .NotEqual("")
                         .WithMessage("Contract Start Date: Required Field")
-                        .Must(U.Utilities.BeAValidDate)
+                        .Must(U.BeAValidDate)
                         .WithMessage("Contract Start Date: Invalid Date")
-                        .Must((c, ContractStartDate) => U.Utilities.StartBeforeEnd(c.ContractStartDate, c.ContractEndDate) && U.Utilities.EndIsFutureDate(c.ContractEndDate))
+                        .Must((c, ContractStartDate) => U.StartBeforeEnd(c.ContractStartDate, c.ContractEndDate) && U.EndIsFutureDate(c.ContractEndDate))
                         .WithMessage("Contract Start Date: Cannot be later than Contract End Date");
 
                     //Contract End Date
                     RuleFor(employee => employee.ContractEndDate)
                         .NotEqual("")
                         .WithMessage("Contract End Date: Required Field")
-                        .Must((c,x) => U.Utilities.BeAValidEndDate(c.ContractEndDate,YearsInTheFuture))
+                        .Must((c,x) => U.BeAValidEndDate(c.ContractEndDate,YearsInTheFuture))
                         .WithMessage("Contract End Date: Invalid Date: date must follow mm/dd/yyyy format and be no more than 30 years in the future")
-                        .Must(U.Utilities.EndIsFutureDate)
+                        .Must(U.EndIsFutureDate)
                         .WithMessage("Contract End Date: Must be a future date");
                 });
 
@@ -586,18 +423,18 @@ namespace ProcessCIW.Validation
                         RuleFor(employee => employee.ContractStartDate)
                             .NotEqual("")
                             .WithMessage("Contract Start Date: Required Field (unless Child Care)")
-                            .Must(U.Utilities.BeAValidDate)
+                            .Must(U.BeAValidDate)
                             .WithMessage("Contract Start Date: Invalid Date")
-                            .Must((c, ContractStartDate) => U.Utilities.StartBeforeEnd(c.ContractStartDate, c.ContractEndDate) && U.Utilities.EndIsFutureDate(c.ContractEndDate))
+                            .Must((c, ContractStartDate) => U.StartBeforeEnd(c.ContractStartDate, c.ContractEndDate) && U.EndIsFutureDate(c.ContractEndDate))
                             .WithMessage("Contract Start Date: Cannot be later than Contract End Date");
 
                         //Contract End Date
                         RuleFor(employee => employee.ContractEndDate)
                             .NotEqual("")
                             .WithMessage("Contract End Date: Required Field (unless Child Care)")
-                            .Must((c,x) => U.Utilities.BeAValidEndDate(c.ContractEndDate,YearsInTheFuture))
+                            .Must((c,x) => U.BeAValidEndDate(c.ContractEndDate,YearsInTheFuture))
                             .WithMessage("Contract End Date: Invalid Date: date must follow mm/dd/yyyy format and be no more than 30 years in the future")
-                            .Must(U.Utilities.EndIsFutureDate)
+                            .Must(U.EndIsFutureDate)
                             .WithMessage("Contract End Date: Must be a future date");
                     });
                 });
@@ -800,10 +637,6 @@ namespace ProcessCIW.Validation
                            });
             });
         }
-
-
-
-
     }
 
     /// <summary>
@@ -811,6 +644,7 @@ namespace ProcessCIW.Validation
     /// </summary>
     class RWAIAAValidator : AbstractValidator<CIW>
     {
+
         /// <summary>
         /// Contains all the validation rules for section 3
         /// </summary>
@@ -847,9 +681,7 @@ namespace ProcessCIW.Validation
     /// </summary>
     class ProjectLocationValidator : AbstractValidator<CIW>
     {
-        //Need global connection check.
-        MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString());
-        MySqlCommand cmd = new MySqlCommand();
+        private readonly IDataAccess da = Utilities.DataAccess.GetInstance();
 
         /// <summary>
         /// Contains all the validation rules for section 4
@@ -862,7 +694,7 @@ namespace ProcessCIW.Validation
                 RuleFor(building => building.BuildingNumber)
                     .NotEmpty()
                     .WithMessage("GSA Building Number: Required when Other is not 'HOME', 'VENDOR', or 'NONGSA'")
-                    .Must(BeAValidBuilding)
+                    .Must(da.BeAValidBuilding)
                     .WithMessage("GSA Building Number: Not Found in GCIMS");
             });
 
@@ -917,53 +749,8 @@ namespace ProcessCIW.Validation
                     .NotEmpty()
                     .WithMessage("GSA Region: Required Field");
         }
-
-        /// <summary>
-        /// Returns whether or not the user entered in a valid building.
-        /// </summary>
-        /// <param name="buildingID"></param>
-        /// <returns>Bool</returns>
-        private bool BeAValidBuilding(string buildingID)
-        {
-            try
-            {
-                using (conn)
-                {
-                    if (conn.State == ConnectionState.Closed)
-                        conn.Open();
-
-                    using (cmd)
-                    {
-                        cmd.Connection = conn;
-                        cmd.CommandType = CommandType.StoredProcedure;
-
-                        cmd.CommandText = "CIW_IsValidBuilding";
-
-                        cmd.Parameters.Clear();
-
-                        MySqlParameter[] buildingParameters = new MySqlParameter[]
-                        {
-                            new MySqlParameter { ParameterName = "buildingID", Value = buildingID, MySqlDbType = MySqlDbType.VarChar, Size = 6, Direction = ParameterDirection.Input },
-                            new MySqlParameter { ParameterName = "rowsReturned", MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Output }
-                        };
-
-                        cmd.Parameters.AddRange(buildingParameters);
-
-                        cmd.ExecuteNonQuery();
-
-                        if ((int)cmd.Parameters["rowsReturned"].Value == 1)
-                            return true;
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-
-            return false;
-        }
     }
+        
 
     /// <summary>
     /// Section 5 Validation
@@ -998,11 +785,8 @@ namespace ProcessCIW.Validation
     /// </summary>
     class RequestingOfficialValidator : AbstractValidator<CIW>
     {
-        private readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
-        MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString());
-        MySqlCommand cmd = new MySqlCommand();
-
+        private readonly IDataAccess da = Utilities.DataAccess.GetInstance();
+        
         /// <summary>
         /// Contains all the validation rules for section 6
         /// </summary>
@@ -1017,7 +801,7 @@ namespace ProcessCIW.Validation
                         .WithMessage("Primary GSA Requesting Official E-Mail Address: Required Field")
                         .Matches(@"^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(gsa)(ig)?\.gov$")
                         .WithMessage("Primary GSA Requesting Official E-Mail Address: Not Valid GSA E-Mail")
-                        .Must(BeAValidEMail)
+                        .Must(da.BeAValidEMail)
                         .WithMessage("Primary GSA Requesting Official E-Mail Address: Not Found in GCIMS");
 
                 RuleFor(requestingOfficial => requestingOfficial.SponsorIsPMCORCO)
@@ -1033,7 +817,7 @@ namespace ProcessCIW.Validation
                     RuleFor(r => r.SponsorAlternateEmailAddress1)
                             .Matches(@"^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(gsa)(ig)?\.gov$")
                             .WithMessage("Alternate GSA Requesting Official 1: E-Mail Address: Not Valid GSA E-Mail")
-                            .Must(BeAValidEMail)
+                            .Must(da.BeAValidEMail)
                             .WithMessage("Alternate GSA Requesting Official 1: E-Mail Address: Not Found in GCIMS");
 
                     RuleFor(requestingOfficial => requestingOfficial.SponsorAlternateIsPMCORCO1)
@@ -1050,7 +834,7 @@ namespace ProcessCIW.Validation
                     RuleFor(r => r.SponsorAlternateEmailAddress2)
                             .Matches(@"^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(gsa)(ig)?\.gov$")
                             .WithMessage("Alternate GSA Requesting Official 2: E-Mail Address: Not Valid GSA E-Mail")
-                            .Must(BeAValidEMail)
+                            .Must(da.BeAValidEMail)
                             .WithMessage("Alternate GSA Requesting Official 2: E-Mail Address: Not Found in GCIMS");
 
                     RuleFor(requestingOfficial => requestingOfficial.SponsorAlternateIsPMCORCO2)
@@ -1067,7 +851,7 @@ namespace ProcessCIW.Validation
                     RuleFor(r => r.SponsorAlternateEmailAddress3)
                             .Matches(@"^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(gsa)(ig)?\.gov$")
                             .WithMessage("Alternate GSA Requesting Official 3: E-Mail Address: Not Valid GSA E-Mail")
-                            .Must(BeAValidEMail)
+                            .Must(da.BeAValidEMail)
                             .WithMessage("Alternate GSA Requesting Official 3: E-Mail Address: Not Found in GCIMS");
 
                     RuleFor(requestingOfficial => requestingOfficial.SponsorAlternateIsPMCORCO3)
@@ -1084,7 +868,7 @@ namespace ProcessCIW.Validation
                     RuleFor(r => r.SponsorAlternateEmailAddress4)
                             .Matches(@"^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(gsa)(ig)?\.gov$")
                             .WithMessage("Alternate GSA Requesting Official 4: E-Mail Address: Not Valid GSA E-Mail")
-                            .Must(BeAValidEMail)
+                            .Must(da.BeAValidEMail)
                             .WithMessage("Alternate GSA Requesting Official 4: E-Mail Address: Not Found in GCIMS");
 
                     RuleFor(requestingOfficial => requestingOfficial.SponsorAlternateIsPMCORCO4)
@@ -1093,57 +877,7 @@ namespace ProcessCIW.Validation
                 });
             });
         }
-
-        /// <summary>
-        /// Verifies that email provided is a valid GSA POC email
-        /// </summary>
-        /// <param name="workEMail"></param>
-        /// <returns></returns>
-        private bool BeAValidEMail(string workEMail)
-        {
-            try
-            {
-                using (conn)
-                {
-                    if (conn.State == ConnectionState.Closed)
-                        conn.Open();
-
-                    using (cmd)
-                    {
-                        cmd.Connection = conn;
-                        cmd.CommandType = CommandType.StoredProcedure;
-
-                        cmd.CommandText = "CIW_IsValidGSAPOC";
-
-                        cmd.Parameters.Clear();
-
-                        MySqlParameter[] sponsorParameters = new MySqlParameter[]
-                        {
-                            new MySqlParameter { ParameterName = "workEMail", Value = workEMail, MySqlDbType = MySqlDbType.VarChar, Size = 64, Direction = ParameterDirection.Input },
-                            new MySqlParameter { ParameterName = "rowsReturned", MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Output }
-                        };
-
-                        cmd.Parameters.AddRange(sponsorParameters);
-
-                        cmd.ExecuteNonQuery();
-
-                        var rows = cmd.Parameters["rowsReturned"].Value;
-
-                        log.Info(string.Format("CIW_IsValidGSAPOC returned with {0} rows and result: {1}", rows, (int)rows > 0));
-
-                        if ((int)rows == 1)
-                            return true;
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-
-            return false;
-        }
-    }
+    }        
 
     /// <summary>
     /// Class VallidateCIW
@@ -1170,11 +904,9 @@ namespace ProcessCIW.Validation
         /// <returns></returns>
         public bool IsDuplicate(List<CIW> ciwInformation)
         {
-            ValidationResult duplicate = new ValidationResult();
-
             UserExistsValidator validator = new UserExistsValidator();
 
-            duplicate = validator.Validate(ciwInformation.First());
+            ValidationResult duplicate = validator.Validate(ciwInformation.First());
 
             return duplicate.IsValid;
         }
@@ -1359,7 +1091,7 @@ namespace ProcessCIW.Validation
         }
         private void AddVendorPOC(string fName, string lName, string email, string phone, List<CIW> ciwInfo)
         {
-            if (!fName.Equals("") && !lName.Equals("") && !email.Equals("") && !phone.Equals(""))
+            if (!string.IsNullOrEmpty(fName) && !string.IsNullOrEmpty(lName) && !string.IsNullOrEmpty(email) && !string.IsNullOrEmpty(phone))
             {
                 ciwInfo.First().VendorPOC.Add(new POC.VendorPOC
                 {
@@ -1459,7 +1191,7 @@ namespace ProcessCIW.Validation
         /// <param name="ciwInfo"></param>
         public void AddGSAPOC(string email, string pmCorCoCs, List<CIW> ciwInfo)
         {
-            if (!email.Equals("") && !pmCorCoCs.Equals(""))
+            if (!string.IsNullOrEmpty(email) && !string.IsNullOrEmpty(pmCorCoCs))
             {
                 ciwInfo.First().GSAPOC.Add(new POC.GSAPOC
                 {

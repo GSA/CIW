@@ -72,9 +72,14 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Interface\IDataAccess.cs" />
+    <Compile Include="Interface\IProcessDocuments.cs" />
+    <Compile Include="Interface\IUtilities.cs" />
     <Compile Include="Models\POC.cs" />
     <Compile Include="Models\UnprocessedFiles.cs" />
+    <Compile Include="Models\UploaderInformation.cs" />
     <Compile Include="Process\CIWEMails.cs" />
+    <Compile Include="Utilities\DataAccess.cs" />
     <Compile Include="Utilities\Email.cs" />
     <Compile Include="Utilities\Utilities.cs" />
     <Compile Include="Models\CIWData.cs" />

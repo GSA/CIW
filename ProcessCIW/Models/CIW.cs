@@ -1,20 +1,29 @@
 ﻿using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
+using ProcessCIW.Interface;
 
 namespace ProcessCIW.Models
 {
-    
+
 
     /// <summary>
     /// The CIW class is the main data object of ProcessCIW. After the CIW is extracted into a csv, this data is then mapped to the CIW object.
     /// </summary>
     class CIW
     {
+        private readonly IUtilities U = new Utilities.Utilities();
+
         delegate string del(string s);
-        readonly del TrimPhone = new del(Utilities.Utilities.TrimPhoneNum);
-        readonly del TrimPound = new del(Utilities.Utilities.TrimPoundSign);
-        readonly del CleanSsn = new del(Utilities.Utilities.CleanSsn);
+        readonly del TrimPhone;
+        readonly del TrimPound;
+        readonly del CleanSsn;
+
+        public CIW()
+        {
+            TrimPhone = new del(U.TrimPhoneNum);
+            TrimPound = new del(U.TrimPoundSign);
+            CleanSsn = new del(U.CleanSsn);
+        }
 
         //List of backing fields
         private string _FirstName;
