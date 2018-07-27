@@ -41,9 +41,7 @@ namespace ProcessCIW
             log.Info("Application Done");
 
             Console.WriteLine("Done! " + stopWatch.ElapsedMilliseconds);
-
-            //End of program
-            return;
+                        
         }
 
         /// <summary>
@@ -51,16 +49,16 @@ namespace ProcessCIW
         /// </summary>
         private static void ProcessFiles()
         {
-            List<UnprocessedFiles> uf = new List<UnprocessedFiles>();
+            List<FileMetadata> uf;
 
-			log.Info(string.Format("Getting unprocessed files"));
+			log.Info("Getting unprocessed files");
             uf = pd.GetUnprocessedFiles();
 
             foreach (string oldCSVFiles in Directory.EnumerateFiles(ConfigurationManager.AppSettings["TEMPFOLDER"], "*.csv"))
             {
                 try
                 {
-                    log.Info(string.Format("Deleting old CSV file (0).", oldCSVFiles));
+                    log.Info(string.Format("Deleting old CSV file {0}.", oldCSVFiles));
                     File.Delete(oldCSVFiles);
                 }
                 catch (IOException e)
@@ -87,35 +85,33 @@ namespace ProcessCIW
                 log.Info("Processing Prod Files");
                 ProcessProdFiles(uf);
             }
-
-            return;
         }
 
         /// <summary>
         /// Processes files while in debug mode, note that in debug mode the files are not encrypted
         /// </summary>
         /// <param name="filesForProcessing"></param>
-        private static void ProcessDebugFiles(List<UnprocessedFiles> filesForProcessing)
+        private static void ProcessDebugFiles(List<FileMetadata> filesForProcessing)
         {
             int processedResult;
 
             foreach (var ciwFile in filesForProcessing)
             {
-                string filePath = ConfigurationManager.AppSettings["CIWDEBUGFILELOCATION"] + ciwFile.FileName;
+                ciwFile.FilePath = ConfigurationManager.AppSettings["CIWDEBUGFILELOCATION"] + ciwFile.FileName;
 
                 int errorCode;
 
-                log.Info(string.Format("Processing file {0}", filePath));
+                log.Info(string.Format("Processing file {0}", ciwFile.FilePath));
 
                 //Get data from CIW
-                string tempFile = pd.GetCIWInformation(ciwFile.PersID, filePath, ciwFile.FileName, out errorCode);
+                ciwFile.TempFilePath = pd.GetCIWInformation(ciwFile, out errorCode);
 
-                if (tempFile != null)
+                if (ciwFile.TempFilePath != null)
                 {
-                    log.Info(string.Format("GetCIWInformation returned with temp file {0}.", tempFile));
+                    log.Info(string.Format("GetCIWInformation returned with temp file {0}.", ciwFile.TempFilePath));
 
                     //Process the data retrieved from the CIW
-                    processedResult = pd.ProcessCIWInformation(ciwFile.PersID, tempFile, true);
+                    processedResult = pd.ProcessCIWInformation(ciwFile, true);
 
                     log.Info(string.Format("ProcessCIWInformation returned with result: {0}", GetErrorMessage(processedResult)));
                     //Update the status of processing the file in the database
@@ -130,7 +126,7 @@ namespace ProcessCIW
                 try
                 {
                     //Delete the original file
-                    Utilities.Utilities.DeleteFiles(new List<string> { filePath });
+                    Utilities.Utilities.DeleteFiles(new List<string> { ciwFile.FilePath });
                 }
                 catch (IOException e)
                 {
@@ -168,38 +164,36 @@ namespace ProcessCIW
         /// Processes files uploaded when not in debug mode
         /// </summary>
         /// <param name="filesForProcessing"></param>
-        private static void ProcessProdFiles(List<UnprocessedFiles> filesForProcessing)
+        private static void ProcessProdFiles(List<FileMetadata> filesForProcessing)
         {
             int processedResult;
 
             foreach (var ciwFile in filesForProcessing)
             {
-                string filePath = ConfigurationManager.AppSettings["CIWPRODUCTIONFILELOCATION"] + ciwFile.FileName;
+                ciwFile.FilePath = ConfigurationManager.AppSettings["CIWPRODUCTIONFILELOCATION"] + ciwFile.FileName;
                 int errorCode;
-                log.Info(string.Format("Processing file {0}", filePath));
+                log.Info(string.Format("Processing file {0}", ciwFile.FilePath));
 
                 //Decrypt unprocessed production files
-                byte[] buffer = new byte[] { };
+                byte[] buffer;
 
-                string decryptedFile = string.Empty;
+                ciwFile.DecryptedFilePath = ConfigurationManager.AppSettings["CIWPRODUCTIONFILELOCATION"] + u.GenerateDecryptedFilename(Path.GetFileNameWithoutExtension(ciwFile.FileName));
 
-                decryptedFile = ConfigurationManager.AppSettings["CIWPRODUCTIONFILELOCATION"] + u.GenerateDecryptedFilename(Path.GetFileNameWithoutExtension(ciwFile.FileName));
+                log.Info(string.Format("Decrypting file {0}.", ciwFile.DecryptedFilePath));
 
-                log.Info(string.Format("Decrypting file {0}.", ciwFile));
+                buffer = File.ReadAllBytes(ciwFile.FilePath);
 
-                buffer = File.ReadAllBytes(filePath);
-
-                buffer.WriteToFile(decryptedFile, Cryptography.Security.Decrypt, true);
+                buffer.WriteToFile(ciwFile.DecryptedFilePath, Cryptography.Security.Decrypt, true);
 
                 //Gets data from CIW
-                string tempFile = pd.GetCIWInformation(ciwFile.PersID, decryptedFile, ciwFile.FileName, out errorCode);
+                ciwFile.TempFilePath = pd.GetCIWInformation(ciwFile, out errorCode);
 
-                if (tempFile != null)
+                if (ciwFile.TempFilePath != null)
                 {
-                    log.Info(string.Format("GetCIWInformation returned with temp file {0}.", tempFile));
+                    log.Info(string.Format("GetCIWInformation returned with temp file {0}.", ciwFile.TempFilePath));
 
                     //Processes data retrieved from CIW
-                    processedResult = pd.ProcessCIWInformation(ciwFile.PersID, tempFile, true);
+                    processedResult = pd.ProcessCIWInformation(ciwFile, true);
 
                     log.Info(string.Format("ProcessCIWInformation returned with result: {0}", processedResult == 1 ? "File processed successfully" : processedResult == 0 ? "File remains unprocessed" : "File failed processing"));
 
@@ -213,7 +207,7 @@ namespace ProcessCIW
                 try
                 {
                     //Delete the original and decrypted file
-                    Utilities.Utilities.DeleteFiles(new List<string> { filePath, decryptedFile });
+                    Utilities.Utilities.DeleteFiles(new List<string> { ciwFile.FilePath, ciwFile.DecryptedFilePath });
                 }
                 catch (IOException e)
                 {
