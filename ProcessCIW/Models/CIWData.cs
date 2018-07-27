@@ -5,7 +5,7 @@ namespace ProcessCIW.Models
     /// <summary>
     /// Class used while processing CIW and creating csv file
     /// </summary>
-    class CIWData
+    public class CIWData
     {
         //Backing field for InnerText
         private string _innerText;

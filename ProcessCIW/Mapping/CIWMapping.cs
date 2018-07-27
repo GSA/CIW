@@ -3,7 +3,7 @@ using ProcessCIW.Models;
 
 namespace ProcessCIW.Mapping
 {
-    sealed class CIWMapping : CsvClassMap<CIW>
+    public class CIWMapping : CsvClassMap<CIW>
     {
         /// <summary>
         /// Maps the csv file created from the CIW to the CIW object.

@@ -16,35 +16,26 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Xml;
+using ProcessCIW.Enum;
 
 namespace ProcessCIW
 {
-    public enum ErrorCodes : int
-    {
-        unknown_error = -1,
-        unprocessed=0,
-        successfully_processed=1,
-        password_protected=-2,
-        wrong_version=-3,
-        arra=-4,
-        duplicate_user=-5,
-        failed_validation=-6
-    }
-
-
-/// <summary>
-/// Class that controls processing of CIW forms
-/// </summary>
-class ProcessDocuments : IProcessDocuments
+    /// <summary>
+    /// Class that controls processing of CIW forms
+    /// </summary>
+    public class ProcessDocuments : IProcessDocuments
     {
         private static CsvConfiguration config;
         private readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        private readonly IDataAccess da = DataAccess.GetInstance();
+        private readonly IDataAccess dataAccess;
+        private readonly IFileTool fileTool;
         /// <summary>
         /// Constructor that sets up CsvConfiguration which is part of CsvHelper
         /// </summary>
-        public ProcessDocuments()
+        public ProcessDocuments(IDataAccess dataAccess, IFileTool fileTool)
         {
+            this.dataAccess = dataAccess;
+            this.fileTool = fileTool;
             config = new CsvConfiguration();
 
             config.Delimiter = "||";
@@ -52,13 +43,12 @@ class ProcessDocuments : IProcessDocuments
             config.WillThrowOnMissingField = false;
             config.IsHeaderCaseSensitive = false;
             config.TrimFields = false;
-        }        
+        }
 
         /// <summary>
         /// Get all the CIW information, create temp csv file then load that and then filter it down to the different objects
         /// </summary>
         /// <param name="fileName"></param>
-
         public string GetCIWInformation(int uploaderID, string filePath, string fileName, out int errorCode)
         {
             List<CIWData> ciwInformation = new List<CIWData>();
@@ -127,36 +117,36 @@ class ProcessDocuments : IProcessDocuments
                     //now we have 29 children of type w:tr which are the rows of the table
                     //select all the table cells inside the current table that arent a section header. 
                     //currently headers start with a number so excluded those
-                    var tableCells = docTable.Descendants<TableCell>().Except(docTable.Descendants<TableCell>().Where( x => "0123456789".Contains(x.InnerText.Trim().Substring(0,1))));
+                    var tableCells = docTable.Descendants<TableCell>().Except(docTable.Descendants<TableCell>().Where(x => "0123456789".Contains(x.InnerText.Trim().Substring(0, 1))));
 
                     //Grab the version cell and add it to ciwInformation
                     var versionNode = xml.SelectSingleNode(string.Format("w:body/w:tbl/w:tr/w:tc/w:tbl/w:tr/w:tc"), nameSpaceManager).NextSibling;
                     ciwInformation.Add(new CIWData { InnerText = versionNode.InnerText, TagName = versionNode.ChildNodes[1].ChildNodes[0].ChildNodes[1].Attributes[0].Value });
 
                     //get pob country name
-                    var placeOfBirthCountryNode = xml.FirstChild.ChildNodes[2].ChildNodes[4].ChildNodes[4];                    
+                    var placeOfBirthCountryNode = xml.FirstChild.ChildNodes[2].ChildNodes[4].ChildNodes[4];
                     var pobTagname = placeOfBirthCountryNode.ChildNodes[2].FirstChild.ChildNodes[1].Attributes[0].Value;
                     ciwInformation.Add(new CIWData { InnerText = placeOfBirthCountryNode.LastChild.InnerText, TagName = pobTagname + "2" });
 
                     //get home country name
                     var homeCountry = xml.FirstChild.ChildNodes[2].ChildNodes[6].ChildNodes[2].LastChild.InnerText;
                     var homeTag = xml.FirstChild.ChildNodes[2].ChildNodes[6].ChildNodes[2].ChildNodes[2].FirstChild.ChildNodes[1].Attributes[0].Value;
-                    ciwInformation.Add(new CIWData { InnerText=homeCountry, TagName=homeTag+"2" });
-                    
+                    ciwInformation.Add(new CIWData { InnerText = homeCountry, TagName = homeTag + "2" });
+
                     //get citizenship country
                     var citizenCountry = xml.FirstChild.ChildNodes[2].ChildNodes[9].ChildNodes[4].ChildNodes[2].InnerText;
                     var citizenTag = xml.FirstChild.ChildNodes[2].ChildNodes[9].ChildNodes[4].ChildNodes[2].FirstChild.ChildNodes[1].Attributes[0].Value;
-                    ciwInformation.Add(new CIWData { InnerText=citizenCountry, TagName=citizenTag+"2" });
+                    ciwInformation.Add(new CIWData { InnerText = citizenCountry, TagName = citizenTag + "2" });
 
                     //get all table cells and add them after the version in ciwInformation
-                    ciwInformation.AddRange( tableCells
+                    ciwInformation.AddRange(tableCells
                                         .Select
                                             (
                                                 s =>
                                                     new CIWData
                                                     {
                                                         TagName = s.ChildElements.OfType<SdtBlock>().FirstOrDefault().GetFirstChild<SdtProperties>().GetFirstChild<Tag>().Val,
-                                                        InnerText =ParseXML( s.ChildElements.OfType<SdtBlock>().FirstOrDefault().InnerText, s.OuterXml),
+                                                        InnerText = ParseXML(s.ChildElements.OfType<SdtBlock>().FirstOrDefault().InnerText, s.OuterXml),
                                                     }
                                             ).ToList());
                 }
@@ -180,7 +170,7 @@ class ProcessDocuments : IProcessDocuments
                 log.Info(String.Format("Creating temp file for {0}", lastFirst));
 
                 //Create a temp csv file of the information within the form
-                string tempFile = CreateTempFile(ciwInformation);
+                string tempFile = fileTool.CreateTempFile(ciwInformation);
                 errorCode = (int)ErrorCodes.successfully_processed;
 
                 return tempFile;
@@ -228,9 +218,9 @@ class ProcessDocuments : IProcessDocuments
             {
                 string _name = fileName.Remove(_, fileName.Length - _ - 5);
                 return _name;
-            }                
+            }
         }
-                
+
         /// <summary>
         /// Retrieves the node
         /// </summary>
@@ -303,21 +293,21 @@ class ProcessDocuments : IProcessDocuments
         /// <param name="filePath"></param>
         /// <param name="isDebug"></param>
         /// <returns>Int success code</returns>
-        public int ProcessCIWInformation(int uploaderID, string filePath, bool isDebug)
+        public int ProcessCIWInformation(int uploaderID, string filePath, bool isDebug, IValidateCIW validateCiw)
         {
             log.Info("Processing CIW");
 
             //Create validation object
-            ValidateCIW validate = new Validation.ValidateCIW();
+            IValidateCIW validate = validateCiw;
 
             List<CIW> ciwInformation;
 
             log.Info("Getting file data from temp csv file.");
 
             //Gets list of CIW's after mapping from csv files
-            ciwInformation = GetFileData<CIW, CIWMapping>(filePath, config);
+            ciwInformation = fileTool.GetFileData<CIW, CIWMapping>(filePath, config);
 
-            DataSet fipsCodes = da.GetFipsCodeFromCountryName(ciwInformation[0].PlaceOfBirthCountryName, ciwInformation[0].HomeCountryName, ciwInformation[0].CitizenCountryName);
+            DataSet fipsCodes = dataAccess.GetFipsCodeFromCountryName(ciwInformation[0].PlaceOfBirthCountryName, ciwInformation[0].HomeCountryName, ciwInformation[0].CitizenCountryName);
 
             ApplyFipsCodes(ref ciwInformation, fipsCodes);
 
@@ -351,7 +341,7 @@ class ProcessDocuments : IProcessDocuments
 
             }
             else
-                log.Info(string.Format("Version OK"));
+                log.Info("Version OK");
 
             log.Info(string.Format("Checking if ARRA. ARRA selected is: {0}", ciwInformation.First().ArraLongTermContractor));
 
@@ -364,7 +354,7 @@ class ProcessDocuments : IProcessDocuments
                 return (int)ErrorCodes.arra;
             }
             else
-                log.Info(string.Format("ARRA is OK"));
+                log.Info("ARRA is OK");
 
             log.Info(String.Format("Checking if {0} is a duplicate user", ciwInformation.First().FullNameForLog));
 
@@ -383,21 +373,18 @@ class ProcessDocuments : IProcessDocuments
             log.Info(String.Format("Company Name Sub is : {0}", !string.IsNullOrWhiteSpace(ciwInformation.FirstOrDefault().CompanyNameSub) ? ciwInformation.FirstOrDefault().CompanyNameSub : "No Company Name Sub"));
             log.Info(String.Format("Checking if form is valid for user {0}", ciwInformation.First().FullNameForLog));
 
-            
+
 
             //Validation is called inside if statement
             if (validate.IsFormValid(ciwInformation))
             {
-                log.Info(String.Format("Form is valid for user {0}", ciwInformation.First().FullNameForLog));
-
-                //Create object to begin insertion of ciw into database
-                InsertCIW sd = new InsertCIW(ciwInformation.First(), uploaderID);
+                log.Info(string.Format("Form is valid for user {0}", ciwInformation.First().FullNameForLog));
 
                 int persID = 0;
 
                 //Save the data
-                log.Info(String.Format("Begin inserting CIW for {0}", ciwInformation.First().FullNameForLog));
-                persID = sd.SaveCIW();
+                log.Info(string.Format("Begin inserting CIW for {0}", ciwInformation.First().FullNameForLog));
+                persID = dataAccess.InsertCIW(ciwInformation.First(), uploaderID);
 
                 //Begin sponsorship if successful
                 if (persID > 0)
@@ -407,16 +394,12 @@ class ProcessDocuments : IProcessDocuments
             }
             else
             {
-                log.Warn(String.Format("Form failed validation for user {0}", ciwInformation.First().FullNameForLog));
+                log.Warn(string.Format("Form failed validation for user {0}", ciwInformation.First().FullNameForLog));
 
                 //E-Mail Failure Template
                 //Send error email
-                Tuple<ValidationResult, ValidationResult, ValidationResult,
-                        ValidationResult, ValidationResult, ValidationResult> ValidationErrors = new Tuple<ValidationResult, ValidationResult, ValidationResult,
-                                                                                                            ValidationResult, ValidationResult, ValidationResult>(null, null,
-                                                                                                                                                                null, null, null, null);
-
-                log.Info(string.Format("Getting errors"));
+                Tuple<ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult, ValidationResult> ValidationErrors;
+                log.Info("Getting errors");
 
                 ValidationErrors = validate.GetErrors();
 
@@ -442,60 +425,8 @@ class ProcessDocuments : IProcessDocuments
             return count;
         }
 
-        /// <summary>
-        /// Generates temp CSV file separated by ||
-        /// </summary>
-        /// <param name="ciwData"></param>
-        private string CreateTempFile(List<CIWData> ciwData)
-        {
-            Guid guid = Guid.NewGuid();
-            string csvFileName = guid + ".csv";
+        
 
-            log.Info("CIW Info Count: " + ciwData.Count);
-
-            string fileName = ConfigurationManager.AppSettings["TEMPFOLDER"] + csvFileName;
-
-            try
-            {
-                using (StreamWriter writer = new StreamWriter(fileName, false))
-                {
-                    writer.WriteLine(string.Join("||", ciwData.Select(item => item.TagName)));
-                    writer.WriteLine(string.Join("||", ciwData.Select(item => item.InnerText)));
-                }
-            }
-            catch (Exception ex)
-            {
-                log.Error(ex.Message + " - " + ex.InnerException);
-            }
-
-            log.Info(string.Format("Temp csv file {0} created", fileName));
-
-            return fileName;
-        }
-
-        /// <summary>
-        /// Loads the CIW information
-        /// </summary>
-        /// <typeparam name="TClass"></typeparam>
-        /// <typeparam name="TMap"></typeparam>
-        /// <param name="filePath"></param>
-        /// <param name="config"></param>
-        /// <returns>List of CIW's</returns>
-        private List<TClass> GetFileData<TClass, TMap>(string filePath, CsvConfiguration config)
-            where TClass : class
-            where TMap : CsvClassMap<TClass>
-        {
-            log.Info(string.Format("Parsing CSV file {0} and mapping to CIW object", filePath));
-
-            using (CsvParser csvParser = new CsvParser(new StreamReader(filePath), config))
-            {
-                using (CsvReader csvReader = new CsvReader(csvParser))
-                {
-                    csvReader.Configuration.RegisterClassMap<TMap>();
-
-                    return csvReader.GetRecords<TClass>().ToList();
-                }
-            }
-        }
+        
     }
 }

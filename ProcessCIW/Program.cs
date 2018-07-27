@@ -1,7 +1,9 @@
 ﻿using Gsa.Sftp.Libraries.Utilities.Encryption;
+using MySql.Data.MySqlClient;
 using ProcessCIW.Interface;
 using ProcessCIW.Models;
 using ProcessCIW.Utilities;
+using ProcessCIW.Validation;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -14,13 +16,17 @@ namespace ProcessCIW
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        private static Stopwatch stopWatch = new Stopwatch();
+        private static Stopwatch stopWatch = new Stopwatch();        
 
-        private static IProcessDocuments pd = new ProcessDocuments();
+        private static readonly IDataAccess da = DataAccess.GetInstance(new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString()));
 
-        private static readonly IDataAccess da = DataAccess.GetInstance();
+        private static readonly IFileTool ft = new FileTool();
+
+        private static IProcessDocuments pd = new ProcessDocuments(da,ft);
 
         private static readonly IUtilities U = new Utilities.Utilities();
+
+        private static readonly IValidateCIW vc = new ValidateCIW();
 
         //Need better naming namespace and convention here
         private static Utilities.Utilities u = new Utilities.Utilities();
@@ -116,7 +122,7 @@ namespace ProcessCIW
                     log.Info(string.Format("GetCIWInformation returned with temp file {0}.", tempFile));
 
                     //Process the data retrieved from the CIW
-                    processedResult = pd.ProcessCIWInformation(ciwFile.PersID, tempFile, true);
+                    processedResult = pd.ProcessCIWInformation(ciwFile.PersID, tempFile, true, vc);
 
                     log.Info(string.Format("ProcessCIWInformation returned with result: {0}", GetErrorMessage(processedResult)));
                     //Update the status of processing the file in the database
@@ -200,7 +206,7 @@ namespace ProcessCIW
                     log.Info(string.Format("GetCIWInformation returned with temp file {0}.", tempFile));
 
                     //Processes data retrieved from CIW
-                    processedResult = pd.ProcessCIWInformation(ciwFile.PersID, tempFile, true);
+                    processedResult = pd.ProcessCIWInformation(ciwFile.PersID, tempFile, true, vc);
 
                     log.Info(string.Format("ProcessCIWInformation returned with result: {0}", processedResult == 1 ? "File processed successfully" : processedResult == 0 ? "File remains unprocessed" : "File failed processing"));
 

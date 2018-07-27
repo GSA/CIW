@@ -1,11 +1,13 @@
 ﻿using FluentValidation;
 using FluentValidation.Results;
+using MySql.Data.MySqlClient;
 using ProcessCIW.Interface;
 using ProcessCIW.Mapping;
 using ProcessCIW.Models;
 using ProcessCIW.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 
 namespace ProcessCIW.Validation
@@ -22,7 +24,7 @@ namespace ProcessCIW.Validation
         /// </summary>
         public UserExistsValidator()
         {
-            da = DataAccess.GetInstance();
+            da = DataAccess.GetInstance(new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString()));
 
             RuleFor(employee => employee.LastName)
                     .Must((o, LastName) => da.NotBeADuplicateUser(o.LastName, o.DateOfBirth, o.SocialSecurityNumber))
@@ -35,7 +37,7 @@ namespace ProcessCIW.Validation
     /// </summary>
     class EmployeeValidator : AbstractValidator<CIW>
     {
-        private readonly IDataAccess da = DataAccess.GetInstance();
+        private readonly IDataAccess da = DataAccess.GetInstance(new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString()));
         private readonly IUtilities U = new Utilities.Utilities();
 
         /// <summary>
@@ -681,7 +683,7 @@ namespace ProcessCIW.Validation
     /// </summary>
     class ProjectLocationValidator : AbstractValidator<CIW>
     {
-        private readonly IDataAccess da = Utilities.DataAccess.GetInstance();
+        private readonly IDataAccess da = Utilities.DataAccess.GetInstance(new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString()));
 
         /// <summary>
         /// Contains all the validation rules for section 4
@@ -785,7 +787,7 @@ namespace ProcessCIW.Validation
     /// </summary>
     class RequestingOfficialValidator : AbstractValidator<CIW>
     {
-        private readonly IDataAccess da = Utilities.DataAccess.GetInstance();
+        private readonly IDataAccess da = Utilities.DataAccess.GetInstance(new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString()));
         
         /// <summary>
         /// Contains all the validation rules for section 6
@@ -883,7 +885,7 @@ namespace ProcessCIW.Validation
     /// Class VallidateCIW
     /// Does validation for entire CIW form
     /// </summary>
-    class ValidateCIW
+    class ValidateCIW : IValidateCIW
     {
         private readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         ValidationResult section1 = new ValidationResult();
@@ -1189,7 +1191,7 @@ namespace ProcessCIW.Validation
         /// <param name="email"></param>
         /// <param name="pmCorCoCs"></param>
         /// <param name="ciwInfo"></param>
-        public void AddGSAPOC(string email, string pmCorCoCs, List<CIW> ciwInfo)
+        private void AddGSAPOC(string email, string pmCorCoCs, List<CIW> ciwInfo)
         {
             if (!string.IsNullOrEmpty(email) && !string.IsNullOrEmpty(pmCorCoCs))
             {

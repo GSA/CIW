@@ -7,9 +7,9 @@ using System.Data;
 
 namespace ProcessCIW.Interface
 {
-    interface IProcessDocuments
+    public interface IProcessDocuments
     {
         string GetCIWInformation(int uploaderID, string filePath, string fileName, out int errorCode);
-        int ProcessCIWInformation(int uploaderID, string filePath, bool isDebug);
+        int ProcessCIWInformation(int uploaderID, string filePath, bool isDebug, IValidateCIW validateCiw);
     }
 }

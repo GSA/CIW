@@ -3,7 +3,7 @@
     /// <summary>
     /// POC class represents a single line of either VendorPOC's or GSAPOC's from the CIW form
     /// </summary>
-    class POC 
+    public class POC 
     {
         //VendorPOC used when evaluating for non empty lines on the CIW form
         public class VendorPOC

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ProcessCIW.Interface
 {
-    interface IUtilities
+    public interface IUtilities
     {
         bool IsNotWhiteSpace(string s);
         bool StartBeforeEnd(string StartDate, string EndDate);

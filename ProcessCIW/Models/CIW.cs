@@ -9,7 +9,7 @@ namespace ProcessCIW.Models
     /// <summary>
     /// The CIW class is the main data object of ProcessCIW. After the CIW is extracted into a csv, this data is then mapped to the CIW object.
     /// </summary>
-    class CIW
+    public class CIW
     {
         private readonly IUtilities U = new Utilities.Utilities();
 

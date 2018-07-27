@@ -4,7 +4,7 @@ using System.Data;
 
 namespace ProcessCIW.Interface
 {
-    interface IDataAccess
+    public interface IDataAccess
     {
         bool BeAValidEMail(string workEMail);
         bool BeAValidBuilding(string buildingID);
@@ -15,7 +15,7 @@ namespace ProcessCIW.Interface
         List<UnprocessedFiles> GetUnprocessedFiles();
         DataSet GetFipsCodeFromCountryName(string placeOfBirthCountryName, string homeCountryName, string citizenshipCountryName);
         UploaderInformation GetUploaderInformation(int uploaderID);
-
+        int InsertCIW(CIW newUser, int uploaderID);
 
     }
 }

@@ -1,4 +1,5 @@
 ﻿using FluentValidation.Results;
+using MySql.Data.MySqlClient;
 using ProcessCIW.Interface;
 using ProcessCIW.Models;
 using ProcessCIW.Utilities;
@@ -14,14 +15,14 @@ namespace ProcessCIW.Process
     /// <summary>
     /// All processes that involve email during processing the CIW
     /// </summary>
-    class CIWEMails
+    public class CIWEMails
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         //Reference to basic Email class in Utilities
         readonly EMail email = new EMail();
 
-        readonly IDataAccess da = DataAccess.GetInstance();
+        readonly IDataAccess da = DataAccess.GetInstance(new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString()));
 
         //Variable declaration and default values
         readonly UploaderInformation uploaderInfo;
