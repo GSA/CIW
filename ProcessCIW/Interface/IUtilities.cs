@@ -21,7 +21,6 @@ namespace ProcessCIW.Interface
         string CleanSsn(string s);
         byte[] HashSSN(string ssn);
         string GenerateDecryptedFilename(string encryptedFilename);
-        void DeleteFiles(List<string> filesToDelete);
-
+        string fileNameHelper(string fileName);
     }
 }

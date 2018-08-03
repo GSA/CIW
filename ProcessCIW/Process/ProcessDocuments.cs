@@ -1,21 +1,16 @@
-﻿using CsvHelper;
-using CsvHelper.Configuration;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Wordprocessing;
+﻿using CsvHelper.Configuration;
 using FluentValidation.Results;
 using ProcessCIW.Interface;
 using ProcessCIW.Mapping;
 using ProcessCIW.Models;
 using ProcessCIW.Process;
 using ProcessCIW.Utilities;
-using ProcessCIW.Validation;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.IO;
 using System.Linq;
-using System.Xml;
 using ProcessCIW.Enum;
 
 namespace ProcessCIW
@@ -25,15 +20,22 @@ namespace ProcessCIW
     /// </summary>
     public class ProcessDocuments : IProcessDocuments
     {
-        private static CsvConfiguration config;
         private readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static CsvConfiguration config;
         private readonly IDataAccess dataAccess;
         private readonly IFileTool fileTool;
+        private readonly IXmlTool xmlTool;
+        private readonly IUtilities U;
+        private readonly IDeleteTool dt;
+
         /// <summary>
         /// Constructor that sets up CsvConfiguration which is part of CsvHelper
         /// </summary>
         public ProcessDocuments(IDataAccess dataAccess, IFileTool fileTool)
         {
+            dt = new DeleteTool();
+            xmlTool = new XmlTool();
+            U = new Utilities.Utilities();
             this.dataAccess = dataAccess;
             this.fileTool = fileTool;
             config = new CsvConfiguration();
@@ -51,144 +53,35 @@ namespace ProcessCIW
         /// <param name="fileName"></param>
         public string GetCIWInformation(int uploaderID, string filePath, string fileName, out int errorCode)
         {
-            List<CIWData> ciwInformation = new List<CIWData>();
-            log.Info(String.Format("Getting information from file {0}", filePath));
+            List<CIWData> ciwInformation;
+            log.Info(string.Format("Getting information from file {0}", filePath));
 
             //Check for password protection
-            try
+            if (xmlTool.isPasswordProtected(filePath))
             {
-                using (WordprocessingDocument wd = WordprocessingDocument.Open(filePath, false))
-                {
-                    DocumentProtection dp = wd.MainDocumentPart.DocumentSettingsPart.Settings.GetFirstChild<DocumentProtection>();
-                }
-            }
-            catch (FileFormatException e)
-            {
-                log.Warn(string.Format("Locked Document - {0} with inner exception:{1}", e.Message, e.InnerException));
-                sendPasswordProtection(uploaderID, fileNameHelper(fileName));
+                sendPasswordProtection(uploaderID, U.fileNameHelper(fileName));
                 errorCode = (int)ErrorCodes.password_protected;
                 log.Warn(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.password_protected, (int)ErrorCodes.password_protected));
                 return null;
             }
 
-            //Begin parsing XML from CIW document
-            using (var document = WordprocessingDocument.Open(filePath, true))
-            {
-                XmlDocument xml = new XmlDocument();
-                MainDocumentPart docPart = document.MainDocumentPart;
-                xml.InnerXml = docPart.Document.FirstChild.OuterXml;
-                XmlNamespaceManager nameSpaceManager = new XmlNamespaceManager(xml.NameTable);
-                nameSpaceManager.AddNamespace("w", "http://schemas.openxmlformats.org/wordprocessingml/2006/main");
+            ciwInformation = xmlTool.parseCiwDocument(filePath, uploaderID, fileName, out errorCode);
 
-                //Get Version number node
-                var node = xml.SelectSingleNode(string.Format("w:body/w:tbl/w:tr/w:tc/w:tbl/w:tr/w:tc/w:sdt/w:sdtContent/w:p/w:r/w:t"), nameSpaceManager);
+            //used in log
+            string lastFirst = (ciwInformation.FirstOrDefault(c => c.TagName == "Employee-LastName").InnerText ?? "null") + ", " + (ciwInformation.FirstOrDefault(c => c.TagName == "Employee-FirstName").InnerText ?? "null");
 
-                if (node != null)
-                {
-                    if (node.InnerText != "V1")
-                    {
-                        //Begin exiting if wrong version
-                        sendWrongVersion(uploaderID, fileNameHelper(fileName));
-                        errorCode = (int)ErrorCodes.wrong_version;
-                        log.Warn(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.wrong_version, (int)ErrorCodes.wrong_version));
-                        return null;
-                    }
-                }
-                else
-                {
-                    //Begin exiting if no version on form
-                    sendWrongVersion(uploaderID, fileNameHelper(fileName));
-                    errorCode = (int)ErrorCodes.wrong_version;
-                    log.Warn(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.wrong_version, (int)ErrorCodes.wrong_version));
-                    return null;
-                }
+            log.Info(string.Format("CiwInformation obtained for {0}", lastFirst));
+            log.Info(string.Format("Creating temp file for {0}", lastFirst));
 
-                try
-                {
-                    //Gets all data on the form via tags
-                    log.Info(string.Format("Parsing XML."));
-                    //docpart.document.firstchild is the entire xml document
-                    //if we get the child elements we get a list of first children which should be 9
-                    //we select the 3rd child which is the main table that gets filled out
-                    var docTable = docPart.Document.FirstChild.ChildElements[2];
-                    //the first 2 children of this table are grid settings and properties which we dont care about right now
-                    docTable.RemoveAllChildren<TableGrid>();
-                    docTable.RemoveAllChildren<TableProperties>();
-                    //now we have 29 children of type w:tr which are the rows of the table
-                    //select all the table cells inside the current table that arent a section header. 
-                    //currently headers start with a number so excluded those
-                    var tableCells = docTable.Descendants<TableCell>().Except(docTable.Descendants<TableCell>().Where(x => "0123456789".Contains(x.InnerText.Trim().Substring(0, 1))));
+            //Create a temp csv file of the information within the form
+            string tempFile = fileTool.CreateTempFile(ciwInformation);
+            errorCode = (int)ErrorCodes.successfully_processed;
 
-                    //Grab the version cell and add it to ciwInformation
-                    var versionNode = xml.SelectSingleNode(string.Format("w:body/w:tbl/w:tr/w:tc/w:tbl/w:tr/w:tc"), nameSpaceManager).NextSibling;
-                    ciwInformation.Add(new CIWData { InnerText = versionNode.InnerText, TagName = versionNode.ChildNodes[1].ChildNodes[0].ChildNodes[1].Attributes[0].Value });
+            return tempFile;
 
-                    //get pob country name
-                    var placeOfBirthCountryNode = xml.FirstChild.ChildNodes[2].ChildNodes[4].ChildNodes[4];
-                    var pobTagname = placeOfBirthCountryNode.ChildNodes[2].FirstChild.ChildNodes[1].Attributes[0].Value;
-                    ciwInformation.Add(new CIWData { InnerText = placeOfBirthCountryNode.LastChild.InnerText, TagName = pobTagname + "2" });
-
-                    //get home country name
-                    var homeCountry = xml.FirstChild.ChildNodes[2].ChildNodes[6].ChildNodes[2].LastChild.InnerText;
-                    var homeTag = xml.FirstChild.ChildNodes[2].ChildNodes[6].ChildNodes[2].ChildNodes[2].FirstChild.ChildNodes[1].Attributes[0].Value;
-                    ciwInformation.Add(new CIWData { InnerText = homeCountry, TagName = homeTag + "2" });
-
-                    //get citizenship country
-                    var citizenCountry = xml.FirstChild.ChildNodes[2].ChildNodes[9].ChildNodes[4].ChildNodes[2].InnerText;
-                    var citizenTag = xml.FirstChild.ChildNodes[2].ChildNodes[9].ChildNodes[4].ChildNodes[2].FirstChild.ChildNodes[1].Attributes[0].Value;
-                    ciwInformation.Add(new CIWData { InnerText = citizenCountry, TagName = citizenTag + "2" });
-
-                    //get all table cells and add them after the version in ciwInformation
-                    ciwInformation.AddRange(tableCells
-                                        .Select
-                                            (
-                                                s =>
-                                                    new CIWData
-                                                    {
-                                                        TagName = s.ChildElements.OfType<SdtBlock>().FirstOrDefault().GetFirstChild<SdtProperties>().GetFirstChild<Tag>().Val,
-                                                        InnerText = ParseXML(s.ChildElements.OfType<SdtBlock>().FirstOrDefault().InnerText, s.OuterXml),
-                                                    }
-                                            ).ToList());
-                }
-                catch (Exception e)
-                {
-                    log.Warn(string.Format("XML Parsing Failed - {0} with inner exception: {1}", e.Message, e.InnerException));
-                    sendWrongVersion(uploaderID, fileNameHelper(fileName));
-
-
-                    errorCode = (int)ErrorCodes.wrong_version;
-                    log.Warn(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.wrong_version, (int)ErrorCodes.wrong_version));
-                    return null;
-                }
-
-
-                //used in log
-                string lastFirst = (ciwInformation.FirstOrDefault(c => c.TagName == "Employee-LastName").InnerText ?? "null") + ", " + (ciwInformation.FirstOrDefault(c => c.TagName == "Employee-FirstName").InnerText ?? "null");
-
-                log.Info(String.Format("CiwInformation obtained for {0}", lastFirst));
-
-                log.Info(String.Format("Creating temp file for {0}", lastFirst));
-
-                //Create a temp csv file of the information within the form
-                string tempFile = fileTool.CreateTempFile(ciwInformation);
-                errorCode = (int)ErrorCodes.successfully_processed;
-
-                return tempFile;
-            }
         }
 
-        /// <summary>
-        /// Function that is called if wrong version detected.
-        /// Calls sendEmail constructor and function to send email for wrong version.
-        /// </summary>
-        /// <param name="uploaderID"></param>
-        /// <param name="fileName"></param>
-        private void sendWrongVersion(int uploaderID, string fileName)
-        {
-            CIWEMails sendEmails = new CIWEMails(uploaderID, "", "", "", "", fileName);
 
-            sendEmails.SendWrongVersion();
-        }
 
         /// <summary>
         /// Function that is called if password protection detected
@@ -201,73 +94,9 @@ namespace ProcessCIW
             CIWEMails sendEmails = new CIWEMails(uploaderID, "", "", "", "", fileName);
 
             sendEmails.SendPasswordProtection();
-        }
+        }        
 
-        /// <summary>
-        /// Removes end of filename
-        /// </summary>
-        /// <param name="fileName"></param>
-        /// <returns></returns>
-        private string fileNameHelper(string fileName)
-        {
-
-            int _ = fileName.LastIndexOf("_");
-            if (_ < 0)
-                return fileName;
-            else
-            {
-                string _name = fileName.Remove(_, fileName.Length - _ - 5);
-                return _name;
-            }
-        }
-
-        /// <summary>
-        /// Retrieves the node
-        /// </summary>
-        /// <param name="innerText"></param>
-        /// <param name="outerXML"></param>
-        /// <returns>The text object in a field or the selected list item value</returns>
-        private string ParseXML(string innerText, string outerXML)
-        {
-            //if xml contains dropdown list then parse and return value otherwise return inner xml
-            XmlDocument xml = new XmlDocument();
-
-            if (!String.IsNullOrEmpty(outerXML))
-            {
-                xml.InnerXml = outerXML;
-            }
-
-            // Add the namespace.
-            XmlNamespaceManager nameSpaceManager = new XmlNamespaceManager(xml.NameTable);
-
-            nameSpaceManager.AddNamespace("w", "http://schemas.openxmlformats.org/wordprocessingml/2006/main");
-
-            //check if it is a list
-            XmlNodeList elemList = xml.GetElementsByTagName("w:listItem");
-
-            if (elemList.Count == 0)
-                return innerText;
-
-            //Properly retrieve selected value of dropdown items
-            else
-            {
-                if (!String.IsNullOrEmpty(innerText))
-                {
-                    XmlNode a = xml.SelectSingleNode(string.Format("w:tc/w:sdt/w:sdtPr/w:dropDownList/w:listItem[@w:displayText=\"{0}\"]", innerText), nameSpaceManager);
-
-                    if (a.Attributes.Count > 1)
-                    {
-                        if (a.Attributes[1].Value != null)
-                        {
-                            return a.Attributes[1].Value;
-                        }
-                    }
-                    else return a.Attributes[0].Value;
-                }
-            }
-
-            return innerText;
-        }
+        
 
         /// <summary>
         /// Helper function to check for child care applicant on CIW
@@ -316,16 +145,7 @@ namespace ProcessCIW
                                                  CheckIfChildCare(ciwInformation));
 
             //Delete temp csv file before proceeding
-            try
-            {
-                log.Info(string.Format("Deleting Temp CSV File {0}.", filePath));
-                File.Delete(filePath);
-            }
-            catch (IOException e)
-            {
-                log.Error("Unable to delete temp file" + e.Message);
-                return 0;
-            }
+            dt.deleteTempCsvFile(filePath);
 
             log.Info("Processing " + ciwInformation.First().FullNameForLog);
 

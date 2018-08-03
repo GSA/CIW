@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 
 namespace ProcessCIW.Utilities
 {
-    sealed class Utilities : IUtilities
+    public sealed class Utilities : IUtilities
     {
         private readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -206,18 +206,22 @@ namespace ProcessCIW.Utilities
         public string GenerateDecryptedFilename(string encryptedFilename)
         {
             return string.Concat(encryptedFilename, "-d.docx");
-        }
+        }        
 
         /// <summary>
-        /// Deletes all files in the list of files passed in
+        /// Removes end of filename
         /// </summary>
-        /// <param name="filesToDelete"></param>
-        public void DeleteFiles(List<string> filesToDelete)
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public string fileNameHelper(string fileName)
         {
-            foreach (var file in filesToDelete)
+            int _ = fileName.LastIndexOf("_");
+            if (_ < 0)
+                return fileName;
+            else
             {
-                log.Info(string.Format("Deleting CIW file {0}.", file));
-                File.Delete(file);
+                string _name = fileName.Remove(_, fileName.Length - _ - 5);
+                return _name;
             }
         }
     }
