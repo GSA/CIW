@@ -12,6 +12,13 @@ namespace ProcessCIW.Utilities
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
+        public static string RemoveDateFromFilename(string s)
+        {
+            int _pos = s.LastIndexOf('_');
+            int _dot = s.LastIndexOf('.');
+            return s.Remove(_pos, _dot - _pos);
+        }
+
         /// <summary>
         /// Returns false if string is white space
         /// Return true if null or empty
