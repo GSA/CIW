@@ -3,28 +3,29 @@ using ProcessCIW.Interface;
 using ProcessCIW.Models;
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Data;
 
 namespace ProcessCIW.Utilities
 {
     public class DataAccess : IDataAccess
     {
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly ILogTool log;
         private volatile static DataAccess dataAccess;
-        private readonly MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString());
+        private readonly MySqlConnection conn;
         private MySqlCommand cmd = new MySqlCommand();
-        private readonly IUtilities U = new Utilities();
+        private readonly IUtilities U;
         private CIW ciwInformation;
         private int uploaderID;
         MySqlTransaction trans;
 
-        private DataAccess(MySqlConnection conn)
+        private DataAccess(MySqlConnection conn, IUtilities U, ILogTool log)
         {
             this.conn = conn;
+            this.U = U;
+            this.log = log;
         }
 
-        public static DataAccess GetInstance(MySqlConnection conn)
+        public static DataAccess GetInstance(MySqlConnection conn, IUtilities U, ILogTool log)
         {
             object lockingObject = new object();
             if (dataAccess == null)
@@ -33,7 +34,7 @@ namespace ProcessCIW.Utilities
                 {
                     if (dataAccess == null)
                     {
-                        dataAccess = new DataAccess(conn);
+                        dataAccess = new DataAccess(conn, U, log);
                     }
                 }
             }

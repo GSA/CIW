@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProcessCIW.Interface;
+using System;
 using System.Net.Mail;
 
 namespace ProcessCIW.Utilities
@@ -8,6 +9,13 @@ namespace ProcessCIW.Utilities
     /// </summary>
     class EMail : IDisposable
     {
+        private readonly ILogTool log;
+
+        public EMail(ILogTool log)
+        {
+            this.log = log;
+        }
+
         protected string _strSmtpServer = string.Empty;
         protected string _strEmailFrom = string.Empty;
         protected string _strEmailTo = string.Empty;
@@ -21,7 +29,7 @@ namespace ProcessCIW.Utilities
         MailMessage message = new MailMessage();
         SmtpClient SmtpMail = new SmtpClient();
 
-        private readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        
 
         /// <summary>
         /// Prepare a message for sending through the smtp server

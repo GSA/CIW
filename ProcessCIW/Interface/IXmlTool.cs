@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ProcessCIW.Interface
 {
-    interface IXmlTool
+    public interface IXmlTool
     {
         bool isPasswordProtected(string filePath);
         List<CIWData> parseCiwDocument(string filePath, int uploaderID, string fileName, out int errorCode);

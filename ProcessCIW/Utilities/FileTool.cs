@@ -7,15 +7,17 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ProcessCIW.Utilities
 {
     public class FileTool : IFileTool
     {
-        private readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly ILogTool log;
 
+        public FileTool(ILogTool log)
+        {
+            this.log = log;
+        }
 
         /// <summary>
         /// Generates temp CSV file separated by ||

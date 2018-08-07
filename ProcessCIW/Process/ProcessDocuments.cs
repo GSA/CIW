@@ -20,7 +20,7 @@ namespace ProcessCIW
     /// </summary>
     public class ProcessDocuments : IProcessDocuments
     {
-        private readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly ILogTool log;
         private static CsvConfiguration config;
         private readonly IDataAccess dataAccess;
         private readonly IFileTool fileTool;
@@ -31,13 +31,15 @@ namespace ProcessCIW
         /// <summary>
         /// Constructor that sets up CsvConfiguration which is part of CsvHelper
         /// </summary>
-        public ProcessDocuments(IDataAccess dataAccess, IFileTool fileTool)
+        public ProcessDocuments(IDataAccess dataAccess, IFileTool fileTool, IXmlTool xt, IUtilities U, IDeleteTool dt, ILogTool log)
         {
-            dt = new DeleteTool();
-            xmlTool = new XmlTool();
-            U = new Utilities.Utilities();
+            this.dt = dt;
+            xmlTool = xt;
+            this.U = U;
             this.dataAccess = dataAccess;
             this.fileTool = fileTool;
+            this.log = log;
+
             config = new CsvConfiguration();
 
             config.Delimiter = "||";
@@ -91,7 +93,8 @@ namespace ProcessCIW
         /// <param name="fileName"></param>
         private void sendPasswordProtection(int uploaderID, string fileName)
         {
-            CIWEMails sendEmails = new CIWEMails(uploaderID, "", "", "", "", fileName);
+            CiwEmails sendEmails = new CiwEmails(dataAccess, log);
+            sendEmails.Setup(uploaderID, "", "", "", "", fileName);
 
             sendEmails.SendPasswordProtection();
         }        
@@ -122,12 +125,12 @@ namespace ProcessCIW
         /// <param name="filePath"></param>
         /// <param name="isDebug"></param>
         /// <returns>Int success code</returns>
-        public int ProcessCIWInformation(int uploaderID, string filePath, bool isDebug, IValidateCIW validateCiw)
+        public int ProcessCIWInformation(int uploaderID, string filePath, bool isDebug, IValidateCiw validateCiw)
         {
             log.Info("Processing CIW");
 
             //Create validation object
-            IValidateCIW validate = validateCiw;
+            IValidateCiw validate = validateCiw;
 
             List<CIW> ciwInformation;
 
@@ -140,7 +143,8 @@ namespace ProcessCIW
 
             ApplyFipsCodes(ref ciwInformation, fipsCodes);
 
-            CIWEMails sendEmails = new CIWEMails(uploaderID, ciwInformation.First().FirstName, ciwInformation.First().MiddleName,
+            CiwEmails sendEmails = new CiwEmails(dataAccess, log);
+            sendEmails.Setup(uploaderID, ciwInformation.First().FirstName, ciwInformation.First().MiddleName,
                                                  ciwInformation.First().LastName, ciwInformation.First().Suffix, Path.GetFileName(filePath),
                                                  CheckIfChildCare(ciwInformation));
 

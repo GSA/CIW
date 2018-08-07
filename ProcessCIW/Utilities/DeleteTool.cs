@@ -3,15 +3,17 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ProcessCIW.Utilities
 {
     public class DeleteTool : IDeleteTool
     {
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly ILogTool log;
+
+        public DeleteTool(ILogTool log)
+        {
+            this.log = log;
+        }
 
         public void deleteOldCsvFiles()
         {

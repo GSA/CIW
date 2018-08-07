@@ -13,8 +13,6 @@ namespace ProcessCIW.Test.dll
 {
     public partial class CiwTest
     {
-        readonly DeleteTool dt = new DeleteTool();
-
         [Theory]
         [MemberData(nameof(DeleteFiles_True))]
         public void DeleteFiles_True_Test(List<string> s)

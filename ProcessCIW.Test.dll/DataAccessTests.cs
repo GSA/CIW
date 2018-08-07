@@ -13,10 +13,7 @@ namespace ProcessCIW.Test.dll
     public partial class CiwTest
     {
         #region DataAccess Tests
-
-        readonly DataAccess db = DataAccess.GetInstance(new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString()));
-
-
+        
         [Fact]
         public void GetUploaderInformation_Test()
         {

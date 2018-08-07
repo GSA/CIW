@@ -12,7 +12,6 @@ namespace ProcessCIW.Test.dll
     {
         #region Utility Tests
 
-        readonly Utilities.Utilities util = new Utilities.Utilities();
 
         [Theory]
         [MemberData(nameof(BeAValidBirthDate_True))]

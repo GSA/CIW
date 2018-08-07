@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ProcessCIW.Interface
 {
-    public interface IValidateCIW
+    public interface IValidateCiw
     {
         bool IsDuplicate(List<CIW> ciwInformation);
         bool IsFormValid(List<CIW> ciwInformation);

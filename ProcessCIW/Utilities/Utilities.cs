@@ -10,8 +10,6 @@ namespace ProcessCIW.Utilities
 {
     public sealed class Utilities : IUtilities
     {
-        private readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
         /// <summary>
         /// Returns false if string is white space
         /// Return true if null or empty

@@ -12,7 +12,7 @@ namespace ProcessCIW.Test.dll
     {
         #region FileTool Tests
 
-        readonly FileTool ft = new FileTool();
+        static readonly FileTool ft = new FileTool(log);
 
         [Fact]
         public void CreateTempFile_Test()

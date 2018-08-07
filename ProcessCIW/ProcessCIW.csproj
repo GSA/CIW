@@ -82,10 +82,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Enum\ErrorCodes.cs" />
+    <Compile Include="Interface\ICIWEMails.cs" />
     <Compile Include="Interface\IDataAccess.cs" />
     <Compile Include="Interface\IDecryptFile.cs.cs" />
     <Compile Include="Interface\IDeleteTool.cs" />
     <Compile Include="Interface\IFileTool.cs" />
+    <Compile Include="Interface\ILogTool.cs" />
     <Compile Include="Interface\IProcessDocuments.cs" />
     <Compile Include="Interface\IProcessFiles.cs" />
     <Compile Include="Interface\IUtilities.cs" />
@@ -101,10 +103,18 @@
     <Compile Include="Utilities\DeleteTool.cs" />
     <Compile Include="Utilities\Email.cs" />
     <Compile Include="Utilities\FileTool.cs" />
+    <Compile Include="Utilities\LogTool.cs" />
     <Compile Include="Utilities\UnhandledException.cs" />
     <Compile Include="Utilities\Utilities.cs" />
     <Compile Include="Models\CIWData.cs" />
     <Compile Include="Utilities\XmlTool.cs" />
+    <Compile Include="Validation\ContractorValidator.cs" />
+    <Compile Include="Validation\EmployeeValidator.cs" />
+    <Compile Include="Validation\InvestigationValidator.cs" />
+    <Compile Include="Validation\ProjectLocationValidator.cs" />
+    <Compile Include="Validation\RequestingOfficialValidator.cs" />
+    <Compile Include="Validation\RWAIAAValidator.cs" />
+    <Compile Include="Validation\UserExistsValidator.cs" />
     <Compile Include="Validation\ValidateCIW.cs" />
     <Compile Include="Mapping\CIWMapping.cs" />
     <Compile Include="Mapping\Constants.cs" />

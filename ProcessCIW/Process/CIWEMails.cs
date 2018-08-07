@@ -1,5 +1,4 @@
 ﻿using FluentValidation.Results;
-using MySql.Data.MySqlClient;
 using ProcessCIW.Interface;
 using ProcessCIW.Models;
 using ProcessCIW.Utilities;
@@ -15,33 +14,40 @@ namespace ProcessCIW.Process
     /// <summary>
     /// All processes that involve email during processing the CIW
     /// </summary>
-    public class CIWEMails
+    public class CiwEmails : ICiwEmails
     {
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly ILogTool log;
 
         //Reference to basic Email class in Utilities
-        readonly EMail email = new EMail();
+        readonly EMail email;
 
-        readonly IDataAccess da = DataAccess.GetInstance(new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString()));
+        readonly IDataAccess da;
 
         //Variable declaration and default values
-        readonly UploaderInformation uploaderInfo;
+        UploaderInformation uploaderInfo;
         readonly string defaultEMail = ConfigurationManager.AppSettings["DEFAULTEMAIL"].ToString();
         string emailBody = string.Empty;
-        readonly string firstName;
-        readonly string middleName;
-        readonly string lastName;
-        readonly string suffix;
-        readonly string fileName;
-        readonly string subject;
-        readonly bool isChildCareWorker;
+        string firstName;
+        string middleName;
+        string lastName;
+        string suffix;
+        string fileName;
+        string subject;
+        bool isChildCareWorker;
+
+        public CiwEmails(IDataAccess da, ILogTool log)
+        {
+            this.da = da;
+            this.log = log;
+            email = new EMail(log);
+        }
 
         /// <summary>
         /// Constructor to retrieve uploader ID, full name, suffix, filename, and isChildCareWorker
         /// Will then create an email subject line of either name or filename and append a date and time to the end
         /// </summary>
         /// <param name="uID"></param>
-        public CIWEMails(int uID, string firstName, string middleName, string lastName, string suffix, string fileName, bool isChildCareWorker = false)
+        public void Setup(int uID, string firstName, string middleName, string lastName, string suffix, string fileName, bool isChildCareWorker = false)
         {
             int uploaderId = uID;
             this.firstName = firstName;

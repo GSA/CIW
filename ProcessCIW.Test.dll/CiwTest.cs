@@ -1,25 +1,50 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Xunit;
-using ProcessCIW.Models;
-using ProcessCIW.Utilities;
-using ProcessCIW.Interface;
-using ProcessCIW.Mapping;
-using ProcessCIW;
-using Moq;
-using CsvHelper.Configuration;
+﻿using ProcessCIW.Utilities;
 using System.Configuration;
 using MySql.Data.MySqlClient;
-using System.IO;
+using ProcessCIW.Process;
 
-namespace ProcessCIW.Test
+namespace ProcessCIW.Test.dll
 {
-    public class CiwTest
+    public partial class CiwTest
     {
+        static XmlTool xmlTool;
+        static readonly DataAccess db;
+        static readonly DeleteTool dt;
+        static readonly Utilities.Utilities util;
+        static readonly CiwEmails ce;
+        static readonly LogTool log;
+        static readonly MockTool mt;
+
+        static CiwTest()
+        {
+            mt = new MockTool();
+            var dataAccessMock = mt.createDataAccessMock();
+            var decryptMock = mt.createDecryptFileMock();
+            var fileToolMock = mt.createFileToolMock();
+            var xmlToolMock = mt.createXmlToolMock();
+            var ciwEmailmock = mt.createCiwEmailMock();
+            var logMock = mt.createLogMock();
+            var utilMock = mt.createUtilMock();
+            var deleteMock = mt.createDeleteMock();
+
+
+            log = LogTool.GetInstance();
+            util = new Utilities.Utilities();
+            dt = new DeleteTool(logMock.Object);
+            db = DataAccess.GetInstance(new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString()), util, logMock.Object);
+
+            ce = new CiwEmails(db, logMock.Object);
+            
+            
+            xmlTool = new XmlTool(utilMock.Object, ciwEmailmock.Object, /*db,*/ logMock.Object);            
+        }
+
         
+
+
+
+
+
 
         //[Fact]
         //public void test1()

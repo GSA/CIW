@@ -10,24 +10,25 @@ namespace ProcessCIW.Process
 {
     public class ProcessFiles :IProcessFiles
     {
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        private static readonly IDataAccess da = DataAccess.GetInstance(new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString()));
-        private readonly IUtilities U;        
+        private readonly ILogTool log;
+        private readonly IDataAccess da;
+        //private readonly IUtilities U;        
         private readonly IProcessDocuments pd;
-        private readonly IValidateCIW vc;
+        private readonly IValidateCiw vc;
         private readonly IDecryptFile df;
         private readonly IDeleteTool dt;
 
-        public ProcessFiles()
+        public ProcessFiles(IDataAccess da, /*IUtilities U,*/ IProcessDocuments pd, IValidateCiw vc, IDecryptFile df, IDeleteTool dt, ILogTool log)
         {
-            IFileTool ft = new FileTool();
-            U = new Utilities.Utilities();            
-            pd = new ProcessDocuments(da, ft);
-            vc = new Validation.ValidateCIW();
-            df = new DecryptFile();
-            dt = new DeleteTool();
+            this.da = da;
+            //this.U = U;
+            this.pd = pd;
+            //this.vc = vc;
+            this.df = df;
+            this.dt = dt;
+            this.log = log;
         }
-
+        
         /// <summary>
         /// Gets unprocessed files, deletes old CSV files, calls process function based on debug mode boolean
         /// </summary>

@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using ProcessCIW.Interface;
+using System;
 using System.Configuration;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ProcessCIW.Utilities
 {
     class UnhandledException
     {
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILogTool log = LogTool.GetInstance();
 
         private static string GetErrorRecursive(Exception e)
         {
@@ -34,7 +31,7 @@ namespace ProcessCIW.Utilities
             log.Fatal(e.ExceptionObject.ToString());
             log.Fatal("Terminating!");
 
-            EMail email = new EMail();
+            EMail email = new EMail(log);
             try
             {
                 email.Send

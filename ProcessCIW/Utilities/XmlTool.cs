@@ -14,12 +14,17 @@ namespace ProcessCIW.Utilities
 {
     public class XmlTool :IXmlTool
     {
-        private readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly ILogTool log;
         private readonly IUtilities U;
+        private readonly ICiwEmails ciwEmails;
+        //private readonly IDataAccess da;
 
-        public XmlTool()
+        public XmlTool(IUtilities U, ICiwEmails ciwEmails, /*IDataAccess da,*/ ILogTool log)
         {
-            U = new Utilities();
+            this.U = U;
+            this.ciwEmails = ciwEmails;
+            //this.da = da;
+            this.log = log;            
         }
 
         public bool isPasswordProtected(string filePath)
@@ -194,9 +199,10 @@ namespace ProcessCIW.Utilities
         /// <param name="fileName"></param>
         private void sendWrongVersion(int uploaderID, string fileName)
         {
-            CIWEMails sendEmails = new CIWEMails(uploaderID, "", "", "", "", fileName);
+            //CIWEMails sendEmails = new CIWEMails(da);
+            ciwEmails.Setup(uploaderID, "", "", "", "", fileName);
 
-            sendEmails.SendWrongVersion();
+            ciwEmails.SendWrongVersion();
         }
     }
 }

@@ -10,6 +10,6 @@ namespace ProcessCIW.Interface
     public interface IProcessDocuments
     {
         string GetCIWInformation(int uploaderID, string filePath, string fileName, out int errorCode);
-        int ProcessCIWInformation(int uploaderID, string filePath, bool isDebug, IValidateCIW validateCiw);
+        int ProcessCIWInformation(int uploaderID, string filePath, bool isDebug, IValidateCiw validateCiw);
     }
 }

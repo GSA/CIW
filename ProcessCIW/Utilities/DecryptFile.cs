@@ -8,10 +8,14 @@ namespace ProcessCIW.Utilities
 {
     class DecryptFile : IDecryptFile
     {
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        private static readonly IUtilities U = new Utilities();
+        private readonly ILogTool log;
+        private readonly IUtilities U;
 
-        public DecryptFile() { }
+        public DecryptFile(IUtilities U, ILogTool log)
+        {
+            this.U = U;
+            this.log = log;
+        }
 
         public string Decrypt(string filePath, UnprocessedFiles ciwFile)
         {

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ProcessCIW.Interface
 {
-    interface IDeleteTool
+    public interface IDeleteTool
     {
         void deleteOldCsvFiles();
         void deleteTempCsvFile(string filePath);

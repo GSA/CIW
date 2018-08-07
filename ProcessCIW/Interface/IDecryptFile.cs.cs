@@ -2,7 +2,7 @@
 
 namespace ProcessCIW.Interface
 {
-    interface IDecryptFile
+    public interface IDecryptFile
     {
         string Decrypt(string filePath, UnprocessedFiles ciwFile);
     }
