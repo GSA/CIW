@@ -77,7 +77,6 @@ namespace ProcessCIW.Utilities
 
                     message.From = mail_from;
 
-                    //message.To.Add(_strEmailTo);
                     if (_strEmailTo.Trim().Length > 0)
 
                         message.To.Add(_strEmailTo);
@@ -115,7 +114,6 @@ namespace ProcessCIW.Utilities
                     // Set the mail object's smtp server property
                     SmtpMail = new SmtpClient(_strSmtpServer);
 
-                    //-->SmtpMail.Credentials = (ICredentialsByHost)CredentialCache.DefaultNetworkCredentials;
                     SmtpMail.Send(message);
 
                     SmtpMail.Dispose();

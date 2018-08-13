@@ -11,6 +11,87 @@ namespace ProcessCIW.Test.dll
 {
     public class MockTool
     {
+        public Mock<IValidateCiw> createValidationMock()
+        {
+            var mock = new Mock<IValidateCiw>();
+            mock.Setup(a => a.GetErrors()).Returns(
+                new System.Tuple<
+                    ValidationResult,
+                    ValidationResult,
+                    ValidationResult,
+                    ValidationResult,
+                    ValidationResult,
+                    ValidationResult>(
+                        new ValidationResult(
+                            new List<ValidationFailure>(
+                                new ValidationFailure[] {
+                                    new ValidationFailure(
+                                        "prop 1",
+                                        "prop 1 message"
+                                    )
+                                }
+                            )
+                        ),
+                        new ValidationResult(
+                            new List<ValidationFailure>(
+                                new ValidationFailure[] {
+                                    new ValidationFailure(
+                                        "prop 2",
+                                        "prop 2 message"
+                                    )
+                                }
+                            )
+                        ),
+                        new ValidationResult(
+                            new List<ValidationFailure>(
+                                new ValidationFailure[] {
+                                    new ValidationFailure(
+                                        "prop 3",
+                                        "prop 3 message"
+                                    )
+                                }
+                            )
+                        ),
+                        new ValidationResult(
+                            new List<ValidationFailure>(
+                                new ValidationFailure[] {
+                                    new ValidationFailure(
+                                        "prop 4",
+                                        "prop 4 message"
+                                    )
+                                }
+                            )
+                        ),
+                        new ValidationResult(
+                            new List<ValidationFailure>(
+                                new ValidationFailure[] {
+                                    new ValidationFailure(
+                                        "prop 5",
+                                        "prop 5 message"
+                                    )
+                                }
+                            )
+                        ),
+                        new ValidationResult(
+                            new List<ValidationFailure>(
+                                new ValidationFailure[] {
+                                    new ValidationFailure(
+                                        "prop 6",
+                                        "prop 6 message"
+                                    )
+                                }
+                            )
+                        )
+                    )
+                );
+
+            mock.Setup(a => a.IsDuplicate(It.IsAny<List<CIW>>())).Returns(false);
+            mock.Setup(a => a.IsFormValid(It.IsAny<List<CIW>>())).Returns(true);
+            mock.Setup(a => a.PrintErrors());
+
+            return mock;
+        }
+
         public Mock<ICiwEmails> createCiwEmailMock()
         {
             var mock = new Mock<ICiwEmails>();
@@ -94,7 +175,7 @@ namespace ProcessCIW.Test.dll
             return mock;
         }
 
-       
+
 
         public Mock<IUtilities> createUtilMock()
         {
@@ -126,6 +207,6 @@ namespace ProcessCIW.Test.dll
 
             return mock;
         }
-       
+
     }
 }

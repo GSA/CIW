@@ -31,16 +31,17 @@ namespace ProcessCIW
             log = LogTool.GetInstance();
             stopWatch = new Stopwatch();
             U = new Utilities.Utilities();
-            vc = new ValidateCiw(da, U, log);
+            ft = new FileTool(log);
+            dt = new DeleteTool(log);
+            df = new DecryptFile(U, log);
             conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString());
             da = DataAccess.GetInstance(conn, U, log);
-            ft = new FileTool(log);
+            vc = new ValidateCiw(da, U, log);
             ce = new CiwEmails(da, log);
             xt = new XmlTool(U, ce, /*da,*/ log);
             pd = new ProcessDocuments(da, ft, xt, U, dt, log);
-            df = new DecryptFile(U, log);
-            dt = new DeleteTool(log);
             pf = new ProcessFiles(da, /*U,*/ pd, vc, df, dt, log);
+            
         }
 
         protected Program() { }

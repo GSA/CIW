@@ -23,7 +23,7 @@ namespace ProcessCIW.Process
             this.da = da;
             //this.U = U;
             this.pd = pd;
-            //this.vc = vc;
+            this.vc = vc;
             this.df = df;
             this.dt = dt;
             this.log = log;

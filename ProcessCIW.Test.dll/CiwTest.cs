@@ -26,20 +26,20 @@ namespace ProcessCIW.Test.dll
             var logMock = mt.createLogMock();
             var utilMock = mt.createUtilMock();
             var deleteMock = mt.createDeleteMock();
-
+            var validationmock = mt.createValidationMock();
 
             log = LogTool.GetInstance();
             util = new Utilities.Utilities();
             dt = new DeleteTool(logMock.Object);
-            db = DataAccess.GetInstance(new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString()), util, logMock.Object);
+            db = DataAccess.GetInstance(new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString()), utilMock.Object, logMock.Object);
 
-            ce = new CiwEmails(db, logMock.Object);
+            ce = new CiwEmails(db, logMock.Object);            
             
-            
-            xmlTool = new XmlTool(utilMock.Object, ciwEmailmock.Object, /*db,*/ logMock.Object);            
+            xmlTool = new XmlTool(utilMock.Object, ciwEmailmock.Object, /*db,*/ logMock.Object);
+
         }
 
-        
+
 
 
 
