@@ -40,6 +40,7 @@ namespace ProcessCIW.Process
         string fileName = string.Empty;
         string subject = string.Empty;
         bool isChildCareWorker;
+        bool isInvalid = false;
 
         /// <summary>
         /// Constructor to retrieve uploader ID, full name, suffix, filename, and isChildCareWorker
@@ -129,7 +130,7 @@ namespace ProcessCIW.Process
         /// <returns>Bool</returns>
         private bool IncludeZonalEMail()
         {
-            return uploaderMajorOrg.ToLower().Equals("p") && !isChildCareWorker;
+            return (uploaderMajorOrg.ToLower().Equals("p") && !isChildCareWorker) || isInvalid;
 
         }
 
@@ -234,7 +235,7 @@ namespace ProcessCIW.Process
         public void SendWrongVersion()
         {
             emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "VersionError.html");
-
+            isInvalid = true;
             log.Info(string.Format("Sending wrong version E-Mail"));
 
             SendEMail("Invalid CIW");
@@ -246,7 +247,7 @@ namespace ProcessCIW.Process
         public void SendPasswordProtection()
         {
             emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "PasswordError.html");
-
+            isInvalid = true;
             log.Info(string.Format("Sending password protection E-Mail"));
 
             SendEMail("Invalid CIW");
@@ -258,7 +259,7 @@ namespace ProcessCIW.Process
         public void SendDuplicateUser()
         {
             emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "DuplicateUserError.html");
-
+            isInvalid = true;
             log.Info(string.Format("Sending duplicate user E-Mail"));
 
             SendEMail("Invalid CIW");
@@ -270,7 +271,7 @@ namespace ProcessCIW.Process
         public void SendARRA()
         {
             emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "ARRAError.html");
-
+            isInvalid = true;
             log.Info(string.Format("Sending ARRA E-Mail"));
 
             SendEMail("Invalid CIW");
