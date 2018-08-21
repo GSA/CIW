@@ -128,6 +128,9 @@ namespace ProcessCIW.Process
             email.Send(defaultEMail, sendTo, cc, ConfigurationManager.AppSettings["BCCEMAIL"], subject, emailBody, "", ConfigurationManager.AppSettings["SMTPSERVER"], true);
         }
 
+        /// <summary>
+        /// Add zonal email to email cc if applicant is p and not child care
+        /// </summary>
         private void AddApplicantZonalEmailOnInvalid()
         {
             if (IncludeApplicantZonalEmailForInvalid())
@@ -146,6 +149,10 @@ namespace ProcessCIW.Process
 
         }
 
+        /// <summary>
+        /// check if applicant is p and not child care
+        /// </summary>
+        /// <returns></returns>
         private bool IncludeApplicantZonalEmailForInvalid()
         {
             return applicantMajorOrg.ToLower().Equals("p") && !isChildCareWorker;
