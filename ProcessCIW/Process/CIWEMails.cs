@@ -292,7 +292,7 @@ namespace ProcessCIW.Process
         public void SendErrors(ValidationResult s1, ValidationResult s2, ValidationResult s3, ValidationResult s4, ValidationResult s5, ValidationResult s6)
         {
             log.Info(string.Format("Preparing to send errors - generating email body"));
-
+            isInvalid = true;
             emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "Errors.html");
 
             emailBody = emailBody.Replace("[GENERAL]", "");
