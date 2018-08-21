@@ -456,7 +456,7 @@ class ProcessDocuments
 
             CIWEMails sendEmails = new CIWEMails(uploaderID, ciwInformation.First().FirstName, ciwInformation.First().MiddleName,
                                                  ciwInformation.First().LastName, ciwInformation.First().Suffix, Path.GetFileName(filePath),
-                                                 CheckIfChildCare(ciwInformation));
+                                                 CheckIfChildCare(ciwInformation), ciwInformation.First().Region, ciwInformation.First().SponsoringMajorOrg);
 
             //Delete temp csv file before proceeding
             try

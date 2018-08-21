@@ -23,31 +23,34 @@ namespace ProcessCIW.Process
         private static Suitability.SendNotification sendNotification;
 
         //Reference to basic Email class in Utilities
-        EMail email = new EMail();
+        readonly EMail email = new EMail();
 
         //Variable declaration and default values
-        int uploaderID = 0;
+        readonly int uploaderID = 0;
         string prefixedName = string.Empty;
         string zonalEMail = string.Empty;
         string uploaderWorkEMail = string.Empty;
         string uploaderMajorOrg = string.Empty;
-        string defaultEMail = ConfigurationManager.AppSettings["DEFAULTEMAIL"].ToString();
+        readonly string defaultEMail = ConfigurationManager.AppSettings["DEFAULTEMAIL"].ToString();
         string emailBody = string.Empty;
-        string firstName = string.Empty;
-        string middleName = string.Empty;
-        string lastName = string.Empty;
-        string suffix = string.Empty;
-        string fileName = string.Empty;
-        string subject = string.Empty;
-        bool isChildCareWorker;
-        bool isInvalid = false;
-
+        readonly string firstName = string.Empty;
+        readonly string middleName = string.Empty;
+        readonly string lastName = string.Empty;
+        readonly string suffix = string.Empty;
+        readonly string fileName = string.Empty;
+        readonly string subject = string.Empty;
+        readonly bool isChildCareWorker;
+        readonly string applicantRegion;
+        readonly string applicantMajorOrg;
+        string applicantZoneLetter;
+        string applicantZoneEmail;
+        string cc = "";
         /// <summary>
         /// Constructor to retrieve uploader ID, full name, suffix, filename, and isChildCareWorker
         /// Will then create an email subject line of either name or filename and append a date and time to the end
         /// </summary>
         /// <param name="uID"></param>
-        public CIWEMails(int uID, string firstName, string middleName, string lastName, string suffix, string fileName, bool isChildCareWorker = false)
+        public CIWEMails(int uID, string firstName, string middleName, string lastName, string suffix, string fileName, bool isChildCareWorker = false, string applicantRegion = "", string applicantMajorOrg = "")
         {
             this.uploaderID = uID;
             this.firstName = firstName;
@@ -56,10 +59,11 @@ namespace ProcessCIW.Process
             this.suffix = suffix;
             this.fileName = fileName;
             this.isChildCareWorker = isChildCareWorker;
-
+            this.applicantRegion = applicantRegion;
             this.subject = FormatSubject();
-
+            this.applicantMajorOrg = applicantMajorOrg;
             GetUploaderInformation();
+            GetApplicantZoneInfo();
         }
 
         /// <summary>
@@ -121,7 +125,15 @@ namespace ProcessCIW.Process
             string sendTo = SendTo();
 
             log.Info(String.Format("Sending Email to {0} with subject:{1} called from function:{2}", sendTo, subject, memberName));
-            email.Send(defaultEMail, sendTo, "", ConfigurationManager.AppSettings["BCCEMAIL"], subject, emailBody, "", ConfigurationManager.AppSettings["SMTPSERVER"], true);
+            email.Send(defaultEMail, sendTo, cc, ConfigurationManager.AppSettings["BCCEMAIL"], subject, emailBody, "", ConfigurationManager.AppSettings["SMTPSERVER"], true);
+        }
+
+        private void AddApplicantZonalEmailOnInvalid()
+        {
+            if (IncludeApplicantZonalEmailForInvalid())
+            {
+                cc = zonalEMail;
+            }
         }
 
         /// <summary>
@@ -130,8 +142,13 @@ namespace ProcessCIW.Process
         /// <returns>Bool</returns>
         private bool IncludeZonalEMail()
         {
-            return (uploaderMajorOrg.ToLower().Equals("p") && !isChildCareWorker) || isInvalid;
+            return uploaderMajorOrg.ToLower().Equals("p") && !isChildCareWorker;
 
+        }
+
+        private bool IncludeApplicantZonalEmailForInvalid()
+        {
+            return applicantMajorOrg.ToLower().Equals("p") && !isChildCareWorker;
         }
 
         /// <summary>
@@ -180,6 +197,31 @@ namespace ProcessCIW.Process
         private void GenerateEMailBody()
         {
             emailBody = emailBody.Replace("[UploaderPrefixLastName]", prefixedName);
+        }
+
+        private void GetApplicantZoneInfo()
+        {
+            if (applicantRegion == "") return;
+            using(var conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString()))
+            using (var cmd = new MySqlCommand("CIW_GetZoneInfo", conn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.Clear();
+                MySqlParameter[] param = new MySqlParameter[]
+                    {
+                        new MySqlParameter { ParameterName = "Region", Value = applicantRegion , MySqlDbType = MySqlDbType.VarChar, Size=3, Direction = ParameterDirection.Input },
+                        new MySqlParameter { ParameterName = "ZoneLetter", MySqlDbType=MySqlDbType.VarChar, Size=2, Direction = ParameterDirection.Output },
+                        new MySqlParameter { ParameterName = "ZoneEmail", MySqlDbType=MySqlDbType.VarChar, Size=64, Direction = ParameterDirection.Output },
+                    };
+                conn.Open();
+                cmd.Parameters.AddRange(param);
+                cmd.ExecuteNonQuery();
+
+                applicantZoneLetter = (string)cmd.Parameters["ZoneLetter"].Value;
+                applicantZoneEmail = (string)cmd.Parameters["ZoneEmail"].Value;
+
+                log.Info(string.Format("GetApplicantZoneInfo returned letter: {0}, and email: {1}", applicantZoneLetter, applicantZoneEmail));
+            }
         }
 
         /// <summary>
@@ -235,9 +277,7 @@ namespace ProcessCIW.Process
         public void SendWrongVersion()
         {
             emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "VersionError.html");
-            isInvalid = true;
             log.Info(string.Format("Sending wrong version E-Mail"));
-
             SendEMail("Invalid CIW");
         }
 
@@ -247,9 +287,7 @@ namespace ProcessCIW.Process
         public void SendPasswordProtection()
         {
             emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "PasswordError.html");
-            isInvalid = true;
             log.Info(string.Format("Sending password protection E-Mail"));
-
             SendEMail("Invalid CIW");
         }
 
@@ -259,9 +297,8 @@ namespace ProcessCIW.Process
         public void SendDuplicateUser()
         {
             emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "DuplicateUserError.html");
-            isInvalid = true;
             log.Info(string.Format("Sending duplicate user E-Mail"));
-
+            AddApplicantZonalEmailOnInvalid();
             SendEMail("Invalid CIW");
         }
 
@@ -271,9 +308,8 @@ namespace ProcessCIW.Process
         public void SendARRA()
         {
             emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "ARRAError.html");
-            isInvalid = true;
             log.Info(string.Format("Sending ARRA E-Mail"));
-
+            AddApplicantZonalEmailOnInvalid();
             SendEMail("Invalid CIW");
         }
 
@@ -292,7 +328,6 @@ namespace ProcessCIW.Process
         public void SendErrors(ValidationResult s1, ValidationResult s2, ValidationResult s3, ValidationResult s4, ValidationResult s5, ValidationResult s6)
         {
             log.Info(string.Format("Preparing to send errors - generating email body"));
-            isInvalid = true;
             emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "Errors.html");
 
             emailBody = emailBody.Replace("[GENERAL]", "");
@@ -302,7 +337,7 @@ namespace ProcessCIW.Process
             emailBody = emailBody.Replace("[SECTION4]", AddErrors(s4.Errors));
             emailBody = emailBody.Replace("[SECTION5]", AddErrors(s5.Errors));
             emailBody = emailBody.Replace("[SECTION6]", AddErrors(s6.Errors));
-
+            AddApplicantZonalEmailOnInvalid();
             log.Info(string.Format("Sending error E-Mail"));
 
             SendEMail("Invalid CIW");
