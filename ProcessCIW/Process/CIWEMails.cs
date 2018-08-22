@@ -26,25 +26,25 @@ namespace ProcessCIW.Process
         readonly EMail email = new EMail();
 
         //Variable declaration and default values
-        readonly int uploaderID = 0;
+        readonly int uploaderID;
         string prefixedName = string.Empty;
         string zonalEMail = string.Empty;
         string uploaderWorkEMail = string.Empty;
         string uploaderMajorOrg = string.Empty;
         readonly string defaultEMail = ConfigurationManager.AppSettings["DEFAULTEMAIL"].ToString();
         string emailBody = string.Empty;
-        readonly string firstName = string.Empty;
-        readonly string middleName = string.Empty;
-        readonly string lastName = string.Empty;
-        readonly string suffix = string.Empty;
-        readonly string fileName = string.Empty;
-        readonly string subject = string.Empty;
+        readonly string firstName;
+        readonly string middleName;
+        readonly string lastName;
+        readonly string suffix;
+        readonly string fileName;
+        readonly string subject;
         readonly bool isChildCareWorker;
         readonly string applicantRegion;
         readonly string applicantMajorOrg;
-        string applicantZoneLetter;
         string applicantZoneEmail;
         string cc = "";
+
         /// <summary>
         /// Constructor to retrieve uploader ID, full name, suffix, filename, and isChildCareWorker
         /// Will then create an email subject line of either name or filename and append a date and time to the end
@@ -65,6 +65,113 @@ namespace ProcessCIW.Process
             GetUploaderInformation();
             GetApplicantZoneInfo();
         }
+
+        /// <summary>
+        /// Function to replace placeholder text in email template with actual error messages.
+        /// Email template is divided by section, each sections errors are passed in as separate objects
+        /// </summary>
+        /// <param name="s1"></param>
+        /// <param name="s2"></param>
+        /// <param name="s3"></param>
+        /// <param name="s4"></param>
+        /// <param name="s5"></param>
+        /// <param name="s6"></param>
+        /// <param name="nested_Err"></param>
+        /// <param name="nested_List"></param>
+        public void SendErrors(ValidationResult s1, ValidationResult s2, ValidationResult s3, ValidationResult s4, ValidationResult s5, ValidationResult s6)
+        {
+            log.Info(string.Format("Preparing to send errors - generating email body"));
+            emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "Errors.html");
+
+            emailBody = emailBody.Replace("[GENERAL]", "");
+            emailBody = emailBody.Replace("[SECTION1]", AddErrors(s1.Errors));
+            emailBody = emailBody.Replace("[SECTION2]", AddErrors(s2.Errors));
+            emailBody = emailBody.Replace("[SECTION3]", AddErrors(s3.Errors));
+            emailBody = emailBody.Replace("[SECTION4]", AddErrors(s4.Errors));
+            emailBody = emailBody.Replace("[SECTION5]", AddErrors(s5.Errors));
+            emailBody = emailBody.Replace("[SECTION6]", AddErrors(s6.Errors));
+            AddApplicantZonalEmailOnInvalid();
+            log.Info(string.Format("Sending error E-Mail"));
+
+            SendEMail("Invalid CIW");
+        }
+
+        /// <summary>
+        /// Called when CIW is Wrong version
+        /// </summary>
+        public void SendWrongVersion()
+        {
+            emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "VersionError.html");
+            log.Info(string.Format("Sending wrong version E-Mail"));
+            SendEMail("Invalid CIW");
+        }
+
+        /// <summary>
+        /// Called when CIW is password protected
+        /// </summary>
+        public void SendPasswordProtection()
+        {
+            emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "PasswordError.html");
+            log.Info(string.Format("Sending password protection E-Mail"));
+            SendEMail("Invalid CIW");
+        }
+
+        /// <summary>
+        /// Called when CIW is a duplicate user
+        /// </summary>
+        public void SendDuplicateUser()
+        {
+            emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "DuplicateUserError.html");
+            log.Info(string.Format("Sending duplicate user E-Mail"));
+            AddApplicantZonalEmailOnInvalid();
+            SendEMail("Invalid CIW");
+        }
+
+        /// <summary>
+        /// Called when CIW is ARRA
+        /// </summary>
+        public void SendARRA()
+        {
+            emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "ARRAError.html");
+            log.Info(string.Format("Sending ARRA E-Mail"));
+            AddApplicantZonalEmailOnInvalid();
+            SendEMail("Invalid CIW");
+        }
+
+        /// <summary>
+        /// If able to process CIW, sends email that sponsorship process has been initiated
+        /// </summary>
+        /// <param name="id"></param>
+        public void SendSponsorshipEMail(int id)
+        {
+
+            try
+            {
+                log.Info("Begin Sponsorship E-Mail");
+                log.Info(string.Format("Sending Sponsorship E-Mail using ID: {0}", id));
+                log.Info(string.Format("Using Default Email: {0}", ConfigurationManager.AppSettings["DEFAULTEMAIL"]));
+                //log.Info(string.Format("Subject: {0}", subject));
+                //log.Info(string.Format("Zonal email is: {0}",zonalEMail));
+                log.Info(string.Format("isChildCareWorker: {0}", isChildCareWorker));
+
+                sendNotification = new Suitability.SendNotification(
+                                    ConfigurationManager.AppSettings["DEFAULTEMAIL"],
+                                    id,
+                                    ConfigurationManager.ConnectionStrings["GCIMS"].ToString(),
+                                    ConfigurationManager.AppSettings["SMTPSERVER"],
+                                    ConfigurationManager.AppSettings["ONBOARDINGLOCATION"]);
+
+                sendNotification.SendSponsorshipNotification();
+
+                log.Info("Finished sending sponsorship notification");
+            }
+            catch (Exception ex)
+            {
+                log.Error("Error E-Mailing Sponsorship: " + ex.Message + " - " + ex.InnerException);
+            }
+        }
+
+        #region Private_Functions
 
         /// <summary>
         /// Generates subject line string
@@ -114,6 +221,14 @@ namespace ProcessCIW.Process
         }
 
         /// <summary>
+        /// Replace UploaderPrefixLastName with prefixedName
+        /// </summary>
+        private void GenerateEMailBody()
+        {
+            emailBody = emailBody.Replace("[UploaderPrefixLastName]", prefixedName);
+        }
+
+        /// <summary>
         /// The final function of the CIWEmail class before emails are sent through the smtp server
         /// Has many references so using CallerMemberName for logging to get source of request to SendEmail
         /// </summary>
@@ -125,6 +240,7 @@ namespace ProcessCIW.Process
             string sendTo = SendTo();
 
             log.Info(String.Format("Sending Email to {0} with subject:{1} called from function:{2}", sendTo, subject, memberName));
+
             email.Send(defaultEMail, sendTo, cc, ConfigurationManager.AppSettings["BCCEMAIL"], subject, emailBody, "", ConfigurationManager.AppSettings["SMTPSERVER"], true);
         }
 
@@ -133,30 +249,21 @@ namespace ProcessCIW.Process
         /// </summary>
         private void AddApplicantZonalEmailOnInvalid()
         {
-            if (IncludeApplicantZonalEmailForInvalid())
+            if (IncludeZonalEMail(applicantMajorOrg))
             {
                 cc = zonalEMail;
             }
         }
 
         /// <summary>
-        /// Checks if uploaderMajorOrg is "p" and not Child care worker
+        /// Checks if supplied MajorOrg is "p" and not Child care worker
         /// </summary>
         /// <returns>Bool</returns>
-        private bool IncludeZonalEMail()
+        private bool IncludeZonalEMail(string majorOrg)
         {
-            return uploaderMajorOrg.ToLower().Equals("p") && !isChildCareWorker;
+            return majorOrg.ToLower().Equals("p") && !isChildCareWorker;
 
-        }
-
-        /// <summary>
-        /// check if applicant is p and not child care
-        /// </summary>
-        /// <returns></returns>
-        private bool IncludeApplicantZonalEmailForInvalid()
-        {
-            return applicantMajorOrg.ToLower().Equals("p") && !isChildCareWorker;
-        }
+        }        
 
         /// <summary>
         /// Checks if uploaderMajorOrg is "q"
@@ -177,7 +284,7 @@ namespace ProcessCIW.Process
 
             to.Append(uploaderWorkEMail);
 
-            if (IncludeZonalEMail())
+            if (IncludeZonalEMail(uploaderMajorOrg))
             {
                 to.Append(",");
                 to.Append(zonalEMail);
@@ -199,17 +306,44 @@ namespace ProcessCIW.Process
         }
 
         /// <summary>
-        /// Replace UploaderPrefixLastName with prefixedName
+        /// Helper function that generates the actual error list for each section
         /// </summary>
-        private void GenerateEMailBody()
+        /// <param name="failures"></param>
+        /// <returns>String of errors in HTML format in an unordered list</returns>
+        private string AddErrors(IList<ValidationFailure> failures)
         {
-            emailBody = emailBody.Replace("[UploaderPrefixLastName]", prefixedName);
+            StringBuilder errors = new StringBuilder();
+
+            errors.Append("<ul>");
+
+            if (failures.Count == 0)
+            {
+                errors.Append("<li>");
+                errors.Append("No Errors Found");
+                errors.Append("</li>");
+
+                return errors.ToString();
+            }
+
+            foreach (var rule in failures)
+            {
+                errors.Append("<li>");
+                errors.Append(rule.ErrorMessage);
+                errors.Append("</li>");
+            }
+
+            errors.Append("</ul>");
+
+            return errors.ToString();
         }
 
+        /// <summary>
+        /// Call database and retrieve applicant zone info
+        /// </summary>
         private void GetApplicantZoneInfo()
         {
             if (applicantRegion == "") return;
-            using(var conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString()))
+            using (var conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString()))
             using (var cmd = new MySqlCommand("CIW_GetZoneInfo", conn))
             {
                 cmd.CommandType = CommandType.StoredProcedure;
@@ -217,17 +351,15 @@ namespace ProcessCIW.Process
                 MySqlParameter[] param = new MySqlParameter[]
                     {
                         new MySqlParameter { ParameterName = "Region", Value = applicantRegion , MySqlDbType = MySqlDbType.VarChar, Size=3, Direction = ParameterDirection.Input },
-                        new MySqlParameter { ParameterName = "ZoneLetter", MySqlDbType=MySqlDbType.VarChar, Size=2, Direction = ParameterDirection.Output },
                         new MySqlParameter { ParameterName = "ZoneEmail", MySqlDbType=MySqlDbType.VarChar, Size=64, Direction = ParameterDirection.Output },
                     };
                 conn.Open();
                 cmd.Parameters.AddRange(param);
                 cmd.ExecuteNonQuery();
 
-                applicantZoneLetter = (string)cmd.Parameters["ZoneLetter"].Value;
                 applicantZoneEmail = (string)cmd.Parameters["ZoneEmail"].Value;
 
-                log.Info(string.Format("GetApplicantZoneInfo returned letter: {0}, and email: {1}", applicantZoneLetter, applicantZoneEmail));
+                log.Info(string.Format("GetApplicantZoneInfo returned email: {0}", applicantZoneEmail));
             }
         }
 
@@ -276,179 +408,32 @@ namespace ProcessCIW.Process
                     log.Info(String.Format("GetUploaderInformation completed with PrefixedName:{0} UploaderWorkEmail:{1} UploaderMajorOrg:{2}", prefixedName, uploaderWorkEMail, uploaderMajorOrg));
                 }
             }
-        }        
-
-        /// <summary>
-        /// Called when CIW is Wrong version
-        /// </summary>
-        public void SendWrongVersion()
-        {
-            emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "VersionError.html");
-            log.Info(string.Format("Sending wrong version E-Mail"));
-            SendEMail("Invalid CIW");
         }
 
-        /// <summary>
-        /// Called when CIW is password protected
-        /// </summary>
-        public void SendPasswordProtection()
-        {
-            emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "PasswordError.html");
-            log.Info(string.Format("Sending password protection E-Mail"));
-            SendEMail("Invalid CIW");
-        }
+        //No references
+        //private string AddNestedErrors(IList<ValidationFailure> failures, List<CIWData> nestedErrors)
+        //{
+        //    StringBuilder errors = new StringBuilder();
+        //    if (failures.Count != 0)
+        //        errors.Append("The following fields have unspecified errors. Please delete all data from these fields and re-input the data manually.");
+        //    errors.Append("<ul>");
+        //    if (failures.Count == 0)
+        //    {
+        //        errors.Append("<li>");
+        //        errors.Append("No Errors Found");
+        //        errors.Append("</li>");
+        //        return errors.ToString();
+        //    }
+        //    foreach (var nested in nestedErrors)
+        //    {
+        //        errors.Append("<li>");
+        //        errors.Append(nested.TagName);
+        //        errors.Append("</li>");
+        //    }
+        //    errors.Append("</ul>");
+        //    return errors.ToString();
+        //}
 
-        /// <summary>
-        /// Called when CIW is a duplicate user
-        /// </summary>
-        public void SendDuplicateUser()
-        {
-            emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "DuplicateUserError.html");
-            log.Info(string.Format("Sending duplicate user E-Mail"));
-            AddApplicantZonalEmailOnInvalid();
-            SendEMail("Invalid CIW");
-        }
-
-        /// <summary>
-        /// Called when CIW is ARRA
-        /// </summary>
-        public void SendARRA()
-        {
-            emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "ARRAError.html");
-            log.Info(string.Format("Sending ARRA E-Mail"));
-            AddApplicantZonalEmailOnInvalid();
-            SendEMail("Invalid CIW");
-        }
-
-        /// <summary>
-        /// Function to replace placeholder text in email template with actual error messages.
-        /// Email template is divided by section, each sections errors are passed in as separate objects
-        /// </summary>
-        /// <param name="s1"></param>
-        /// <param name="s2"></param>
-        /// <param name="s3"></param>
-        /// <param name="s4"></param>
-        /// <param name="s5"></param>
-        /// <param name="s6"></param>
-        /// <param name="nested_Err"></param>
-        /// <param name="nested_List"></param>
-        public void SendErrors(ValidationResult s1, ValidationResult s2, ValidationResult s3, ValidationResult s4, ValidationResult s5, ValidationResult s6)
-        {
-            log.Info(string.Format("Preparing to send errors - generating email body"));
-            emailBody = File.ReadAllText(@ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"] + "Errors.html");
-
-            emailBody = emailBody.Replace("[GENERAL]", "");
-            emailBody = emailBody.Replace("[SECTION1]", AddErrors(s1.Errors));
-            emailBody = emailBody.Replace("[SECTION2]", AddErrors(s2.Errors));
-            emailBody = emailBody.Replace("[SECTION3]", AddErrors(s3.Errors));
-            emailBody = emailBody.Replace("[SECTION4]", AddErrors(s4.Errors));
-            emailBody = emailBody.Replace("[SECTION5]", AddErrors(s5.Errors));
-            emailBody = emailBody.Replace("[SECTION6]", AddErrors(s6.Errors));
-            AddApplicantZonalEmailOnInvalid();
-            log.Info(string.Format("Sending error E-Mail"));
-
-            SendEMail("Invalid CIW");
-        }
-
-        /// <summary>
-        /// Generates list of nested errors to be added to email template
-        /// </summary>
-        /// <param name="failures"></param>
-        /// <param name="nestedErrors"></param>
-        /// <returns>String of nested errors</returns>
-        private string AddNestedErrors(IList<ValidationFailure> failures, List<CIWData> nestedErrors)
-        {
-            StringBuilder errors = new StringBuilder();
-
-            if (failures.Count != 0)
-                errors.Append("The following fields have unspecified errors. Please delete all data from these fields and re-input the data manually.");
-
-            errors.Append("<ul>");
-
-            if (failures.Count == 0)
-            {
-                errors.Append("<li>");
-                errors.Append("No Errors Found");
-                errors.Append("</li>");
-
-                return errors.ToString();
-            }
-
-            foreach (var nested in nestedErrors)
-            {
-                errors.Append("<li>");
-                errors.Append(nested.TagName);
-                errors.Append("</li>");
-            }
-
-            errors.Append("</ul>");
-
-            return errors.ToString();
-        }
-
-        /// <summary>
-        /// Helper function that generates the actual error list for each section
-        /// </summary>
-        /// <param name="failures"></param>
-        /// <returns>String of errors in HTML format in an unordered list</returns>
-        private string AddErrors(IList<ValidationFailure> failures)
-        {
-            StringBuilder errors = new StringBuilder();
-
-            errors.Append("<ul>");
-
-            if (failures.Count == 0)
-            {
-                errors.Append("<li>");
-                errors.Append("No Errors Found");
-                errors.Append("</li>");
-
-                return errors.ToString();
-            }
-
-            foreach (var rule in failures)
-            {
-                errors.Append("<li>");
-                errors.Append(rule.ErrorMessage);
-                errors.Append("</li>");
-            }
-
-            errors.Append("</ul>");
-
-            return errors.ToString();
-        }
-
-        /// <summary>
-        /// If able to process CIW, sends email that sponsorship process has been initiated
-        /// </summary>
-        /// <param name="id"></param>
-        public void SendSponsorshipEMail(int id)
-        {
-            
-            try
-            {
-                log.Info("Begin Sponsorship E-Mail");
-                log.Info(string.Format("Sending Sponsorship E-Mail using ID: {0}", id));
-                log.Info(string.Format("Using Default Email: {0}", ConfigurationManager.AppSettings["DEFAULTEMAIL"] ));
-                //log.Info(string.Format("Subject: {0}", subject));
-                //log.Info(string.Format("Zonal email is: {0}",zonalEMail));
-                log.Info(string.Format("isChildCareWorker: {0}", isChildCareWorker));
-
-                sendNotification = new Suitability.SendNotification(
-                                    ConfigurationManager.AppSettings["DEFAULTEMAIL"],
-                                    id,
-                                    ConfigurationManager.ConnectionStrings["GCIMS"].ToString(),
-                                    ConfigurationManager.AppSettings["SMTPSERVER"],
-                                    ConfigurationManager.AppSettings["ONBOARDINGLOCATION"]);
-
-                sendNotification.SendSponsorshipNotification();
-
-                log.Info("Finished sending sponsorship notification");
-            }
-            catch (Exception ex)
-            {
-                log.Error("Error E-Mailing Sponsorship: " + ex.Message + " - " + ex.InnerException);
-            }
-        }
+        #endregion
     }
 }
