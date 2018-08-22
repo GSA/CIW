@@ -251,7 +251,7 @@ namespace ProcessCIW.Process
         {
             if (IncludeZonalEMail(applicantMajorOrg))
             {
-                cc = zonalEMail;
+                cc = applicantZoneEmail;
             }
         }
 
@@ -350,7 +350,7 @@ namespace ProcessCIW.Process
                 cmd.Parameters.Clear();
                 MySqlParameter[] param = new MySqlParameter[]
                     {
-                        new MySqlParameter { ParameterName = "Region", Value = applicantRegion , MySqlDbType = MySqlDbType.VarChar, Size=3, Direction = ParameterDirection.Input },
+                        new MySqlParameter { ParameterName = "Region", Value = applicantRegion.PadLeft(2,'0') , MySqlDbType = MySqlDbType.VarChar, Size=3, Direction = ParameterDirection.Input },
                         new MySqlParameter { ParameterName = "ZoneEmail", MySqlDbType=MySqlDbType.VarChar, Size=64, Direction = ParameterDirection.Output },
                     };
                 conn.Open();
