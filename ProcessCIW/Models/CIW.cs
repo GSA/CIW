@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
+using ProcessCIW.Utilities;
 
 namespace ProcessCIW.Models
 {
@@ -50,6 +51,7 @@ namespace ProcessCIW.Models
         private string _HomeAddressOne;
         private string _HomeAddressTwo;
         private string _HomeAddressCity;
+        private string _TaskOrderDeliveryOrder;
 
         //_ApproximiateInvestigationDate is the pers_prior_investigation_date
         private string _ApproximiateInvestigationDate;
@@ -179,7 +181,11 @@ namespace ProcessCIW.Models
         public string CompanyName { get; set; }
         public string CompanyNameSub { get; set; }
         public string DataUniversalNumberingSystem { get; set; }
-        public string TaskOrderDeliveryOrder { get; set; }
+        public string TaskOrderDeliveryOrder
+        {
+            get { return _TaskOrderDeliveryOrder; }
+            set { _TaskOrderDeliveryOrder = value.Trim().removeItems(new[] { "u00A0","u0009","u000A","u000B","u000C","u000D"}); }
+        }
         public string ContractNumberType { get; set; } 
         public string ContractStartDate { get; set; }
         public string ContractEndDate { get; set; }

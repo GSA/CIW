@@ -76,6 +76,7 @@
     <Compile Include="Models\UnprocessedFiles.cs" />
     <Compile Include="Process\CIWEMails.cs" />
     <Compile Include="Utilities\Email.cs" />
+    <Compile Include="Utilities\Extension.cs" />
     <Compile Include="Utilities\Utilities.cs" />
     <Compile Include="Models\CIWData.cs" />
     <Compile Include="Validation\ValidateCIW.cs" />
