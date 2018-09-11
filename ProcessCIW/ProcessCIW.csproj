@@ -82,7 +82,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Models\POC.cs" />
-    <Compile Include="Models\UnprocessedFiles.cs" />
+    <Compile Include="Models\FileMetadata.cs" />
     <Compile Include="Process\CIWEMails.cs" />
     <Compile Include="Utilities\Email.cs" />
     <Compile Include="Utilities\Extension.cs" />
