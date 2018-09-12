@@ -16,6 +16,8 @@ namespace ProcessCIW.Utilities
         {
             int _pos = s.LastIndexOf('_');
             int _dot = s.LastIndexOf('.');
+            if (_pos < 0)
+                return s;
             return s.Remove(_pos, _dot - _pos);
         }
 
