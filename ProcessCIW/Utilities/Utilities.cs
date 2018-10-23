@@ -145,13 +145,9 @@ namespace ProcessCIW.Utilities
 
             if (DateTime.TryParse(date, out _birthDate))
             {
-                if ( (_birthDate > DateTime.Now) || (_birthDate >= DateTime.Now.AddYears(-15)) || (_birthDate < new DateTime(1900,1,1)) )
-                    return false;
+                return ((_birthDate <= DateTime.Now.AddYears(-14)) && (_birthDate > DateTime.Now.AddYears(-100)));
             }
-            else
-                return false;
-
-            return true;
+            else return false;
         }
 
         /// <summary>
