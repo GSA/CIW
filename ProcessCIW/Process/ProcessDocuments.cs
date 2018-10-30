@@ -445,7 +445,7 @@ class ProcessDocuments
         /// <param name="filePath"></param>
         /// <param name="isDebug"></param>
         /// <returns>Int success code</returns>
-        public int ProcessCIWInformation(FileMetadata fmd, bool isDebug)
+        public int ProcessCIWInformation(FileMetadata fmd, bool isDebug, out int insertedPersID)
         {
             insertedPersID = 0;
             log.Info("Processing CIW");
@@ -562,7 +562,7 @@ class ProcessDocuments
                                                                                                             ValidationResult, ValidationResult, ValidationResult>(null, null,
                                                                                                                                                                 null, null, null, null);
 
-                log.Info(string.Format("Getting errors"));
+                log.Info("Getting errors");
 
                 ValidationErrors = validate.GetErrors();
 
