@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
+using ProcessCIW.Utilities;
 
 namespace ProcessCIW.Models
 {
@@ -17,58 +18,143 @@ namespace ProcessCIW.Models
         readonly del CleanSsn = new del(Utilities.Utilities.CleanSsn);
 
         //List of backing fields
+        private string _VersionNumber;
+        private string _PlaceOfBirthCountryName;
+        private string _HomeCountryName;
+        private string _CitizenCountryName;
         private string _FirstName;
         private string _MiddleName;
         private string _LastName;
-        private string _PhoneNumberWork;
-        private string _PhoneNumberWorkCell;
-        private string _ContractPOCPhoneWork;
-        private string _ContractPOCAlternatePocPhoneWork1;
-        private string _ContractPOCAlternatePocPhoneWork2;
-        private string _ContractPOCAlternatePocPhoneWork3;
-        private string _ContractPOCAlternatePocPhoneWork4;
-        private string _SponsorPhoneWork;
-        private string _SponsorAlternatePhoneWork1;
-        private string _SponsorAlternatePhoneWork2;
-        private string _SponsorAlternatePhoneWork3;
-        private string _SponsorAlternatePhoneWork4;
-        private string _VersionNumber;
         private string _Suffix;
-        private string _ArraLongTermContractor;
-        private string _PersonalEmailAddress;
-        private string _ContractPOCEMailAddress;
-        private string _ContractPOCAlternatePocEmail1;
-        private string _ContractPOCAlternatePocEmail2;
-        private string _ContractPOCAlternatePocEmail3;
-        private string _ContractPOCAlternatePocEmail4;
-        private string _SponsorEmailAddress;
-        private string _SponsorAlternateEmailAddress1;
-        private string _SponsorAlternateEmailAddress2;
-        private string _SponsorAlternateEmailAddress3;
-        private string _SponsorAlternateEmailAddress4;
+        private string _Sex;
         private string _SocialSecurityNumber;
+        private string _DateOfBirth;
+        private string _PlaceOfBirthCity;
+        private string _PlaceOfBirthCountry;
+        private string _PlaceOfBirthState;
+        private string _PlaceOfBirthMexicoCanada;
         private string _HomeAddressOne;
         private string _HomeAddressTwo;
         private string _HomeAddressCity;
-
+        private string _HomeAddressCountry;
+        private string _HomeAddressUSState;
+        private string _HomeAddressMexicoStateCanadaProvince;
+        private string _HomeAddressZip;
+        private string _PhoneNumberWork;
+        private string _PhoneNumberWorkCell;
+        private string _PersonalEmailAddress;
+        private string _PositionJobTitle;
+        private string _PriorInvestigation;
         //_ApproximiateInvestigationDate is the pers_prior_investigation_date
         private string _ApproximiateInvestigationDate;
+        private string _AgencyAdjudicatedPriorInvestigation;
+        private string _Citizen;
+        private string _PortOfEntryUSCityAndState;
+        private string _DateOfEntry;
+        private string _LessThanThreeYearsResident;
+        private string _AlienRegistrationNumber;
+        private string _CitzenshipCountry;
+        private string _CompanyName;
+        private string _CompanyNameSub;
+        private string _DataUniversalNumberingSystem;
+        private string _TaskOrderDeliveryOrder;
+        private string _ContractNumberType;
+        private string _ContractStartDate;
+        private string _ContractEndDate;
+        private string _HasOptionYears;
+        private string _NumberOfOptionYears;
+        private string _ContractPOCFirstName;
+        private string _ContractPOCLastName;
+        private string _ContractPOCPhoneWork;
+        private string _ContractPOCEMailAddress;
+        private string _ContractPOCAlternatePocFirstname1;
+        private string _ContractPOCAlternatePocLastname1;
+        private string _ContractPOCAlternatePocPhoneWork1;
+        private string _ContractPOCAlternatePocEmail1;
+        private string _ContractPOCAlternatePocFirstname2;
+        private string _ContractPOCAlternatePocLastname2;
+        private string _ContractPOCAlternatePocPhoneWork2;
+        private string _ContractPOCAlternatePocEmail2;
+        private string _ContractPOCAlternatePocFirstname3;
+        private string _ContractPOCAlternatePocLastname3;
+        private string _ContractPOCAlternatePocPhoneWork3;
+        private string _ContractPOCAlternatePocEmail3;
+        private string _ContractPOCAlternatePocFirstname4;
+        private string _ContractPOCAlternatePocLastname4;
+        private string _ContractPOCAlternatePocPhoneWork4;
+        private string _ContractPOCAlternatePocEmail4;
+        private string _RWAIAANumber;
+        private string _RWAIAAAgency;
+        private string _BuildingNumber;
+        private string _Other;
+        private string _ContractorType;
+        private string _ArraLongTermContractor;
+        private string _SponsoringMajorOrg;
+        private string _SponsoringOfficeSymbol;
+        private string _Region;
+        private string _InvestigationTypeRequested;
+        private string _AccessCardRequired;
+        private string _SponsorFirstName;
+        private string _SponsorMiddleName;
+        private string _SponsorLastName;
+        private string _SponsorEmailAddress;
+        private string _SponsorPhoneWork;
+        private string _SponsorIsPMCORCO;
+        private string _SponsorAlternateFirstName1;
+        private string _SponsorAlternateMiddleName1;
+        private string _SponsorAlternateLastName1;
+        private string _SponsorAlternateEmailAddress1;
+        private string _SponsorAlternatePhoneWork1;
+        private string _SponsorAlternateIsPMCORCO1;
+        private string _SponsorAlternateFirstName2;
+        private string _SponsorAlternateMiddleName2;
+        private string _SponsorAlternateLastName2;
+        private string _SponsorAlternateEmailAddress2;
+        private string _SponsorAlternatePhoneWork2;
+        private string _SponsorAlternateIsPMCORCO2;
+        private string _SponsorAlternateFirstName3;
+        private string _SponsorAlternateMiddleName3;
+        private string _SponsorAlternateLastName3;
+        private string _SponsorAlternateEmailAddress3;
+        private string _SponsorAlternatePhoneWork3;
+        private string _SponsorAlternateIsPMCORCO3;
+        private string _SponsorAlternateFirstName4;
+        private string _SponsorAlternateMiddleName4;
+        private string _SponsorAlternateLastName4;
+        private string _SponsorAlternateEmailAddress4;
+        private string _SponsorAlternatePhoneWork4;
+        private string _SponsorAlternateIsPMCORCO4;
+
+        
+
+        
 
         /// <summary>
         /// Section 1
         /// </summary>
 
-
         //Assigns "V0" to version if version is null
         public string VersionNumber
         {
             get { return (_VersionNumber == null) ? "V0" : _VersionNumber; }
-            set { _VersionNumber = value; }
+            set { _VersionNumber = value.Trim(); }
         }
 
-        public string PlaceOfBirthCountryName { get; set; }
-        public string HomeCountryName { get; set; }
-        public string CitizenCountryName { get; set; }
+        public string PlaceOfBirthCountryName
+        {
+            get { return _PlaceOfBirthCountryName; }
+            set { _PlaceOfBirthCountryName = value.Trim(); }
+        }
+        public string HomeCountryName
+        {
+            get { return _HomeCountryName; }
+            set { _HomeCountryName = value.Trim(); }
+        }
+        public string CitizenCountryName
+        {
+            get { return _CitizenCountryName; }
+            set { _CitizenCountryName = value.Trim(); }
+        }
 
         //Trim 3 name parts
         public string FirstName
@@ -91,42 +177,88 @@ namespace ProcessCIW.Models
         public string Suffix
         {
             get { return _Suffix; }
-            set { _Suffix = (value == "N/A") ? "" : value; }
+            set { _Suffix = (value == "N/A") ? "" : value.Trim(); }
         }
 
-        public string Sex { get; set; } 
+        public string Sex
+        {
+            get { return _Sex; }
+            set { _Sex = value.Trim(); }
+        }
+
         public string SocialSecurityNumber
         {
             get { return _SocialSecurityNumber; }
             set { _SocialSecurityNumber = CleanSsn(value); }
         }
-        public string DateOfBirth { get; set; }
-        public string PlaceOfBirthCity { get; set; }
-        public string PlaceOfBirthCountry { get; set; }
-        public string PlaceOfBirthState { get; set; }
-        public string PlaceOfBirthMexicoCanada { get; set; }
+        public string DateOfBirth
+        {
+            get { return _DateOfBirth; }
+            set { _DateOfBirth = value.Trim(); }
+        }
+        public string PlaceOfBirthCity
+        {
+            get { return _PlaceOfBirthCity; }
+            set { _PlaceOfBirthCity = value.Trim(); }
+        }
+        public string PlaceOfBirthCountry
+        {
+            get { return _PlaceOfBirthCountry;
+            }
+            set {
+                _PlaceOfBirthCountry = value.Trim();
+            }
+        }
+        public string PlaceOfBirthState
+        {
+            get { return _PlaceOfBirthState;
+            }
+            set { _PlaceOfBirthState = value.Trim();
+            }
+        }
+        public string PlaceOfBirthMexicoCanada
+        {
+            get { return _PlaceOfBirthMexicoCanada; }
+            set { _PlaceOfBirthMexicoCanada = value.Trim(); }
+        }
 
         //Remove # sign from addresses, mso does not support, 7-2-2018
         public string HomeAddressOne
         {
             get { return _HomeAddressOne; }
-            set { _HomeAddressOne = TrimPound(value); }
+            set { _HomeAddressOne = TrimPound(value.Trim()); }
         }
         public string HomeAddressTwo
         {
             get { return _HomeAddressTwo; }
-            set { _HomeAddressTwo = TrimPound(value); }
+            set { _HomeAddressTwo = TrimPound(value.Trim()); }
         }
         public string HomeAddressCity
         {
             get { return _HomeAddressCity; }
-            set { _HomeAddressCity = TrimPound(value); }
+            set { _HomeAddressCity = TrimPound(value.Trim()); }
         }
 
-        public string HomeAddressCountry { get; set; }
-        public string HomeAddressUSState { get; set; }
-        public string HomeAddressMexicoStateCanadaProvince { get; set; }
-        public string HomeAddressZip { get; set; }
+        public string HomeAddressCountry
+        {
+            get { return _HomeAddressCountry; }
+            set { _HomeAddressCountry = value.Trim(); }
+        }
+        public string HomeAddressUSState
+        {
+            get { return _HomeAddressUSState; }
+            set { _HomeAddressUSState = value.Trim(); }
+        }
+        public string HomeAddressMexicoStateCanadaProvince
+        {
+            get { return _HomeAddressMexicoStateCanadaProvince; }
+            set { _HomeAddressMexicoStateCanadaProvince = value.Trim(); }
+        }
+        public string HomeAddressZip
+        {
+            get { return _HomeAddressZip; }
+            set { _HomeAddressZip = value.Trim(); }
+        }
 
         //Removes all non digit characters from PhoneNumberWork
         public string PhoneNumberWork
@@ -134,7 +266,7 @@ namespace ProcessCIW.Models
             get
             { return _PhoneNumberWork; }
             set
-            { _PhoneNumberWork = TrimPhone(value); }
+            { _PhoneNumberWork = TrimPhone(value.Trim()); }
         }
 
         //Removes all non digit characters from PhoneNumberCell
@@ -143,7 +275,7 @@ namespace ProcessCIW.Models
             get
             { return _PhoneNumberWorkCell; }
             set
-            { _PhoneNumberWorkCell = TrimPhone(value); }
+            { _PhoneNumberWorkCell = TrimPhone(value.Trim()); }
         }
 
         //Stores PersonalEmailAddress as lower case
@@ -152,11 +284,19 @@ namespace ProcessCIW.Models
             get
             { return _PersonalEmailAddress; }
             set
-            { _PersonalEmailAddress = value.ToLower(); }
+            { _PersonalEmailAddress = value.ToLower().Trim(); }
         }
 
-        public string PositionJobTitle { get; set; }
-        public string PriorInvestigation { get; set; }
+        public string PositionJobTitle
+        {
+            get { return _PositionJobTitle; }
+            set { _PositionJobTitle = value.Trim(); }
+        }
+        public string PriorInvestigation
+        {
+            get { return _PriorInvestigation; }
+            set { _PriorInvestigation = value.Trim(); }
+        }
 
         //_ApproximiateInvestigationDate is the pers_prior_investigation_date
         public string ApproximiateInvestigationDate
@@ -164,29 +304,106 @@ namespace ProcessCIW.Models
             get { return _ApproximiateInvestigationDate; }
             set { _ApproximiateInvestigationDate = value.Trim(); }
         }
-        public string AgencyAdjudicatedPriorInvestigation { get; set; }
-        public string Citizen { get; set; }
-        public string PortOfEntryUSCityAndState { get; set; }
-        public string DateOfEntry { get; set; }
-        public string LessThanThreeYearsResident { get; set; }
-        public string AlienRegistrationNumber { get; set; } 
-        public string CitzenshipCountry { get; set; }
+        public string AgencyAdjudicatedPriorInvestigation
+        {
+            get { return _AgencyAdjudicatedPriorInvestigation; }
+            set { _AgencyAdjudicatedPriorInvestigation = value.Trim(); }
+        }
+        public string Citizen
+        {
+            get { return _Citizen; }
+            set { _Citizen = value.Trim(); }
+        }
+        public string PortOfEntryUSCityAndState
+        {
+            get { return _PortOfEntryUSCityAndState; }
+            set { _PortOfEntryUSCityAndState = value.Trim(); }
+        }
+        public string DateOfEntry
+        {
+            get { return _DateOfEntry; }
+            set { _DateOfEntry = value.Trim(); }
+        }
+        public string LessThanThreeYearsResident
+        {
+            get { return _LessThanThreeYearsResident; }
+            set { _LessThanThreeYearsResident = value.Trim(); }
+        }
+        public string AlienRegistrationNumber
+        {
+            get { return _AlienRegistrationNumber; }
+            set { _AlienRegistrationNumber = value.Trim(); }
+        }
+        public string CitzenshipCountry
+        {
+            get { return _CitzenshipCountry; }
+            set { _CitzenshipCountry = value.Trim(); }
+        }
 
         /// <summary>
         /// Section 2
         /// </summary>
-        
-        public string CompanyName { get; set; }
-        public string CompanyNameSub { get; set; }
-        public string DataUniversalNumberingSystem { get; set; }
-        public string TaskOrderDeliveryOrder { get; set; }
-        public string ContractNumberType { get; set; } 
-        public string ContractStartDate { get; set; }
-        public string ContractEndDate { get; set; }
-        public string HasOptionYears { get; set; }
-        public string NumberOfOptionYears { get; set; }
-        public string ContractPOCFirstName { get; set; }
-        public string ContractPOCLastName { get; set; }
+
+        public string CompanyName
+        {
+            get { return _CompanyName; }
+            set { _CompanyName = value.Trim(); }
+        }
+        public string CompanyNameSub
+        {
+            get { return _CompanyNameSub; }
+            set { _CompanyNameSub = value.Trim(); }
+        }
+        public string DataUniversalNumberingSystem
+        {
+            get { return _DataUniversalNumberingSystem; }
+            set { _DataUniversalNumberingSystem = value.Trim(); }
+        }
+        public string TaskOrderDeliveryOrder
+        {
+            get { return _TaskOrderDeliveryOrder; }
+            set { _TaskOrderDeliveryOrder = value.Trim(); }
+        }
+        public string ContractNumberType
+        {
+            get { return _ContractNumberType; }
+            set { _ContractNumberType = value.Trim(); }
+        }
+        public string ContractStartDate
+        {
+            get { return _ContractStartDate; }
+            set { _ContractStartDate = value.Trim(); }
+        }
+        public string ContractEndDate
+        {
+            get { return _ContractEndDate; }
+
+            set { _ContractEndDate = value.Trim(); }
+        }
+        public string HasOptionYears
+        {
+            get { return _HasOptionYears; }
+
+            set { _HasOptionYears = value.Trim(); }
+        }
+        public string NumberOfOptionYears
+        {
+            get { return _NumberOfOptionYears; }
+
+            set { _NumberOfOptionYears = value.Trim(); }
+        }
+        public string ContractPOCFirstName
+        {
+            get { return _ContractPOCFirstName; }
+
+            set { _ContractPOCFirstName = value.Trim(); }
+        }
+        public string ContractPOCLastName
+        {
+            get { return _ContractPOCLastName; }
+
+            set { _ContractPOCLastName = value.Trim(); }
+        }
 
         //Removes all non digit characters from ContractPOCPhoneWork
         public string ContractPOCPhoneWork
@@ -194,7 +411,7 @@ namespace ProcessCIW.Models
             get
             { return _ContractPOCPhoneWork; }
             set
-            { _ContractPOCPhoneWork = TrimPhone(value); }
+            { _ContractPOCPhoneWork = TrimPhone(value.Trim()); }
         }
 
         //Stores ContractPOCEMailAddress as lower case
@@ -203,11 +420,21 @@ namespace ProcessCIW.Models
             get
             { return _ContractPOCEMailAddress; }
             set
-            { _ContractPOCEMailAddress = value.ToLower(); }
+            { _ContractPOCEMailAddress = value.ToLower().Trim(); }
         }
 
-        public string ContractPOCAlternatePocFirstname1 { get; set; }
-        public string ContractPOCAlternatePocLastname1 { get; set; }
+        public string ContractPOCAlternatePocFirstname1
+        {
+            get { return _ContractPOCAlternatePocFirstname1; }
+
+            set { _ContractPOCAlternatePocFirstname1 = value.Trim(); }
+        }
+        public string ContractPOCAlternatePocLastname1
+        {
+            get { return _ContractPOCAlternatePocLastname1; }
+
+            set { _ContractPOCAlternatePocLastname1 = value.Trim(); }
+        }
 
         //Removes all non digit characters from ContractPOCAlternatePocPhoneWork1
         public string ContractPOCAlternatePocPhoneWork1
@@ -215,7 +442,7 @@ namespace ProcessCIW.Models
             get
             { return _ContractPOCAlternatePocPhoneWork1; }
             set
-            { _ContractPOCAlternatePocPhoneWork1 = TrimPhone(value); }
+            { _ContractPOCAlternatePocPhoneWork1 = TrimPhone(value.Trim()); }
         }
 
         //Stores ContractPOCAlternatePocEmail1 as lower case
@@ -224,11 +451,21 @@ namespace ProcessCIW.Models
             get
             { return _ContractPOCAlternatePocEmail1; }
             set
-            { _ContractPOCAlternatePocEmail1 = value.ToLower(); }
+            { _ContractPOCAlternatePocEmail1 = value.ToLower().Trim(); }
         }
 
-        public string ContractPOCAlternatePocFirstname2 { get; set; }
-        public string ContractPOCAlternatePocLastname2 { get; set; }
+        public string ContractPOCAlternatePocFirstname2
+        {
+            get { return _ContractPOCAlternatePocFirstname2; }
+
+            set { _ContractPOCAlternatePocFirstname2 = value.Trim(); }
+        }
+        public string ContractPOCAlternatePocLastname2
+        {
+            get { return _ContractPOCAlternatePocLastname2; }
+
+            set { _ContractPOCAlternatePocLastname2 = value.Trim(); }
+        }
 
         //Removes all non digit characters from ContractPOCAlternatePocPhoneWork2
         public string ContractPOCAlternatePocPhoneWork2
@@ -236,7 +473,7 @@ namespace ProcessCIW.Models
             get
             { return _ContractPOCAlternatePocPhoneWork2; }
             set
-            { _ContractPOCAlternatePocPhoneWork2 = TrimPhone(value); }
+            { _ContractPOCAlternatePocPhoneWork2 = TrimPhone(value.Trim()); }
         }
 
         //Stores ContractPOCAlternatePocEmail2 as lower case
@@ -245,11 +482,21 @@ namespace ProcessCIW.Models
             get
             { return _ContractPOCAlternatePocEmail2; }
             set
-            { _ContractPOCAlternatePocEmail2 = value.ToLower(); }
+            { _ContractPOCAlternatePocEmail2 = value.ToLower().Trim(); }
         }
 
-        public string ContractPOCAlternatePocFirstname3 { get; set; }
-        public string ContractPOCAlternatePocLastname3 { get; set; }
+        public string ContractPOCAlternatePocFirstname3
+        {
+            get { return _ContractPOCAlternatePocFirstname3; }
+
+            set { _ContractPOCAlternatePocFirstname3 = value.Trim(); }
+        }
+        public string ContractPOCAlternatePocLastname3
+        {
+            get { return _ContractPOCAlternatePocLastname3; }
+
+            set { _ContractPOCAlternatePocLastname3 = value.Trim(); }
+        }
 
         //Removes all non digit characters from ContractPOCAlternatePocPhoneWork3
         public string ContractPOCAlternatePocPhoneWork3
@@ -257,7 +504,7 @@ namespace ProcessCIW.Models
             get
             { return _ContractPOCAlternatePocPhoneWork3; }
             set
-            { _ContractPOCAlternatePocPhoneWork3 = TrimPhone(value); }
+            { _ContractPOCAlternatePocPhoneWork3 = TrimPhone(value.Trim()); }
         }
 
         //Stores ContractPOCAlternatePocEmail3 as lower case
@@ -266,11 +513,21 @@ namespace ProcessCIW.Models
             get
             { return _ContractPOCAlternatePocEmail3; }
             set
-            { _ContractPOCAlternatePocEmail3 = value.ToLower(); }
+            { _ContractPOCAlternatePocEmail3 = value.ToLower().Trim(); }
         }
 
-        public string ContractPOCAlternatePocFirstname4 { get; set; }
-        public string ContractPOCAlternatePocLastname4 { get; set; }
+        public string ContractPOCAlternatePocFirstname4
+        {
+            get { return _ContractPOCAlternatePocFirstname4; }
+
+            set { _ContractPOCAlternatePocFirstname4 = value.Trim(); }
+        }
+        public string ContractPOCAlternatePocLastname4
+        {
+            get { return _ContractPOCAlternatePocLastname4; }
+
+            set { _ContractPOCAlternatePocLastname4 = value.Trim(); }
+        }
 
         //Removes all non digit characters from ContractPOCAlternatePocPhoneWork4
         public string ContractPOCAlternatePocPhoneWork4
@@ -278,7 +535,7 @@ namespace ProcessCIW.Models
             get
             { return _ContractPOCAlternatePocPhoneWork4; }
             set
-            { _ContractPOCAlternatePocPhoneWork4 = TrimPhone(value); }
+            { _ContractPOCAlternatePocPhoneWork4 = TrimPhone(value.Trim()); }
         }
 
         //Stores ContractPOCAlternatePocEmail4 as lower case
@@ -287,49 +544,114 @@ namespace ProcessCIW.Models
             get
             { return _ContractPOCAlternatePocEmail4; }
             set
-            { _ContractPOCAlternatePocEmail4 = value.ToLower(); }
+            { _ContractPOCAlternatePocEmail4 = value.ToLower().Trim(); }
         }
 
         /// <summary>
         /// Section 3
         /// </summary>
 
-        public string RWAIAANumber { get; set; }
-        public string RWAIAAAgency { get; set; }
+        public string RWAIAANumber
+        {
+            get { return _RWAIAANumber; }
+
+            set { _RWAIAANumber = value.Trim(); }
+        }
+        public string RWAIAAAgency
+        {
+            get { return _RWAIAAAgency; }
+
+            set { _RWAIAAAgency = value.Trim(); }
+        }
 
         /// <summary>
         /// Section 4
         /// </summary>
 
-        public string BuildingNumber { get; set; }
-        public string Other { get; set; }
-        public string ContractorType { get; set; }
+        public string BuildingNumber
+        {
+            get { return _BuildingNumber; }
+
+            set { _BuildingNumber = value.Trim(); }
+        }
+        public string Other
+        {
+            get { return _Other; }
+
+            set { _Other = value.Trim(); }
+        }
+        public string ContractorType
+        {
+            get { return _ContractorType; }
+
+            set { _ContractorType = value.Trim(); }
+        }
 
         //Stores ArraLongTermContractor as empty string if value is "Not Applicable"
         public string ArraLongTermContractor
         {
             get { return _ArraLongTermContractor; }
-            set { _ArraLongTermContractor = (value == "Not Applicable") ? "" : value; }
+            set { _ArraLongTermContractor = (value == "Not Applicable") ? "" : value.Trim(); }
         }
 
-        public string SponsoringMajorOrg { get; set; }
-        public string SponsoringOfficeSymbol { get; set; }
-        public string Region { get; set; }
+        public string SponsoringMajorOrg
+        {
+            get { return _SponsoringMajorOrg; }
+
+            set { _SponsoringMajorOrg = value.Trim(); }
+        }
+        public string SponsoringOfficeSymbol
+        {
+            get { return _SponsoringOfficeSymbol; }
+
+            set { _SponsoringOfficeSymbol = value.Trim(); }
+        }
+        public string Region
+        {
+            get { return _Region; }
+
+            set { _Region = value.Trim(); }
+        }
 
         /// <summary>
         /// Section 5
         /// </summary>
 
-        public string InvestigationTypeRequested { get; set; }
-        public string AccessCardRequired { get; set; }
+        public string InvestigationTypeRequested
+        {
+            get { return _InvestigationTypeRequested; }
+
+            set { _InvestigationTypeRequested = value.Trim(); }
+        }
+        public string AccessCardRequired
+        {
+            get { return _AccessCardRequired; }
+
+            set { _AccessCardRequired = value.Trim(); }
+        }
 
         /// <summary>
         /// Section 6
         /// </summary>
 
-        public string SponsorFirstName { get; set; }
-        public string SponsorMiddleName { get; set; }
-        public string SponsorLastName { get; set; }
+        public string SponsorFirstName
+        {
+            get { return _SponsorFirstName; }
+
+            set { _SponsorFirstName = value.Trim(); }
+        }
+        public string SponsorMiddleName
+        {
+            get { return _SponsorMiddleName; }
+
+            set { _SponsorMiddleName = value.Trim(); }
+        }
+        public string SponsorLastName
+        {
+            get { return _SponsorLastName; }
+
+            set { _SponsorLastName = value.Trim(); }
+        }
 
         //Stores SponsorEmailAddress as lower case
         public string SponsorEmailAddress
@@ -337,7 +659,7 @@ namespace ProcessCIW.Models
             get
             { return _SponsorEmailAddress; }
             set
-            { _SponsorEmailAddress = value.ToLower(); }
+            { _SponsorEmailAddress = value.ToLower().Trim(); }
         }
 
         //Removes all non digit characters from SponsorPhoneWork
@@ -346,13 +668,33 @@ namespace ProcessCIW.Models
             get
             { return _SponsorPhoneWork; }
             set
-            { _SponsorPhoneWork = TrimPhone(value); }
+            { _SponsorPhoneWork = TrimPhone(value.Trim()); }
         }
 
-        public string SponsorIsPMCORCO { get; set; }
-        public string SponsorAlternateFirstName1 { get; set; }
-        public string SponsorAlternateMiddleName1 { get; set; }
-        public string SponsorAlternateLastName1 { get; set; }
+        public string SponsorIsPMCORCO
+        {
+            get { return _SponsorIsPMCORCO; }
+
+            set { _SponsorIsPMCORCO = value.Trim(); }
+        }
+        public string SponsorAlternateFirstName1
+        {
+            get { return _SponsorAlternateFirstName1; }
+
+            set { _SponsorAlternateFirstName1 = value.Trim(); }
+        }
+        public string SponsorAlternateMiddleName1
+        {
+            get { return _SponsorAlternateMiddleName1; }
+
+            set { _SponsorAlternateMiddleName1 = value.Trim(); }
+        }
+        public string SponsorAlternateLastName1
+        {
+            get { return _SponsorAlternateLastName1; }
+
+            set { _SponsorAlternateLastName1 = value.Trim(); }
+        }
 
         //Stores SponsorAlternateEmailAddress1 as lower case
         public string SponsorAlternateEmailAddress1
@@ -360,7 +702,7 @@ namespace ProcessCIW.Models
             get
             { return _SponsorAlternateEmailAddress1; }
             set
-            { _SponsorAlternateEmailAddress1 = value.ToLower(); }
+            { _SponsorAlternateEmailAddress1 = value.ToLower().Trim(); }
         }
 
         //Removes all non digit characters from SponsorAlternatePhoneWork1
@@ -369,13 +711,33 @@ namespace ProcessCIW.Models
             get
             { return _SponsorAlternatePhoneWork1; }
             set
-            { _SponsorAlternatePhoneWork1 = TrimPhone(value); }
+            { _SponsorAlternatePhoneWork1 = TrimPhone(value.Trim()); }
         }
 
-        public string SponsorAlternateIsPMCORCO1 { get; set; }
-        public string SponsorAlternateFirstName2 { get; set; }
-        public string SponsorAlternateMiddleName2 { get; set; }
-        public string SponsorAlternateLastName2 { get; set; }
+        public string SponsorAlternateIsPMCORCO1
+        {
+            get { return _SponsorAlternateIsPMCORCO1; }
+
+            set { _SponsorAlternateIsPMCORCO1 = value.Trim(); }
+        }
+        public string SponsorAlternateFirstName2
+        {
+            get { return _SponsorAlternateFirstName2; }
+
+            set { _SponsorAlternateFirstName2 = value.Trim(); }
+        }
+        public string SponsorAlternateMiddleName2
+        {
+            get { return _SponsorAlternateMiddleName2; }
+
+            set { _SponsorAlternateMiddleName2 = value.Trim(); }
+        }
+        public string SponsorAlternateLastName2
+        {
+            get { return _SponsorAlternateLastName2; }
+
+            set { _SponsorAlternateLastName2 = value.Trim(); }
+        }
 
         //Stores SponsorAlternateEmailAddress2 as lower case
         public string SponsorAlternateEmailAddress2
@@ -383,7 +745,7 @@ namespace ProcessCIW.Models
             get
             { return _SponsorAlternateEmailAddress2; }
             set
-            { _SponsorAlternateEmailAddress2 = value.ToLower(); }
+            { _SponsorAlternateEmailAddress2 = value.ToLower().Trim(); }
         }
 
         //Removes all non digit characters from SponsorAlternatePhoneWork2
@@ -392,13 +754,33 @@ namespace ProcessCIW.Models
             get
             { return _SponsorAlternatePhoneWork2; }
             set
-            { _SponsorAlternatePhoneWork2 = TrimPhone(value); }
+            { _SponsorAlternatePhoneWork2 = TrimPhone(value.Trim()); }
         }
 
-        public string SponsorAlternateIsPMCORCO2 { get; set; }
-        public string SponsorAlternateFirstName3 { get; set; }
-        public string SponsorAlternateMiddleName3 { get; set; }
-        public string SponsorAlternateLastName3 { get; set; }
+        public string SponsorAlternateIsPMCORCO2
+        {
+            get { return _SponsorAlternateIsPMCORCO2; }
+
+            set { _SponsorAlternateIsPMCORCO2 = value.Trim(); }
+        }
+        public string SponsorAlternateFirstName3
+        {
+            get { return _SponsorAlternateFirstName3; }
+
+            set { _SponsorAlternateFirstName3 = value.Trim(); }
+        }
+        public string SponsorAlternateMiddleName3
+        {
+            get { return _SponsorAlternateMiddleName3; }
+
+            set { _SponsorAlternateMiddleName3 = value.Trim(); }
+        }
+        public string SponsorAlternateLastName3
+        {
+            get { return _SponsorAlternateLastName3; }
+
+            set { _SponsorAlternateLastName3 = value.Trim(); }
+        }
 
         //Stores SponsorAlternateEmailAddress3 as lower case
         public string SponsorAlternateEmailAddress3
@@ -406,7 +788,7 @@ namespace ProcessCIW.Models
             get
             { return _SponsorAlternateEmailAddress3; }
             set
-            { _SponsorAlternateEmailAddress3 = value.ToLower(); }
+            { _SponsorAlternateEmailAddress3 = value.ToLower().Trim(); }
         }
 
         //Removes all non digit characters from SponsorAlternatePhoneWork3
@@ -415,13 +797,33 @@ namespace ProcessCIW.Models
             get
             { return _SponsorAlternatePhoneWork3; }
             set
-            { _SponsorAlternatePhoneWork3 = TrimPhone(value); }
+            { _SponsorAlternatePhoneWork3 = TrimPhone(value.Trim()); }
         }
 
-        public string SponsorAlternateIsPMCORCO3 { get; set; }
-        public string SponsorAlternateFirstName4 { get; set; }
-        public string SponsorAlternateMiddleName4 { get; set; }
-        public string SponsorAlternateLastName4 { get; set; }
+        public string SponsorAlternateIsPMCORCO3
+        {
+            get { return _SponsorAlternateIsPMCORCO3; }
+
+            set { _SponsorAlternateIsPMCORCO3 = value.Trim(); }
+        }
+        public string SponsorAlternateFirstName4
+        {
+            get { return _SponsorAlternateFirstName4; }
+
+            set { _SponsorAlternateFirstName4 = value.Trim(); }
+        }
+        public string SponsorAlternateMiddleName4
+        {
+            get { return _SponsorAlternateMiddleName4; }
+
+            set { _SponsorAlternateMiddleName4 = value.Trim(); }
+        }
+        public string SponsorAlternateLastName4
+        {
+            get { return _SponsorAlternateLastName4; }
+
+            set { _SponsorAlternateLastName4 = value.Trim(); }
+        }
 
         //Stores SponsorAlternateEmailAddress4 as lower case
         public string SponsorAlternateEmailAddress4
@@ -429,7 +831,7 @@ namespace ProcessCIW.Models
             get
             { return _SponsorAlternateEmailAddress4; }
             set
-            { _SponsorAlternateEmailAddress4 = value.ToLower(); }
+            { _SponsorAlternateEmailAddress4 = value.ToLower().Trim(); }
         }
 
         //Removes all non digit characters from SponsorAlternatePhoneWork4
@@ -438,10 +840,15 @@ namespace ProcessCIW.Models
             get
             { return _SponsorAlternatePhoneWork4; }
             set
-            { _SponsorAlternatePhoneWork4 = TrimPhone(value); }
+            { _SponsorAlternatePhoneWork4 = TrimPhone(value.Trim()); }
         }
 
-        public string SponsorAlternateIsPMCORCO4 { get; set; }
+        public string SponsorAlternateIsPMCORCO4
+        {
+            get { return _SponsorAlternateIsPMCORCO4; }
+
+            set { _SponsorAlternateIsPMCORCO4 = value.Trim(); }
+        }
 
         //List of VendorPOC's to iterate through, checking for non empty lines
         public List<POC.VendorPOC> VendorPOC { get; set; }
@@ -458,12 +865,17 @@ namespace ProcessCIW.Models
             {
                 StringBuilder fullName = new StringBuilder();
 
-                fullName.Append(FirstName == null ? "FirstName is NULL" : FirstName == "" ? "FirstName is EMPTY" : FirstName);
+                fullName.Append(FirstName == null ? "FirstName is NULL" : ReturnFieldOrAltText(FirstName, "FirstName"));
                 fullName.Append(" ");
-                fullName.Append(LastName == null ? "LastName is NULL" : LastName == "" ? "LastName is EMPTY" : LastName);
+                fullName.Append(LastName == null ? "LastName is NULL" : ReturnFieldOrAltText(LastName, "LastName"));
 
                 return fullName.ToString();
             }
+        }
+
+        public string ReturnFieldOrAltText(string value, string fieldName)
+        {
+            return value == "" ? string.Format("{0} is EMPTY", fieldName) : value;
         }
     }
 }

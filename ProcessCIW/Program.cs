@@ -1,5 +1,6 @@
 ﻿using Gsa.Sftp.Libraries.Utilities.Encryption;
 using ProcessCIW.Models;
+using ProcessCIW.Utilities;
 using ProcessCIW.Validation;
 using System;
 using System.Collections.Generic;
@@ -22,6 +23,9 @@ namespace ProcessCIW
 
         static void Main(string[] args)
         {
+            //Define unhandled exception delegate
+            AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionTrap;
+                        
             //used during logging
             stopWatch.Start();
 
@@ -37,9 +41,7 @@ namespace ProcessCIW
             log.Info("Application Done");
 
             Console.WriteLine("Done! " + stopWatch.ElapsedMilliseconds);
-
-            //End of program
-            return;
+                        
         }
 
         /// <summary>
@@ -47,16 +49,16 @@ namespace ProcessCIW
         /// </summary>
         private static void ProcessFiles()
         {
-            List<UnprocessedFiles> uf = new List<UnprocessedFiles>();
+            List<FileMetadata> uf;
 
-			log.Info(string.Format("Getting unprocessed files"));
+			log.Info("Getting unprocessed files");
             uf = pd.GetUnprocessedFiles();
 
             foreach (string oldCSVFiles in Directory.EnumerateFiles(ConfigurationManager.AppSettings["TEMPFOLDER"], "*.csv"))
             {
                 try
                 {
-                    log.Info(string.Format("Deleting old CSV file (0).", oldCSVFiles));
+                    log.Info(string.Format("Deleting old CSV file {0}.", oldCSVFiles));
                     File.Delete(oldCSVFiles);
                 }
                 catch (IOException e)
@@ -83,33 +85,31 @@ namespace ProcessCIW
                 log.Info("Processing Prod Files");
                 ProcessProdFiles(uf);
             }
-
-            return;
         }
 
         /// <summary>
         /// Processes files while in debug mode, note that in debug mode the files are not encrypted
         /// </summary>
         /// <param name="filesForProcessing"></param>
-        private static void ProcessDebugFiles(List<UnprocessedFiles> filesForProcessing)
+        private static void ProcessDebugFiles(List<FileMetadata> filesForProcessing)
         {
             int processedResult;
             int insertedPersId=0;
 
             foreach (var ciwFile in filesForProcessing)
             {
-                string filePath = ConfigurationManager.AppSettings["CIWDEBUGFILELOCATION"] + ciwFile.FileName;
+                ciwFile.FilePath = ConfigurationManager.AppSettings["CIWDEBUGFILELOCATION"] + ciwFile.FileName;
 
                 int errorCode;
 
-                log.Info(string.Format("Processing file {0}", filePath));
+                log.Info(string.Format("Processing file {0}", ciwFile.FilePath));
 
                 //Get data from CIW
-                string tempFile = pd.GetCIWInformation(ciwFile.PersID, filePath, ciwFile.FileName, out errorCode);
+                ciwFile.TempFilePath = pd.GetCIWInformation(ciwFile, out errorCode);
 
-                if (tempFile != null)
+                if (ciwFile.TempFilePath != null)
                 {
-                    log.Info(string.Format("GetCIWInformation returned with temp file {0}.", tempFile));
+                    log.Info(string.Format("GetCIWInformation returned with temp file {0}.", ciwFile.TempFilePath));
 
                     //Process the data retrieved from the CIW
                     processedResult = pd.ProcessCIWInformation(ciwFile.PersID, tempFile, true, out insertedPersId);
@@ -127,7 +127,7 @@ namespace ProcessCIW
                 try
                 {
                     //Delete the original file
-                    Utilities.Utilities.DeleteFiles(new List<string> { filePath });
+                    Utilities.Utilities.DeleteFiles(new List<string> { ciwFile.FilePath });
                 }
                 catch (IOException e)
                 {
@@ -165,36 +165,34 @@ namespace ProcessCIW
         /// Processes files uploaded when not in debug mode
         /// </summary>
         /// <param name="filesForProcessing"></param>
-        private static void ProcessProdFiles(List<UnprocessedFiles> filesForProcessing)
+        private static void ProcessProdFiles(List<FileMetadata> filesForProcessing)
         {
             int processedResult;
             int insertedPersId = 0;
 
             foreach (var ciwFile in filesForProcessing)
             {
-                string filePath = ConfigurationManager.AppSettings["CIWPRODUCTIONFILELOCATION"] + ciwFile.FileName;
+                ciwFile.FilePath = ConfigurationManager.AppSettings["CIWPRODUCTIONFILELOCATION"] + ciwFile.FileName;
                 int errorCode;
-                log.Info(string.Format("Processing file {0}", filePath));
+                log.Info(string.Format("Processing file {0}", ciwFile.FilePath));
 
                 //Decrypt unprocessed production files
-                byte[] buffer = new byte[] { };
+                byte[] buffer;
 
-                string decryptedFile = string.Empty;
+                ciwFile.DecryptedFilePath = ConfigurationManager.AppSettings["CIWPRODUCTIONFILELOCATION"] + u.GenerateDecryptedFilename(Path.GetFileNameWithoutExtension(ciwFile.FileName));
 
-                decryptedFile = ConfigurationManager.AppSettings["CIWPRODUCTIONFILELOCATION"] + u.GenerateDecryptedFilename(Path.GetFileNameWithoutExtension(ciwFile.FileName));
+                log.Info(string.Format("Decrypting file {0}.", ciwFile.DecryptedFilePath));
 
-                log.Info(string.Format("Decrypting file {0}.", ciwFile));
+                buffer = File.ReadAllBytes(ciwFile.FilePath);
 
-                buffer = File.ReadAllBytes(filePath);
-
-                buffer.WriteToFile(decryptedFile, Cryptography.Security.Decrypt, true);
+                buffer.WriteToFile(ciwFile.DecryptedFilePath, Cryptography.Security.Decrypt, true);
 
                 //Gets data from CIW
-                string tempFile = pd.GetCIWInformation(ciwFile.PersID, decryptedFile, ciwFile.FileName, out errorCode);
+                ciwFile.TempFilePath = pd.GetCIWInformation(ciwFile, out errorCode);
 
-                if (tempFile != null)
+                if (ciwFile.TempFilePath != null)
                 {
-                    log.Info(string.Format("GetCIWInformation returned with temp file {0}.", tempFile));
+                    log.Info(string.Format("GetCIWInformation returned with temp file {0}.", ciwFile.TempFilePath));
 
                     //Processes data retrieved from CIW
                     processedResult = pd.ProcessCIWInformation(ciwFile.PersID, tempFile, true, out insertedPersId);
@@ -210,13 +208,59 @@ namespace ProcessCIW
                 try
                 {
                     //Delete the original and decrypted file
-                    Utilities.Utilities.DeleteFiles(new List<string> { filePath, decryptedFile });
+                    Utilities.Utilities.DeleteFiles(new List<string> { ciwFile.FilePath, ciwFile.DecryptedFilePath });
                 }
                 catch (IOException e)
                 {
                     log.Error(e.Message + " - " + e.InnerException);
                 }
             }
+        }
+
+        private static string GetErrorRecursive(Exception e)
+        {
+            if (e.InnerException == null)
+                return e.Message + '\n' + e.StackTrace;
+            else return e.Message + '\n' + e.StackTrace + '\n' + GetErrorRecursive(e.InnerException);
+        }
+
+        private static string PrepareFatalErrorBody(string error)
+        {
+            string body = File.ReadAllText(ConfigurationManager.AppSettings["EMAILTEMPLATESLOCATION"].ToString() + "FatalError.html");
+            body = body.Replace("[ERRORMESSAGE]", error);
+            body = body.Replace("[DATETIME]", DateTime.Now.ToString());
+            return body;
+        }
+
+        static void UnhandledExceptionTrap(object sender, UnhandledExceptionEventArgs e)
+        {
+            Exception ex = e.ExceptionObject as Exception;
+            log.Fatal("Fatal Error has occurred!");
+            log.Fatal(e.ExceptionObject.ToString());
+            log.Fatal("Terminating!");
+            
+            EMail email = new EMail();
+            try
+            {
+                email.Send
+                (
+                    ConfigurationManager.AppSettings["DEFAULTEMAIL"].ToString(),        //from
+                    ConfigurationManager.AppSettings["FATALEMAIL"].ToString(),          //to
+                    "",                                                                 //cc
+                    "",                                                                 //bcc
+                    "FATAL ERROR IN CIW",                                               //subject
+                    PrepareFatalErrorBody(GetErrorRecursive(ex)),                       //body
+                    "",                                                                 //attachments
+                    ConfigurationManager.AppSettings["SMTPSERVER"],                     //smtp
+                    true                                                                //isbodyhtml
+                );
+            }
+            catch (Exception x)
+            {
+                log.Fatal("Fatal Email not sent due to :" + x.Message + x.StackTrace);
+            }            
+            
+            Environment.Exit(1);
         }
     }
 }

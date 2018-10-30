@@ -17,4 +17,5 @@
   <add key="Salt" value="salt" />
   <add key="EPass" value="epass" />
   <add key="ClientSettingsProvider.ServiceUri" value="" />
+  <add key="FATALEMAIL" value="replaceme@example.com" />
 </appSettings>

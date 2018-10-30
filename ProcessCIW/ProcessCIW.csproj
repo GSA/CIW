@@ -42,8 +42,8 @@
       <HintPath>..\packages\DocumentFormat.OpenXml.2.7.2\lib\net40\DocumentFormat.OpenXml.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="FluentValidation, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7de548da2fbae0f0, processorArchitecture=MSIL">
-      <HintPath>..\packages\FluentValidation.7.1.0\lib\net45\FluentValidation.dll</HintPath>
+    <Reference Include="FluentValidation, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7de548da2fbae0f0, processorArchitecture=MSIL">
+      <HintPath>..\packages\FluentValidation.8.0.100\lib\net45\FluentValidation.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Gsa.Sftp.Libraries.Utilities">
@@ -62,8 +62,17 @@
       <HintPath>..\references\Suitability.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.ComponentModel.Primitives, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ComponentModel.Primitives.4.3.0\lib\net45\System.ComponentModel.Primitives.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.5.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -73,9 +82,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Models\POC.cs" />
-    <Compile Include="Models\UnprocessedFiles.cs" />
+    <Compile Include="Models\FileMetadata.cs" />
     <Compile Include="Process\CIWEMails.cs" />
     <Compile Include="Utilities\Email.cs" />
+    <Compile Include="Utilities\Extension.cs" />
     <Compile Include="Utilities\Utilities.cs" />
     <Compile Include="Models\CIWData.cs" />
     <Compile Include="Validation\ValidateCIW.cs" />
@@ -94,7 +104,9 @@
     </None>
     <None Include="AppSettings.example" />
     <None Include="ConnectionStrings.example" />
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Templates\ARRAError.html">
@@ -105,6 +117,9 @@
     </Content>
     <Content Include="Templates\Errors.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Templates\FatalError.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Templates\PasswordError.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

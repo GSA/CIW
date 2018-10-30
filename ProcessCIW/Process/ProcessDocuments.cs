@@ -109,11 +109,11 @@ class ProcessDocuments
         /// Gets a list of unprocessed files by calling a stored procedure
         /// </summary>
         /// <returns>List of unprocessed files</returns>
-        public List<UnprocessedFiles> GetUnprocessedFiles()
+        public List<FileMetadata> GetUnprocessedFiles()
         {
             MySqlCommand cmd = new MySqlCommand();
 
-            List<UnprocessedFiles> uf = new List<UnprocessedFiles>();
+            List<FileMetadata> uf = new List<FileMetadata>();
 
             using (MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString()))
             {
@@ -134,10 +134,10 @@ class ProcessDocuments
                     while (unprocessedFiles.Read())
                     {
                         uf.Add(
-                                new UnprocessedFiles
+                                new FileMetadata
                                 {
                                     ID = (int)unprocessedFiles[0],
-                                    PersID = (int)unprocessedFiles[1],
+                                    UploaderPersID = (int)unprocessedFiles[1],
                                     FileName = unprocessedFiles[2].ToString()
                                 }
                               );
@@ -192,9 +192,17 @@ class ProcessDocuments
         /// Get all the CIW information, create temp csv file then load that and then filter it down to the different objects
         /// </summary>
         /// <param name="fileName"></param>
-
-        public string GetCIWInformation(int uploaderID, string filePath, string fileName, out int errorCode)
+        public string GetCIWInformation(FileMetadata fmd, out int errorCode)
         {
+            string filePath;
+            if(string.IsNullOrEmpty(fmd.DecryptedFilePath))
+            {
+                filePath = fmd.FilePath;
+            }
+            else
+            {
+                filePath = fmd.DecryptedFilePath;
+            }
             List<CIWData> ciwInformation = new List<CIWData>();
             log.Info(String.Format("Getting information from file {0}", filePath));
 
@@ -209,7 +217,7 @@ class ProcessDocuments
             catch (FileFormatException e)
             {
                 log.Warn(string.Format("Locked Document - {0} with inner exception:{1}", e.Message, e.InnerException));
-                sendPasswordProtection(uploaderID, fileNameHelper(fileName));
+                sendPasswordProtection(fmd.UploaderPersID, fileNameHelper(fmd.FileName));
                 errorCode = (int)ErrorCodes.password_protected;
                 log.Warn(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.password_protected, (int)ErrorCodes.password_protected));
                 return null;
@@ -232,7 +240,7 @@ class ProcessDocuments
                     if (node.InnerText != "V1")
                     {
                         //Begin exiting if wrong version
-                        sendWrongVersion(uploaderID, fileNameHelper(fileName));
+                        sendWrongVersion(fmd.UploaderPersID, fileNameHelper(fmd.FileName));
                         errorCode = (int)ErrorCodes.wrong_version;
                         log.Warn(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.wrong_version, (int)ErrorCodes.wrong_version));
                         return null;
@@ -241,7 +249,7 @@ class ProcessDocuments
                 else
                 {
                     //Begin exiting if no version on form
-                    sendWrongVersion(uploaderID, fileNameHelper(fileName));
+                    sendWrongVersion(fmd.UploaderPersID, fileNameHelper(fmd.FileName));
                     errorCode = (int)ErrorCodes.wrong_version;
                     log.Warn(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.wrong_version, (int)ErrorCodes.wrong_version));
                     return null;
@@ -297,7 +305,7 @@ class ProcessDocuments
                 catch (Exception e)
                 {
                     log.Warn(string.Format("XML Parsing Failed - {0} with inner exception: {1}", e.Message, e.InnerException));
-                    sendWrongVersion(uploaderID, fileNameHelper(fileName));
+                    sendWrongVersion(fmd.UploaderPersID, fileNameHelper(fmd.FileName));
 
 
                     errorCode = (int)ErrorCodes.wrong_version;
@@ -437,34 +445,34 @@ class ProcessDocuments
         /// <param name="filePath"></param>
         /// <param name="isDebug"></param>
         /// <returns>Int success code</returns>
-        public int ProcessCIWInformation(int uploaderID, string filePath, bool isDebug, out int insertedPersID)
+        public int ProcessCIWInformation(FileMetadata fmd, bool isDebug)
         {
             insertedPersID = 0;
             log.Info("Processing CIW");
 
             //Create validation object
-            ValidateCIW validate = new Validation.ValidateCIW();
+            ValidateCIW validate = new ValidateCIW();
 
-            List<CIW> ciwInformation = new List<CIW>();
+            List<CIW> ciwInformation;
 
-            log.Info(string.Format("Getting file data from temp csv file."));
+            log.Info("Getting file data from temp csv file.");
 
             //Gets list of CIW's after mapping from csv files
-            ciwInformation = GetFileData<CIW, CIWMapping>(filePath, config);
+            ciwInformation = GetFileData<CIW, CIWMapping>(fmd.TempFilePath, config);
 
             DataSet fipsCodes = GetFipsCodeFromCountryName(ciwInformation[0].PlaceOfBirthCountryName, ciwInformation[0].HomeCountryName, ciwInformation[0].CitizenCountryName);
 
             ApplyFipsCodes(ref ciwInformation, fipsCodes);
 
-            CIWEMails sendEmails = new CIWEMails(uploaderID, ciwInformation.First().FirstName, ciwInformation.First().MiddleName,
-                                                 ciwInformation.First().LastName, ciwInformation.First().Suffix, Path.GetFileName(filePath),
+            CIWEMails sendEmails = new CIWEMails(fmd.UploaderPersID, ciwInformation.First().FirstName, ciwInformation.First().MiddleName,
+                                                 ciwInformation.First().LastName, ciwInformation.First().Suffix, Path.GetFileName(fmd.FilePath),
                                                  CheckIfChildCare(ciwInformation));
 
             //Delete temp csv file before proceeding
             try
             {
-                log.Info(string.Format("Deleting Temp CSV File {0}.", filePath));
-                File.Delete(filePath);
+                log.Info(string.Format("Deleting Temp CSV File {0}.", fmd.FilePath));
+                File.Delete(fmd.TempFilePath);
             }
             catch (IOException e)
             {
@@ -526,7 +534,7 @@ class ProcessDocuments
                 log.Info(String.Format("Form is valid for user {0}", ciwInformation.First().FullNameForLog));
 
                 //Create object to begin insertion of ciw into database
-                InsertCIW sd = new InsertCIW(ciwInformation.First(), uploaderID);
+                InsertCIW sd = new InsertCIW(ciwInformation.First(), fmd.UploaderPersID);
 
                 int persID = 0;
 

@@ -147,7 +147,7 @@ namespace ProcessCIW.Validation
                     .NotEmpty()
                     .WithMessage("Date Of Birth: Required Field")
                     .Must(U.Utilities.BeAValidBirthDate)
-                    .WithMessage("Date Of Birth: Invalid Date");
+                    .WithMessage(string.Format("Date Of Birth: Invalid Date (Must be beteween {0} and {1})",DateTime.Now.AddYears(-100).ToString("MM/dd/yyyy"), DateTime.Now.AddYears(-14).ToString("MM/dd/yyyy")));
 
             //POB:City
             RuleFor(employee => employee.PlaceOfBirthCity)
