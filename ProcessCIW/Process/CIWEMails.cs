@@ -189,7 +189,7 @@ namespace ProcessCIW.Process
 
             //Append file name if first and last name not known
             if (lastName == "" && firstName == "")
-                subject.Append(fileName);
+                subject.Append(Utilities.Utilities.RemoveDateFromFilename(fileName));
             else
             {
                 subject.Append(lastName);
