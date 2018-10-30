@@ -12,12 +12,12 @@ namespace ProcessCIW
     /// </summary>
     class InsertCIW
     {
-        MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString());
+        readonly MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString());
         MySqlCommand cmd = new MySqlCommand();
         MySqlTransaction trans;
-        CIW ciwInformation = new CIW();
-        int uploaderID;
-        Utilities.Utilities u = new Utilities.Utilities();
+        readonly CIW ciwInformation;
+        readonly int uploaderID;
+        readonly Utilities.Utilities u = new Utilities.Utilities();
         private readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
@@ -168,8 +168,8 @@ namespace ProcessCIW
             cmd.Parameters.Clear();
 
             string persGuid = System.Guid.NewGuid().ToString();
-            Byte[] hashedSSNFull = { };
-            Byte[] hashedSSNFour = { };
+            Byte[] hashedSSNFull;
+            Byte[] hashedSSNFour;
 
             hashedSSNFull = u.HashSSN(ciwInformation.SocialSecurityNumber);
             hashedSSNFour = u.HashSSN(ciwInformation.SocialSecurityNumber.Substring(ciwInformation.SocialSecurityNumber.Length - 4));

@@ -158,3 +158,6 @@ $RECYCLE.BIN/
 
 # Mac desktop service store files
 .DS_Store
+/packages/Castle.Core.4.3.1
+/packages/DocumentFormat.OpenXml.2.8.1
+/packages/DocX.1.2.1

@@ -155,7 +155,7 @@ class ProcessDocuments
         /// </summary>
         /// <param name="documentID"></param>
         /// <param name="processedResult"></param>
-        public void UpdateProcessed(int documentID, int processedResult)
+        public void UpdateProcessed(int documentID, int processedResult, int insertedPersId)
         {
             MySqlCommand cmd = new MySqlCommand();
 
@@ -175,7 +175,8 @@ class ProcessDocuments
                     {
                         new MySqlParameter { ParameterName = "documentID", Value = documentID, MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Input },
                         new MySqlParameter { ParameterName = "processedResult", Value = processedResult, MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Input },
-                        new MySqlParameter { ParameterName = "SQLExceptionWarning", MySqlDbType=MySqlDbType.VarChar, Size=4000, Direction = ParameterDirection.Output },
+                        new MySqlParameter { ParameterName = "insertedPersId", Value = insertedPersId ,MySqlDbType=MySqlDbType.Int32, Direction = ParameterDirection.Input },
+                        new MySqlParameter { ParameterName = "SQLExceptionWarning", MySqlDbType=MySqlDbType.VarChar, Size=4000, Direction = ParameterDirection.Output },                        
                     };
 
                     cmd.Parameters.AddRange(ProcessedParameters);
@@ -444,8 +445,9 @@ class ProcessDocuments
         /// <param name="filePath"></param>
         /// <param name="isDebug"></param>
         /// <returns>Int success code</returns>
-        public int ProcessCIWInformation(FileMetadata fmd, bool isDebug)
+        public int ProcessCIWInformation(FileMetadata fmd, bool isDebug, out int insertedPersID)
         {
+            insertedPersID = 0;
             log.Info("Processing CIW");
 
             //Create validation object
@@ -542,8 +544,11 @@ class ProcessDocuments
 
                 //Begin sponsorship if successful
                 if (persID > 0)
+                {
                     sendEmails.SendSponsorshipEMail(persID);
-                log.Info(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.successfully_processed, (int)ErrorCodes.successfully_processed));
+                    insertedPersID = persID;
+                }                    
+                log.Error(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.successfully_processed, (int)ErrorCodes.successfully_processed));
                 return (int)ErrorCodes.successfully_processed;
             }
             else
@@ -557,7 +562,7 @@ class ProcessDocuments
                                                                                                             ValidationResult, ValidationResult, ValidationResult>(null, null,
                                                                                                                                                                 null, null, null, null);
 
-                log.Info(string.Format("Getting errors"));
+                log.Info("Getting errors");
 
                 ValidationErrors = validate.GetErrors();
 
