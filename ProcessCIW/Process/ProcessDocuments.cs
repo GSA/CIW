@@ -36,7 +36,9 @@ namespace ProcessCIW
 /// </summary>
 class ProcessDocuments
     {
-        private static CsvConfiguration config;
+        // CsvConfiguration changed to CsvHelper.Configuration.Configuration for v. 6.0.0
+        private static CsvHelper.Configuration.Configuration config;
+
         private readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
@@ -44,13 +46,17 @@ class ProcessDocuments
         /// </summary>
         public ProcessDocuments()
         {
-            config = new CsvConfiguration();
+            config = new CsvHelper.Configuration.Configuration();
 
             config.Delimiter = "||";
             config.HasHeaderRecord = true;
-            config.WillThrowOnMissingField = false;
-            config.IsHeaderCaseSensitive = false;
-            config.TrimFields = false;
+
+            // Function called when missing field is found. The default is to throw a MissingFieldException
+            config.MissingFieldFound = null;
+
+            // Ignores header case
+            config.PrepareHeaderForMatch = header => header?.ToLower();
+            config.TrimOptions = TrimOptions.None;
         }
                 
         private DataSet GetFipsCodeFromCountryName(string placeOfBirthCountryName, string homeCountryName, string citizenshipCountryName)
@@ -622,20 +628,21 @@ class ProcessDocuments
         /// <param name="filePath"></param>
         /// <param name="config"></param>
         /// <returns>List of CIW's</returns>
-        private List<TClass> GetFileData<TClass, TMap>(string filePath, CsvConfiguration config)
+        private List<TClass> GetFileData<TClass, TMap>(string filePath, CsvHelper.Configuration.Configuration config)
             where TClass : class
-            where TMap : CsvClassMap<TClass>
+            where TMap : ClassMap<TClass>
         {
             log.Info(string.Format("Parsing CSV file {0} and mapping to CIW object", filePath));
 
-            using (CsvParser csvParser = new CsvParser(new StreamReader(filePath), config))
-            {
-                using (CsvReader csvReader = new CsvReader(csvParser))
-                {
-                    csvReader.Configuration.RegisterClassMap<TMap>();
+            // Updated this section due to breaking changes w/ CsvHelper v. 6.0.0
+            // NullReference error thown due to multiple Dispose() calls
+            var reader = new StreamReader(filePath);
 
-                    return csvReader.GetRecords<TClass>().ToList();
-                }
+            using (CsvReader csvReader = new CsvReader(reader, config, false))
+            {
+                csvReader.Configuration.RegisterClassMap<TMap>();
+
+                return csvReader.GetRecords<TClass>().ToList();
             }
         }
     }

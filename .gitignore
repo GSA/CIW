@@ -158,3 +158,4 @@ $RECYCLE.BIN/
 
 # Mac desktop service store files
 .DS_Store
+/packages/CsvHelper.2.12.0.0
