@@ -12,6 +12,15 @@ namespace ProcessCIW.Utilities
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
+        public static string RemoveDateFromFilename(string s)
+        {
+            int _pos = s.LastIndexOf('_');
+            int _dot = s.LastIndexOf('.');
+            if (_pos < 0)
+                return s;
+            return s.Remove(_pos, _dot - _pos);
+        }
+
         /// <summary>
         /// Returns false if string is white space
         /// Return true if null or empty
@@ -136,13 +145,9 @@ namespace ProcessCIW.Utilities
 
             if (DateTime.TryParse(date, out _birthDate))
             {
-                if ( (_birthDate > DateTime.Now) || (_birthDate >= DateTime.Now.AddYears(-15)) || (_birthDate < new DateTime(1900,1,1)) )
-                    return false;
+                return ((_birthDate <= DateTime.Now.AddYears(-14)) && (_birthDate > DateTime.Now.AddYears(-100)));
             }
-            else
-                return false;
-
-            return true;
+            else return false;
         }
 
         /// <summary>
@@ -168,6 +173,16 @@ namespace ProcessCIW.Utilities
         {
             return Regex.Replace(s, "[^0-9]", "");
         }
+
+        public static string TrimPoundSign(string s)
+        {
+            return s.Replace("#", string.Empty);
+        }
+
+        public static string CleanSsn(string s)
+        {
+            return s.Replace("-", string.Empty).Replace(" ", string.Empty).Trim();
+        }        
 
         /// <summary>
         /// SHA256 Hash of the SSN, pass in the full 9 or the last 4
