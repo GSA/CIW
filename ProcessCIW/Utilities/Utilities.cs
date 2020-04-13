@@ -12,6 +12,15 @@ namespace ProcessCIW.Utilities
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
+        public static string RemoveDateFromFilename(string s)
+        {
+            int _pos = s.LastIndexOf('_');
+            int _dot = s.LastIndexOf('.');
+            if (_pos < 0)
+                return s;
+            return s.Remove(_pos, _dot - _pos);
+        }
+
         /// <summary>
         /// Returns false if string is white space
         /// Return true if null or empty
@@ -136,13 +145,9 @@ namespace ProcessCIW.Utilities
 
             if (DateTime.TryParse(date, out _birthDate))
             {
-                if ( (_birthDate > DateTime.Now) || (_birthDate >= DateTime.Now.AddYears(-15)) || (_birthDate < new DateTime(1900,1,1)) )
-                    return false;
+                return ((_birthDate <= DateTime.Now.AddYears(-14)) && (_birthDate > DateTime.Now.AddYears(-100)));
             }
-            else
-                return false;
-
-            return true;
+            else return false;
         }
 
         /// <summary>
