@@ -57,7 +57,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\references\MySql.Data.dll</HintPath>
     </Reference>
-    <Reference Include="Suitability, Version=2.0.6564.19664, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Suitability, Version=2.0.7397.24597, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\references\Suitability.dll</HintPath>
     </Reference>
