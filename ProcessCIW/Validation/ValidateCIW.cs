@@ -406,30 +406,6 @@ namespace ProcessCIW.Validation
 
             });
 
-            When(e => (e.Citizen.Equals("Yes") && e.CitzenshipCountry.Equals("US")), () =>
-            {
-                //Port Of Entry US City And State
-                RuleFor(employee => employee.PortOfEntryUSCityAndState)
-                    .Empty()
-                    .WithMessage("Port of Entry, US City and State: Must be blank for US citizens");
-
-                //Date of entry
-                RuleFor(employee => employee.DateOfEntry)
-                    .Empty()
-                    .WithMessage("Date Of Entry: Must be blank for US citizens");
-
-                //Less than 3 Yrs. U.S. Resident
-                RuleFor(employee => employee.LessThanThreeYearsResident)
-                    .Empty()
-                    .WithMessage("Less than 3 Yrs. U.S. Resident: Must be blank for US citizens");
-
-                //Alien Registration Number
-                RuleFor(employee => employee.AlienRegistrationNumber)
-                    .Empty()
-                    .WithMessage("Alien Registration #: Must be blank for US citizens");
-
-            });
-
             //Citizenship Country
             RuleFor(employee => employee.CitzenshipCountry)
                 .NotEmpty()
