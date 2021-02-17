@@ -408,8 +408,8 @@ namespace ProcessCIW.Validation
 
             //Citizenship Country
             RuleFor(employee => employee.CitzenshipCountry)
-                    .NotEmpty()
-                    .WithMessage("Citizenship Country: Required Field");
+                .NotEmpty()
+                .WithMessage("Citizenship Country: Required Field");
         }
 
         /// <summary>
