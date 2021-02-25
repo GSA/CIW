@@ -3,6 +3,7 @@ using ProcessCIW.Models;
 using System;
 using System.Configuration;
 using System.Data;
+using System.Text.RegularExpressions;
 using U = ProcessCIW.Utilities;
 
 namespace ProcessCIW
@@ -278,6 +279,9 @@ namespace ProcessCIW
         /// <returns>Contract ID</returns>
         private int InsertOrUpdateContractHeader(MySqlCommand cmd, string storedProcedure)
         {
+            ciwInformation.ContractNumberType = Regex.Replace(ciwInformation.ContractNumberType, "[^a-zA-Z0-9]+", "", RegexOptions.Compiled);
+            ciwInformation.TaskOrderDeliveryOrder = Regex.Replace(ciwInformation.TaskOrderDeliveryOrder, "[^a-zA-Z0-9]+", "", RegexOptions.Compiled);
+
             cmd.CommandText = storedProcedure;
             cmd.Parameters.Clear();
 
