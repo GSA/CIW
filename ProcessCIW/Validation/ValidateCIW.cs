@@ -544,15 +544,31 @@ namespace ProcessCIW.Validation
                         .WithMessage("DUNS Number: Invalid - should be only numeric and exactly 9 characters long");
                 });
 
-                // TO/DO
                 RuleFor(employee => employee.TaskOrderDeliveryOrder)
-                    .NotEmpty()
-                    .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Required Field");
+                        .NotEmpty()
+                        .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Required Field");
 
-                //Contract Number Type
                 RuleFor(employee => employee.ContractNumberType)
-                    .NotEmpty()
-                    .WithMessage("Contract Number Type: Required Field");
+                        .NotEmpty()
+                        .WithMessage("Contract Number Type: Required Field");
+
+                When((e => e.SponsoringMajorOrg != "Q" 
+                        && e.ContractNumberType.Trim().StartsWith("L") == false
+                        && e.ContractNumberType.Trim().StartsWith("RS") == false
+                        && e.ContractNumberType.Trim().StartsWith("CU") == false
+                        && e.ContractNumberType.Trim().StartsWith("CCP") == false
+                        && e.ContractNumberType.Trim().StartsWith("IAA") == false
+                        && e.ContractNumberType.Trim().StartsWith("MOU") == false
+                        && e.ContractNumberType.Trim().StartsWith("MOA") == false
+                        && e.ContractNumberType.Trim().StartsWith("CO") == false), () =>
+                {
+                    RuleFor(employee => employee.TaskOrderDeliveryOrder)
+                        .Cascade(CascadeMode.StopOnFirstFailure)
+                        .Must(NotMatchedTaskOrder)
+                        .Must(MatchedContractNumber)
+                        .WithMessage("Contract Not Found");                        
+
+                });
 
                 //changes for contract dates to be used with child care changes
                 //This will be when neither is child care
@@ -801,15 +817,112 @@ namespace ProcessCIW.Validation
             });
         }
 
+        /// <summary>
+        /// Calls stored procedure that checks if CIW contracts match GCIMS task oder number
+        /// </summary>
+        /// <param name="taskorderNumber"></param>
+        /// <returns></returns>
+        private bool NotMatchedTaskOrder(string taskorderNumber)
+        {
+            //Need global connection check.
+            MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString());
+            MySqlCommand cmd = new MySqlCommand();
+            try
+            {
+                using (conn)
+                {
+                    if (conn.State == ConnectionState.Closed)
+                        conn.Open();
+
+                    using (cmd)
+                    {
+                        cmd.Connection = conn;
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        cmd.CommandText = "CIW_MatchedTaskOrder";
+
+                        cmd.Parameters.Clear();
+
+                        MySqlParameter[] userParameters = new MySqlParameter[]
+                        {
+                            new MySqlParameter { ParameterName = "TaskOrderNumber", Value = taskorderNumber, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
+                            new MySqlParameter { ParameterName = "rowsReturned", MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Output }
+                        };
+
+                        cmd.Parameters.AddRange(userParameters);
+
+                        cmd.ExecuteNonQuery();
+
+                        if ((int)cmd.Parameters["rowsReturned"].Value > 0)
+                            return false;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+            return true;
 
 
+        }
 
-    }
+        /// <summary>
+        /// Calls stored procedure that checks if CIW contracts match GCIMS contract number
+        /// </summary>
+        /// <param name="contractNumber"></param>
+        /// <returns></returns>
+        private bool MatchedContractNumber(string contractNumber)
+        {
+            //Need global connection check.
+            MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString());
+            MySqlCommand cmd = new MySqlCommand();
+            try
+            {
+                using (conn)
+                {
+                    if (conn.State == ConnectionState.Closed)
+                        conn.Open();
 
-    /// <summary>
-    /// Section 3 Validation
-    /// </summary>
-    class RWAIAAValidator : AbstractValidator<CIW>
+                    using (cmd)
+                    {
+                        cmd.Connection = conn;
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        cmd.CommandText = "CIW_MatchedContractNumber";
+
+                        cmd.Parameters.Clear();
+
+                        MySqlParameter[] userParameters = new MySqlParameter[]
+                        {
+                            new MySqlParameter { ParameterName = "ContractNumber", Value = contractNumber, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
+                            new MySqlParameter { ParameterName = "rowsReturned", MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Output }
+                        };
+
+                        cmd.Parameters.AddRange(userParameters);
+
+                        cmd.ExecuteNonQuery();
+
+                        if ((int)cmd.Parameters["rowsReturned"].Value == 0)
+                            return false;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+            return true;
+
+
+        }
+
+        /// <summary>
+        /// Section 3 Validation
+        /// </summary>
+        class RWAIAAValidator : AbstractValidator<CIW>
     {
         /// <summary>
         /// Contains all the validation rules for section 3
