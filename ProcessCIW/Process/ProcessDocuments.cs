@@ -523,7 +523,6 @@ class ProcessDocuments
 
             log.Info(String.Format("Company Name Primary is : {0}", !string.IsNullOrWhiteSpace(ciwInformation.FirstOrDefault().CompanyName) ? ciwInformation.FirstOrDefault().CompanyName : "No Company Name Primary"));
             log.Info(String.Format("Company Name Sub is : {0}", !string.IsNullOrWhiteSpace(ciwInformation.FirstOrDefault().CompanyNameSub) ? ciwInformation.FirstOrDefault().CompanyNameSub : "No Company Name Sub"));
-            log.Info(String.Format("Checking if form is valid for user {0}", ciwInformation.First().FullNameForLog));
 
 
             /// <summary>
@@ -531,7 +530,9 @@ class ProcessDocuments
             /// </summary>
             if (validate.MatchedEASiData(ciwInformation))
             {
+                log.Info(String.Format("CCheck Contract Validation of EASi-synced Contract for user {0}", ciwInformation.First().FullNameForLog));
                 log.Info(String.Format("Checking if form is valid for user {0}", ciwInformation.First().FullNameForLog));
+                log.Info(String.Format("Checking if its investigation type is not Tier 1C and office symbor is not PMC for user {0}", ciwInformation.First().FullNameForLog));
 
                 if (validate.IsFormValid(ciwInformation) && ciwInformation.First().InvestigationTypeRequested != "Tier 1C" && ciwInformation.First().SponsoringOfficeSymbol != "PMC")
                 {
@@ -543,7 +544,7 @@ class ProcessDocuments
                     int persID = 0;
 
                     //Save the data
-                    log.Info(String.Format("Begin inserting CIW for {0}", ciwInformation.First().FullNameForLog));
+                    log.Info(String.Format("Begin inserting Matched EASi Data for {0}", ciwInformation.First().FullNameForLog));
                     persID = sd.SaveCIWMatchedEasi();
 
                     //Begin sponsorship if successful
@@ -557,17 +558,19 @@ class ProcessDocuments
 
             }
 
-
-
             /// <summary>
             /// check contract validation if it is Child Care 
             /// </summary>
             else if (ciwInformation.First().InvestigationTypeRequested.ToLower() == "tier 1c" || ciwInformation.First().SponsoringOfficeSymbol.ToLower() == "pmc" || U.Utilities.validchildcare(ciwInformation.First().ContractNumberType))
             {
+                log.Info(String.Format("Check Contract Validation for {0} if it is Child Care", ciwInformation.First().FullNameForLog));
+
                 if (ciwInformation.First().InvestigationTypeRequested.ToLower() == "tier 1c" && ciwInformation.First().SponsoringOfficeSymbol.ToLower() == "pmc" && ciwInformation.First().SponsoringMajorOrg.ToLower() == "p" && U.Utilities.validchildcare(ciwInformation.First().ContractNumberType))
                 {
                     if (validate.MatchedContractNumber(ciwInformation.First().ContractNumberType))
                     {
+                        log.Info(String.Format("Checking if form is valid for user {0}", ciwInformation.First().FullNameForLog));
+
                         if (validate.IsFormValid(ciwInformation))
                         {
                             log.Info(String.Format("Form is valid for user {0}", ciwInformation.First().FullNameForLog));
@@ -601,7 +604,7 @@ class ProcessDocuments
                         int persID = 0;
 
                         //Save the data
-                        log.Info(String.Format("Begin inserting CIW for {0}", ciwInformation.First().FullNameForLog));
+                        log.Info(String.Format("Begin inserting New CIW for {0}", ciwInformation.First().FullNameForLog));
                         persID = sd.SaveNewCIW();
 
                         //Begin sponsorship if successful
@@ -623,8 +626,13 @@ class ProcessDocuments
             /// </summary>
             else if (U.Utilities.validFAS(ciwInformation.First().ContractNumberType))
             {
+                log.Info(String.Format("Check Contract Validation of FAS Contract for {0}", ciwInformation.First().FullNameForLog));
+
                 if (validate.MatchedGCIMSData(ciwInformation))
                 {
+                    log.Info(String.Format("Check Contract Validation of FAS Contract for {0} if it matched GCIMS data", ciwInformation.First().FullNameForLog));
+                    log.Info(String.Format("Checking if form is valid for user {0}", ciwInformation.First().FullNameForLog));
+
                     if (validate.IsFormValid(ciwInformation))
                     {
                         log.Info(String.Format("Form is valid for user {0}", ciwInformation.First().FullNameForLog));
@@ -648,6 +656,9 @@ class ProcessDocuments
                 }
                 else
                 {
+                    log.Info(String.Format("Checking if the major org is q for user {0}", ciwInformation.First().FullNameForLog));
+                    log.Info(String.Format("Checking if form is valid for user {0}", ciwInformation.First().FullNameForLog));
+
                     if (ciwInformation.First().SponsoringMajorOrg.ToLower() == "q" && validate.IsFormValid(ciwInformation))
                     {
                         log.Info(String.Format("Form is valid for user {0}", ciwInformation.First().FullNameForLog));
@@ -675,8 +686,12 @@ class ProcessDocuments
             }
             else if (U.Utilities.validcontractnumber(ciwInformation.First().ContractNumberType, ciwInformation.First().SponsoringMajorOrg))
             {
+                log.Info(String.Format("Check Contract Validation of NON-FAS Contract for {0} if it matched GCIMS data", ciwInformation.First().FullNameForLog));
+
                 if (validate.MatchedGCIMSData(ciwInformation))
                 {
+                    log.Info(String.Format("Checking if form is valid for user {0}", ciwInformation.First().FullNameForLog));
+
                     if (validate.IsFormValid(ciwInformation))
                     {
                         log.Info(String.Format("Form is valid for user {0}", ciwInformation.First().FullNameForLog));
@@ -709,7 +724,7 @@ class ProcessDocuments
                     int persID = 0;
 
                     //Save the data
-                    log.Info(String.Format("Begin inserting CIW for {0}", ciwInformation.First().FullNameForLog));
+                    log.Info(String.Format("Begin inserting New CIW for {0}", ciwInformation.First().FullNameForLog));
                     persID = sd.SaveNewCIW();
 
                     //Begin sponsorship if successful

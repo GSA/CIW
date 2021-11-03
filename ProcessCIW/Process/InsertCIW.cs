@@ -87,10 +87,10 @@ namespace ProcessCIW
                                 //}
                                 //else
                                 //{
-                                    log.Info(String.Format("Inserting/Updating contract header {0} with start date of {1} and end date {2}", ciwInformation.TaskOrderDeliveryOrder, ciwInformation.ContractStartDate, ciwInformation.ContractEndDate));
+                                    log.Info(String.Format("Updating matched GCIMS contract header {0} with start date of {1} and end date {2}", ciwInformation.TaskOrderDeliveryOrder, ciwInformation.ContractStartDate, ciwInformation.ContractEndDate));
 
                                     //Insert Contract header and assign return value to contractID
-                                    contractID = InsertOrUpdateContractHeader(cmd, "CIW_UpdateContractHeader");
+                                    contractID = UpdateMacthedGCIMSContractHeader(cmd, "CIW_UpdateContractHeader");
                                 //}
 
                                 //Continue on success
@@ -206,10 +206,10 @@ namespace ProcessCIW
                                 //}
                                 //else
                                 //{
-                                log.Info(String.Format("Updating contract header {0} with start date of {1} and end date {2}", ciwInformation.TaskOrderDeliveryOrder, ciwInformation.ContractStartDate, ciwInformation.ContractEndDate));
+                                log.Info(String.Format("Updating matched EASi contract header {0} with start date of {1} and end date {2}", ciwInformation.TaskOrderDeliveryOrder, ciwInformation.ContractStartDate, ciwInformation.ContractEndDate));
 
                                 //Insert Contract header and assign return value to contractID
-                                contractID = UpdateContractHeader(cmd, "CIW_UpdateContractHeader");
+                                contractID = UpdateMatchedEASiContractHeader(cmd, "CIW_UpdateContractHeader");
                                 //}
 
                                 //Continue on success
@@ -515,7 +515,7 @@ namespace ProcessCIW
         /// <param name="cmd"></param>
         /// <param name="storedProcedure"></param>
         /// <returns>Contract ID</returns>
-        private int InsertOrUpdateContractHeader(MySqlCommand cmd, string storedProcedure)
+        private int UpdateMacthedGCIMSContractHeader(MySqlCommand cmd, string storedProcedure)
         {
             cmd.CommandText = storedProcedure;
             cmd.Parameters.Clear();
@@ -554,7 +554,7 @@ namespace ProcessCIW
         /// <param name="cmd"></param>
         /// <param name="storedProcedure"></param>
         /// <returns>Contract ID</returns>
-        private int UpdateContractHeader(MySqlCommand cmd, string storedProcedure)
+        private int UpdateMatchedEASiContractHeader(MySqlCommand cmd, string storedProcedure)
         {
             cmd.CommandText = storedProcedure;
             cmd.Parameters.Clear();
