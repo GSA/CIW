@@ -915,7 +915,7 @@ namespace ProcessCIW.Validation
                 {
                     RuleFor(e => { e.TaskOrderDeliveryOrder, e.ContractNumberType})
                         .Must(MatchedEASiData)
-                        .WithMessage("ask Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: This contract does not match an existing contract in GCIMS and cannot be created. Please see the CIW user guide for further details.");
+                        .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: This contract does not match an existing contract in GCIMS and cannot be created. Please see the CIW user guide for further details.");
                 });
 
                 When(b => (U.Utilities.validFAS(b.ContractNumberType) && MatchedGCIMSData(b.TaskOrderDeliveryOrder, b.ContractNumberType) == false), () =>
@@ -929,7 +929,7 @@ namespace ProcessCIW.Validation
                 {
                     RuleFor(building => building.SponsoringMajorOrg.ToLower())
                         .Equal("P")
-                        .WithMessage(" Sponsoring Major Org: Only contractors with Major Org P are can be assigned to this contract type");
+                        .WithMessage(" Sponsoring Major Org: Only contractors with Major Org P can be assigned to this contract type");
                 });
 
             });
@@ -946,7 +946,7 @@ namespace ProcessCIW.Validation
 
                     RuleFor(building => building.SponsoringOfficeSymbol.ToLower())
                         .Equal("pmc")
-                        .WithMessage("Office Symbol: Child care workers must have office symbol PMC");
+                        .WithMessage("Sponsoring Office Symbol: Child care workers must have office symbol PMC");
 
                     RuleFor(building => building.SponsoringMajorOrg.ToLower())
                         .Equal("p")
@@ -954,7 +954,7 @@ namespace ProcessCIW.Validation
 
                     RuleFor(building => building.ContractNumberType)
                         .Matches(@"^(Childcare)([0-9]{4})$")
-                        .WithMessage("Contract Number: Provided contract number is not a valid childcare contract");
+                        .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Provided contract number is not a valid childcare contract");
                 });
 
                 When(b => U.Utilities.validchildcare(b.ContractNumberType), () =>
