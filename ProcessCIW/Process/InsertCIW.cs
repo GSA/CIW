@@ -543,7 +543,7 @@ namespace ProcessCIW
             cmd.ExecuteNonQuery();
 
             //Returns the Contract ID
-            log.Info(String.Format("InsertOrUpdateContractHeader completed with ContractId:{0} and SqlException:{1}", cmd.Parameters["ContractID"].Value, cmd.Parameters["SQLExceptionWarning"].Value));
+            log.Info(String.Format("Update Matched GCIMS ContractHeader completed with ContractId:{0} and SqlException:{1}", cmd.Parameters["ContractID"].Value, cmd.Parameters["SQLExceptionWarning"].Value));
 
             return (int)cmd.Parameters["ContractID"].Value;
         }
@@ -582,7 +582,7 @@ namespace ProcessCIW
             cmd.ExecuteNonQuery();
 
             //Returns the Contract ID
-            log.Info(String.Format("Update ContractHeader completed with ContractId:{0} and SqlException:{1}", cmd.Parameters["ContractID"].Value, cmd.Parameters["SQLExceptionWarning"].Value));
+            log.Info(String.Format("Update Matched EASi ContractHeader completed with ContractId:{0} and SqlException:{1}", cmd.Parameters["ContractID"].Value, cmd.Parameters["SQLExceptionWarning"].Value));
 
             return (int)cmd.Parameters["ContractID"].Value;
         }

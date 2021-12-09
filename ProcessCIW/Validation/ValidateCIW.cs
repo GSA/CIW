@@ -1374,7 +1374,7 @@ namespace ProcessCIW.Validation
                         MySqlParameter[] userParameters = new MySqlParameter[]
                         {
                             new MySqlParameter { ParameterName = "TaskOrderNumber", Value = ciwInformation.First().TaskOrderDeliveryOrder, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
-                            new MySqlParameter { ParameterName = "ContractNumber", Value = ciwInformation.First().ContractNumberType, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
+                            //new MySqlParameter { ParameterName = "ContractNumber", Value = ciwInformation.First().ContractNumberType, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
                             new MySqlParameter { ParameterName = "rowsReturned", MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Output }
                         };
 
