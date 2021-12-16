@@ -908,24 +908,24 @@ namespace ProcessCIW.Validation
                     .NotEmpty()
                     .WithMessage("GSA Region: Required Field");
 
-            When(b => (b.InvestigationTypeRequested.ToLower() != "tier 1c" && b.SponsoringOfficeSymbol.ToLower() != "pmc" && U.Utilities.validchildcare(b.ContractNumberType) == false), () =>
+            When(b => (b.InvestigationTypeRequested.ToLower() != "tier 1c" && b.SponsoringOfficeSymbol.ToLower() != "pmc" && U.Utilities.validchildcare(b.TaskOrderDeliveryOrder) == false), () =>
             {
 
-                When(b => (U.Utilities.validFAS(b.ContractNumberType) == false && U.Utilities.validcontractnumber(b.ContractNumberType, b.SponsoringMajorOrg) == false), () =>
+                When(b => (U.Utilities.validFAS(b.TaskOrderDeliveryOrder) == false && U.Utilities.validcontractnumber(b.TaskOrderDeliveryOrder, b.SponsoringMajorOrg) == false), () =>
                 {
-                    RuleFor(e => { e.TaskOrderDeliveryOrder, e.ContractNumberType})
+                    RuleFor(e => e.TaskOrderDeliveryOrder)
                         .Must(MatchedEASiData)
                         .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: This contract does not match an existing contract in GCIMS and cannot be created. Please see the CIW user guide for further details.");
                 });
 
-                When(b => (U.Utilities.validFAS(b.ContractNumberType) && MatchedGCIMSData(b.TaskOrderDeliveryOrder, b.ContractNumberType) == false), () =>
+                When(b => (U.Utilities.validFAS(b.TaskOrderDeliveryOrder) && MatchedGCIMSData(b.TaskOrderDeliveryOrder) == false), () =>
                 {
                     RuleFor(building => building.SponsoringMajorOrg.ToLower())
                         .Equal("q")
                         .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: This contract does not match an existing contract in GCIMS and cannot be created. Please see the CIW user guide for further details.");                  
                 });
 
-                When(b => (U.Utilities.validLeaseAndRandolphcontractnumber(b.ContractNumberType)), () =>
+                When(b => (U.Utilities.validLeaseAndRandolphcontractnumber(b.TaskOrderDeliveryOrder)), () =>
                 {
                     RuleFor(building => building.SponsoringMajorOrg.ToLower())
                         .Equal("P")
@@ -935,7 +935,7 @@ namespace ProcessCIW.Validation
             });
 
 
-                When(b => (b.InvestigationTypeRequested.ToLower() == "tier 1c" && b.SponsoringOfficeSymbol.ToLower() == "pmc" && U.Utilities.validchildcare(b.ContractNumberType) && b.SponsoringMajorOrg.ToLower() == "p"), () =>
+                When(b => (b.InvestigationTypeRequested.ToLower() == "tier 1c" && b.SponsoringOfficeSymbol.ToLower() == "pmc" && U.Utilities.validchildcare(b.TaskOrderDeliveryOrder) && b.SponsoringMajorOrg.ToLower() == "p"), () =>
             {
                 //Ensure type contractor is child care when investigation type requested is tier 1C
                 When(b => b.InvestigationTypeRequested == "Tier 1C", () =>
@@ -952,12 +952,12 @@ namespace ProcessCIW.Validation
                         .Equal("p")
                         .WithMessage("Sponsoring Major Org: Child care workers must have major org P");
 
-                    RuleFor(building => building.ContractNumberType)
+                    RuleFor(building => building.TaskOrderDeliveryOrder)
                         .Matches(@"^(Childcare)([0-9]{4})$")
                         .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Provided contract number is not a valid childcare contract");
                 });
 
-                When(b => U.Utilities.validchildcare(b.ContractNumberType), () =>
+                When(b => U.Utilities.validchildcare(b.TaskOrderDeliveryOrder), () =>
                 {
                     RuleFor(employee => employee.InvestigationTypeRequested.ToLower())
                         .Equal("tier 1c")
@@ -974,7 +974,7 @@ namespace ProcessCIW.Validation
                         .Equal("p")
                         .WithMessage("Sponsoring Major Org: Office Symbol PMC can only be associated with Sponsoring Major Org P");
 
-                    RuleFor(building => building.ContractNumberType)
+                    RuleFor(building => building.TaskOrderDeliveryOrder)
                         .Matches(@"^(Childcare)([0-9]{4})$")
                         .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Office Symbol PMC can only be associated with childcare contracts.");
                 });
@@ -984,7 +984,7 @@ namespace ProcessCIW.Validation
 
         }
 
-        private bool MatchedGCIMSData(string taskordernumber, string contractnumber)
+        private bool MatchedGCIMSData(string taskordernumber)
         {
             //Need global connection check.
             MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString());
@@ -1008,7 +1008,7 @@ namespace ProcessCIW.Validation
                         MySqlParameter[] userParameters = new MySqlParameter[]
                         {
                             new MySqlParameter { ParameterName = "TaskOrderNumber", Value = taskordernumber, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
-                            new MySqlParameter { ParameterName = "ContractNumber", Value = contractnumber, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
+                            //new MySqlParameter { ParameterName = "ContractNumber", Value = contractnumber, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
                             new MySqlParameter { ParameterName = "rowsReturned", MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Output }
                         };
 
@@ -1037,7 +1037,7 @@ namespace ProcessCIW.Validation
         /// <param name="taskordernumber"></param>
         /// <param name="contractnumber"></param>
         /// <returns></returns>
-        private bool MatchedEASiData(string taskordernumber, string contractnumber)
+        private bool MatchedEASiData(string taskordernumber)
         {
             //Need global connection check.
             MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString());
@@ -1061,7 +1061,7 @@ namespace ProcessCIW.Validation
                         MySqlParameter[] userParameters = new MySqlParameter[]
                         {
                             new MySqlParameter { ParameterName = "TaskOrderNumber", Value = taskordernumber, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
-                            new MySqlParameter { ParameterName = "ContractNumber", Value = contractnumber, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
+                            //new MySqlParameter { ParameterName = "ContractNumber", Value = contractnumber, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
                             new MySqlParameter { ParameterName = "rowsReturned", MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Output }
                         };
 
@@ -1427,7 +1427,7 @@ namespace ProcessCIW.Validation
                         MySqlParameter[] userParameters = new MySqlParameter[]
                         {
                             new MySqlParameter { ParameterName = "TaskOrderNumber", Value = ciwInformation.First().TaskOrderDeliveryOrder, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
-                            new MySqlParameter { ParameterName = "ContractNumber", Value = ciwInformation.First().ContractNumberType, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
+                            //new MySqlParameter { ParameterName = "ContractNumber", Value = ciwInformation.First().ContractNumberType, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
                             new MySqlParameter { ParameterName = "rowsReturned", MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Output }
                         };
 

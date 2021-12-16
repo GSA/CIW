@@ -561,13 +561,13 @@ class ProcessDocuments
             /// <summary>
             /// check contract validation if it is Child Care 
             /// </summary>
-            else if (ciwInformation.First().InvestigationTypeRequested.ToLower() == "tier 1c" || ciwInformation.First().SponsoringOfficeSymbol.ToLower() == "pmc" || U.Utilities.validchildcare(ciwInformation.First().ContractNumberType))
+            else if (ciwInformation.First().InvestigationTypeRequested.ToLower() == "tier 1c" || ciwInformation.First().SponsoringOfficeSymbol.ToLower() == "pmc" || U.Utilities.validchildcare(ciwInformation.First().TaskOrderDeliveryOrder))
             {
                 log.Info(String.Format("Check Contract Validation for {0} if it is Child Care", ciwInformation.First().FullNameForLog));
 
-                if (ciwInformation.First().InvestigationTypeRequested.ToLower() == "tier 1c" && ciwInformation.First().SponsoringOfficeSymbol.ToLower() == "pmc" && ciwInformation.First().SponsoringMajorOrg.ToLower() == "p" && U.Utilities.validchildcare(ciwInformation.First().ContractNumberType))
+                if (ciwInformation.First().InvestigationTypeRequested.ToLower() == "tier 1c" && ciwInformation.First().SponsoringOfficeSymbol.ToLower() == "pmc" && ciwInformation.First().SponsoringMajorOrg.ToLower() == "p" && U.Utilities.validchildcare(ciwInformation.First().TaskOrderDeliveryOrder))
                 {
-                    if (validate.MatchedContractNumber(ciwInformation.First().ContractNumberType))
+                    if (validate.MatchedContractNumber(ciwInformation.First().TaskOrderDeliveryOrder))
                     {
                         log.Info(String.Format("Checking if form is valid for user {0}", ciwInformation.First().FullNameForLog));
 
@@ -624,7 +624,7 @@ class ProcessDocuments
             /// <summary>
             /// check if contract number follows nomenclature of any of the contract type
             /// </summary>
-            else if (U.Utilities.validFAS(ciwInformation.First().ContractNumberType))
+            else if (U.Utilities.validFAS(ciwInformation.First().TaskOrderDeliveryOrder))
             {
                 log.Info(String.Format("Check Contract Validation of FAS Contract for {0}", ciwInformation.First().FullNameForLog));
 
@@ -684,7 +684,7 @@ class ProcessDocuments
 
 
             }
-            else if (U.Utilities.validcontractnumber(ciwInformation.First().ContractNumberType, ciwInformation.First().SponsoringMajorOrg))
+            else if (U.Utilities.validcontractnumber(ciwInformation.First().TaskOrderDeliveryOrder, ciwInformation.First().SponsoringMajorOrg))
             {
                 log.Info(String.Format("Check Contract Validation of NON-FAS Contract for {0} if it matched GCIMS data", ciwInformation.First().FullNameForLog));
 
