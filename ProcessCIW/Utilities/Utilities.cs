@@ -245,27 +245,14 @@ namespace ProcessCIW.Utilities
         }
 
 
-        public static bool validcontractnumber(string contractnumber, string majororg)
+        public static bool validcontractnumber(string contractnumber)
         {
-            bool Leasevalid = Regex.IsMatch(contractnumber, @"^[Ll](A[LKSZRAEP]|C[AOT]|D[EC]|F[LM]|G[AU]|HI|I[ADLN]|K[SY]|LA|M[ADEHINOPST]|N[CDEHJMVY]|O[HKR]|P[ARW]|RI|S[CD]|T[NX]|UT|V[AIT]|W[AIVY])(\d{5})$");
-            bool Randolphvalid = Regex.IsMatch(contractnumber, @"^(RS)(A[LKSZRAEP]|C[AOT]|D[EC]|F[LM]|G[AU]|HI|I[ADLN]|K[SY]|LA|M[ADEHINOPST]|N[CDEHJMVY]|O[HKR]|P[ARW]|RI|S[CD]|T[NX]|UT|V[AIT]|W[AIVY])(\d{4})(\w{2,3})(\d*)$");
-            bool CreditUvalid = Regex.IsMatch(contractnumber, @"^(CU)(A[LKSZRAEP]|C[AOT]|D[EC]|F[LM]|G[AU]|HI|I[ADLN]|K[SY]|LA|M[ADEHINOPST]|N[CDEHJMVY]|O[HKR]|P[ARW]|RI|S[CD]|T[NX]|UT|V[AIT]|W[AIVY])([0-9]{4})$");
             bool ChildCarevalid = Regex.IsMatch(contractnumber, @"^(\d{4})$");
-            bool RevokeLicensevalid = Regex.IsMatch(contractnumber, @"^(RL)(\d\w)*$");
             bool IAAvalid = Regex.IsMatch(contractnumber, @"^(IAA)(\d\w)*$");
             bool MOUvalid = Regex.IsMatch(contractnumber, @"^(MOU)(\d\w)*$");
             bool MOAvalid = Regex.IsMatch(contractnumber, @"^(MOA)(\d\w)*$");
 
-            if (Leasevalid || Randolphvalid || CreditUvalid || RevokeLicensevalid)
-            {
-                if (majororg.ToLower() == "p")
-                {
-                    return true;
-                }
-                else return false;
-
-            }
-            else if (ChildCarevalid || IAAvalid || MOUvalid || MOAvalid)
+            if (ChildCarevalid || IAAvalid || MOUvalid || MOAvalid)
             {
                 return true;
             }

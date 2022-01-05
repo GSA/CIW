@@ -911,7 +911,7 @@ namespace ProcessCIW.Validation
             When(b => (b.InvestigationTypeRequested.ToLower() != "tier 1c" && b.SponsoringOfficeSymbol.ToLower() != "pmc" && U.Utilities.validchildcare(b.TaskOrderDeliveryOrder) == false), () =>
             {
 
-                When(b => (U.Utilities.validFAS(b.TaskOrderDeliveryOrder) == false && U.Utilities.validcontractnumber(b.TaskOrderDeliveryOrder, b.SponsoringMajorOrg) == false), () =>
+                When(b => (U.Utilities.validFAS(b.TaskOrderDeliveryOrder) == false && U.Utilities.validcontractnumber(b.TaskOrderDeliveryOrder) == false && U.Utilities.validLeaseAndRandolphcontractnumber(b.TaskOrderDeliveryOrder) == false), () =>
                 {
                     RuleFor(e => e.TaskOrderDeliveryOrder)
                         .Must(MatchedEASiData)
