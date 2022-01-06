@@ -248,9 +248,9 @@ namespace ProcessCIW.Utilities
         public static bool validcontractnumber(string contractnumber)
         {
             bool ChildCarevalid = Regex.IsMatch(contractnumber, @"^(\d{4})$");
-            bool IAAvalid = Regex.IsMatch(contractnumber, @"^(IAA)(\d\w)*$");
-            bool MOUvalid = Regex.IsMatch(contractnumber, @"^(MOU)(\d\w)*$");
-            bool MOAvalid = Regex.IsMatch(contractnumber, @"^(MOA)(\d\w)*$");
+            bool IAAvalid = Regex.IsMatch(contractnumber, @"^IAA\w*$");
+            bool MOUvalid = Regex.IsMatch(contractnumber, @"^MOU\w*$");
+            bool MOAvalid = Regex.IsMatch(contractnumber, @"^MOA\w*$");
 
             if (ChildCarevalid || IAAvalid || MOUvalid || MOAvalid)
             {
@@ -264,9 +264,9 @@ namespace ProcessCIW.Utilities
         public static bool validLeaseAndRandolphcontractnumber(string contractnumber)
         {
             bool Leasevalid = Regex.IsMatch(contractnumber, @"^[Ll](A[LKSZRAEP]|C[AOT]|D[EC]|F[LM]|G[AU]|HI|I[ADLN]|K[SY]|LA|M[ADEHINOPST]|N[CDEHJMVY]|O[HKR]|P[ARW]|RI|S[CD]|T[NX]|UT|V[AIT]|W[AIVY])(\d{5})$");
-            bool Randolphvalid = Regex.IsMatch(contractnumber, @"^(RS)(A[LKSZRAEP]|C[AOT]|D[EC]|F[LM]|G[AU]|HI|I[ADLN]|K[SY]|LA|M[ADEHINOPST]|N[CDEHJMVY]|O[HKR]|P[ARW]|RI|S[CD]|T[NX]|UT|V[AIT]|W[AIVY])(\d{4})(\w{2,3})(\d*)$");
-            bool CreditUvalid = Regex.IsMatch(contractnumber, @"^(CU)(A[LKSZRAEP]|C[AOT]|D[EC]|F[LM]|G[AU]|HI|I[ADLN]|K[SY]|LA|M[ADEHINOPST]|N[CDEHJMVY]|O[HKR]|P[ARW]|RI|S[CD]|T[NX]|UT|V[AIT]|W[AIVY])([0-9]{4})$");
-            bool RevokeLicensevalid = Regex.IsMatch(contractnumber, @"^(RL)(\d\w)*$");
+            bool Randolphvalid = Regex.IsMatch(contractnumber, @"^(RS)(A[LKSZRAEP]|C[AOT]|D[EC]|F[LM]|G[AU]|HI|I[ADLN]|K[SY]|LA|M[ADEHINOPST]|N[CDEHJMVY]|O[HKR]|P[ARW]|RI|S[CD]|T[NX]|UT|V[AIT]|W[AIVY])(\d{4})([A-Z]{2,3})(\d*)$");
+            bool CreditUvalid = Regex.IsMatch(contractnumber, @"^(CU)(A[LKSZRAEP]|C[AOT]|D[EC]|F[LM]|G[AU]|HI|I[ADLN]|K[SY]|LA|M[ADEHINOPST]|N[CDEHJMVY]|O[HKR]|P[ARW]|RI|S[CD]|T[NX]|UT|V[AIT]|W[AIVY])(\d{4})$");
+            bool RevokeLicensevalid = Regex.IsMatch(contractnumber, @"^(RL)(\w)*$");
 
 
             if (Leasevalid || Randolphvalid || CreditUvalid || RevokeLicensevalid)
