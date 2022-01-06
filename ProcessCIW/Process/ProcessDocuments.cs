@@ -530,7 +530,7 @@ class ProcessDocuments
             /// </summary>
             if (validate.MatchedEASiData(ciwInformation))
             {
-                log.Info(String.Format("CCheck Contract Validation of EASi-synced Contract for user {0}", ciwInformation.First().FullNameForLog));
+                log.Info(String.Format("Check Contract Validation of EASi-synced Contract for user {0}", ciwInformation.First().FullNameForLog));
                 log.Info(String.Format("Checking if form is valid for user {0}", ciwInformation.First().FullNameForLog));
                 log.Info(String.Format("Checking if its investigation type is not Tier 1C and office symbor is not PMC for user {0}", ciwInformation.First().FullNameForLog));
 

@@ -928,7 +928,7 @@ namespace ProcessCIW.Validation
                 When(b => (U.Utilities.validLeaseAndRandolphcontractnumber(b.TaskOrderDeliveryOrder)), () =>
                 {
                     RuleFor(building => building.SponsoringMajorOrg.ToLower())
-                        .Equal("P")
+                        .Equal("p")
                         .WithMessage(" Sponsoring Major Org: Only contractors with Major Org P can be assigned to this contract type");
                 });
 
