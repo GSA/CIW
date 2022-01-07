@@ -593,7 +593,7 @@ namespace ProcessCIW.Validation
                             .WithMessage("Sponsoring Major Org: Child care workers must have major org P");
 
                         RuleFor(building => building.TaskOrderDeliveryOrder)
-                            .Matches(@"^(Childcare)([0-9]{4})$")
+                            .Matches(@"^(\d{4})$")
                             .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Provided contract number is not a valid childcare contract");
                     });
 

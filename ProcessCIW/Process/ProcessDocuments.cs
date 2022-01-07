@@ -665,7 +665,7 @@ class ProcessDocuments
                     log.Info(String.Format("Checking if the major org is q for user {0}", ciwInformation.First().FullNameForLog));
                     log.Info(String.Format("Checking if form is valid for user {0}", ciwInformation.First().FullNameForLog));
 
-                    if (ciwInformation.First().SponsoringMajorOrg.ToLower() == "q" && validate.IsFormValid(ciwInformation))
+                    if (validate.IsFormValid(ciwInformation))
                     {
                         log.Info(String.Format("Form is valid for user {0}", ciwInformation.First().FullNameForLog));
 
