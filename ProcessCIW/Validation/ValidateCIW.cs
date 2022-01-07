@@ -559,14 +559,14 @@ namespace ProcessCIW.Validation
                             .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: This contract does not match an existing contract in GCIMS and cannot be created. Please see the CIW user guide for further details.");
                     });
 
-                    When(b => (U.Utilities.validFAS(b.TaskOrderDeliveryOrder) && MatchedGCIMSData(b.TaskOrderDeliveryOrder) == false), () =>
+                    When(b => (U.Utilities.validFAS(b.TaskOrderDeliveryOrder) == true && MatchedGCIMSData(b.TaskOrderDeliveryOrder) == false), () =>
                     {
                         RuleFor(building => building.SponsoringMajorOrg.ToLower())
                             .Equal("q")
                             .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: This contract does not match an existing contract in GCIMS and cannot be created. Please see the CIW user guide for further details.");
                     });
 
-                    When(b => (U.Utilities.validLeaseAndRandolphcontractnumber(b.TaskOrderDeliveryOrder)), () =>
+                    When(b => (U.Utilities.validLeaseAndRandolphcontractnumber(b.TaskOrderDeliveryOrder) == true), () =>
                     {
                         RuleFor(building => building.SponsoringMajorOrg.ToLower())
                             .Equal("p")
@@ -575,7 +575,7 @@ namespace ProcessCIW.Validation
 
                 });
 
-                When(b => (b.InvestigationTypeRequested.ToLower() == "tier 1c" && b.SponsoringOfficeSymbol.ToLower() == "pmc" && U.Utilities.validchildcare(b.TaskOrderDeliveryOrder) && b.SponsoringMajorOrg.ToLower() == "p"), () =>
+                When(b => (b.InvestigationTypeRequested.ToLower() == "tier 1c" && b.SponsoringOfficeSymbol.ToLower() == "pmc" && U.Utilities.validchildcare(b.TaskOrderDeliveryOrder) == true && b.SponsoringMajorOrg.ToLower() == "p"), () =>
                 {
                     //Ensure type contractor is child care when investigation type requested is tier 1C
                     When(b => b.InvestigationTypeRequested == "Tier 1C", () =>
@@ -597,7 +597,7 @@ namespace ProcessCIW.Validation
                             .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Provided contract number is not a valid childcare contract");
                     });
 
-                    When(b => U.Utilities.validchildcare(b.TaskOrderDeliveryOrder), () =>
+                    When(b => U.Utilities.validchildcare(b.TaskOrderDeliveryOrder) == true, () =>
                     {
                         RuleFor(employee => employee.InvestigationTypeRequested.ToLower())
                             .Equal("tier 1c")
@@ -615,7 +615,7 @@ namespace ProcessCIW.Validation
                             .WithMessage("Sponsoring Major Org: Office Symbol PMC can only be associated with Sponsoring Major Org P");
 
                         RuleFor(building => building.TaskOrderDeliveryOrder)
-                            .Matches(@"^(Childcare)([0-9]{4})$")
+                            .Matches(@"^(\d{4})$")
                             .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Office Symbol PMC can only be associated with childcare contracts.");
                     });
 

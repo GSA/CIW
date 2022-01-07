@@ -569,7 +569,7 @@ class ProcessDocuments
                 {
                     if (validate.MatchedContractNumber(ciwInformation.First().TaskOrderDeliveryOrder))
                     {
-                        log.Info(String.Format("Checking if form is valid for user {0}", ciwInformation.First().FullNameForLog));
+                        log.Info(String.Format("Checking if form is valid for user {0} if it matches contract number in GCIMS", ciwInformation.First().FullNameForLog));
 
                         if (validate.IsFormValid(ciwInformation))
                         {
@@ -636,7 +636,7 @@ class ProcessDocuments
 
                 if (validate.MatchedGCIMSData(ciwInformation))
                 {
-                    log.Info(String.Format("Check Contract Validation of FAS Contract for {0}", ciwInformation.First().FullNameForLog));
+                    log.Info(String.Format("Check Contract Validation of FAS Contract for {0} if it matches contract in GSCIMS", ciwInformation.First().FullNameForLog));
                     log.Info(String.Format("Checking if form is valid for user {0}", ciwInformation.First().FullNameForLog));
 
                     if (validate.IsFormValid(ciwInformation))
@@ -692,13 +692,13 @@ class ProcessDocuments
             }
             else if (U.Utilities.validLeaseAndRandolphcontractnumber(ciwInformation.First().TaskOrderDeliveryOrder))
             {
-                log.Info(String.Format("Check Contract Validation of NON-FAS Contract for {0} if ontract number match nomenclature of Lease, Revokable License, Credit Union, or Randolph Sheppard", ciwInformation.First().FullNameForLog));
+                log.Info(String.Format("Check Contract Validation of NON-FAS Contract for {0} if contract number match nomenclature of Lease, Revokable License, Credit Union, or Randolph Sheppard", ciwInformation.First().FullNameForLog));
 
                 if (ciwInformation.First().SponsoringMajorOrg.ToLower() == "p")
                 {
                     if (validate.MatchedGCIMSData(ciwInformation))
                     {
-                        log.Info(String.Format("Checking if form is valid for user {0}", ciwInformation.First().FullNameForLog));
+                        log.Info(String.Format("Checking if form is valid for user {0} if it matches contract in GCIMS", ciwInformation.First().FullNameForLog));
 
                         if (validate.IsFormValid(ciwInformation))
                         {
@@ -758,7 +758,7 @@ class ProcessDocuments
 
                 if (validate.MatchedGCIMSData(ciwInformation))
                 {
-                    log.Info(String.Format("Checking if form is valid for user {0}", ciwInformation.First().FullNameForLog));
+                    log.Info(String.Format("Checking if form is valid for user {0} if it matches contract in GCIMS", ciwInformation.First().FullNameForLog));
 
                     if (validate.IsFormValid(ciwInformation))
                     {
@@ -806,7 +806,7 @@ class ProcessDocuments
             }
             else if(validate.MatchedGCIMSData(ciwInformation))
             {
-                log.Info(String.Format("Checking if form is valid for user {0}", ciwInformation.First().FullNameForLog));
+                log.Info(String.Format("Checking if form is valid for user {0} if it matches contract in GCIMS", ciwInformation.First().FullNameForLog));
 
                 if (validate.IsFormValid(ciwInformation))
                 {
