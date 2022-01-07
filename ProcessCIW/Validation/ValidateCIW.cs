@@ -549,6 +549,79 @@ namespace ProcessCIW.Validation
                     .NotEmpty()
                     .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Required Field");
 
+                When(b => (b.InvestigationTypeRequested.ToLower() != "tier 1c" && b.SponsoringOfficeSymbol.ToLower() != "pmc" && U.Utilities.validchildcare(b.TaskOrderDeliveryOrder) == false), () =>
+                {
+
+                    When(b => (U.Utilities.validFAS(b.TaskOrderDeliveryOrder) == false && U.Utilities.validcontractnumber(b.TaskOrderDeliveryOrder) == false && U.Utilities.validLeaseAndRandolphcontractnumber(b.TaskOrderDeliveryOrder) == false), () =>
+                    {
+                        RuleFor(e => e.TaskOrderDeliveryOrder)
+                            .Must(MatchedEASiData)
+                            .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: This contract does not match an existing contract in GCIMS and cannot be created. Please see the CIW user guide for further details.");
+                    });
+
+                    When(b => (U.Utilities.validFAS(b.TaskOrderDeliveryOrder) && MatchedGCIMSData(b.TaskOrderDeliveryOrder) == false), () =>
+                    {
+                        RuleFor(building => building.SponsoringMajorOrg.ToLower())
+                            .Equal("q")
+                            .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: This contract does not match an existing contract in GCIMS and cannot be created. Please see the CIW user guide for further details.");
+                    });
+
+                    When(b => (U.Utilities.validLeaseAndRandolphcontractnumber(b.TaskOrderDeliveryOrder)), () =>
+                    {
+                        RuleFor(building => building.SponsoringMajorOrg.ToLower())
+                            .Equal("p")
+                            .WithMessage("Sponsoring Major Org: Only contractors with Major Org P can be assigned to this contract type");
+                    });
+
+                });
+
+                When(b => (b.InvestigationTypeRequested.ToLower() == "tier 1c" && b.SponsoringOfficeSymbol.ToLower() == "pmc" && U.Utilities.validchildcare(b.TaskOrderDeliveryOrder) && b.SponsoringMajorOrg.ToLower() == "p"), () =>
+                {
+                    //Ensure type contractor is child care when investigation type requested is tier 1C
+                    When(b => b.InvestigationTypeRequested == "Tier 1C", () =>
+                    {
+                        RuleFor(building => building.ContractorType.ToLower())
+                            .Equal("child care")
+                            .WithMessage("Type Contractor: Applicants with Investigation Type Requested Child Care Worker must have Type Contractor Child Care");
+
+                        RuleFor(building => building.SponsoringOfficeSymbol.ToLower())
+                            .Equal("pmc")
+                            .WithMessage("Sponsoring Office Symbol: Child care workers must have office symbol PMC");
+
+                        RuleFor(building => building.SponsoringMajorOrg.ToLower())
+                            .Equal("p")
+                            .WithMessage("Sponsoring Major Org: Child care workers must have major org P");
+
+                        RuleFor(building => building.TaskOrderDeliveryOrder)
+                            .Matches(@"^(Childcare)([0-9]{4})$")
+                            .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Provided contract number is not a valid childcare contract");
+                    });
+
+                    When(b => U.Utilities.validchildcare(b.TaskOrderDeliveryOrder), () =>
+                    {
+                        RuleFor(employee => employee.InvestigationTypeRequested.ToLower())
+                            .Equal("tier 1c")
+                            .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Only childcare workers can be assigned to childcare contracts. Please see the CIW user guide for further details.");
+                    });
+
+                    When(b => b.SponsoringOfficeSymbol.ToLower() == "pmc", () =>
+                    {
+                        RuleFor(building => building.InvestigationTypeRequested.ToLower())
+                            .Equal("tier 1c")
+                            .WithMessage("Investigation Type Request: Office Symbol PMC can only be associated with childcare workers");
+
+                        RuleFor(building => building.SponsoringMajorOrg.ToLower())
+                            .Equal("p")
+                            .WithMessage("Sponsoring Major Org: Office Symbol PMC can only be associated with Sponsoring Major Org P");
+
+                        RuleFor(building => building.TaskOrderDeliveryOrder)
+                            .Matches(@"^(Childcare)([0-9]{4})$")
+                            .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Office Symbol PMC can only be associated with childcare contracts.");
+                    });
+
+                });
+
+
                 //Contract Number Type
                 RuleFor(employee => employee.ContractNumberType)
                     .NotEmpty()
@@ -801,7 +874,107 @@ namespace ProcessCIW.Validation
             });
         }
 
-   }
+        private bool MatchedGCIMSData(string taskordernumber)
+        {
+            //Need global connection check.
+            MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString());
+            MySqlCommand cmd = new MySqlCommand();
+            try
+            {
+                using (conn)
+                {
+                    if (conn.State == ConnectionState.Closed)
+                        conn.Open();
+
+                    using (cmd)
+                    {
+                        cmd.Connection = conn;
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        cmd.CommandText = "CIW_MatchedGCIMSData";
+
+                        cmd.Parameters.Clear();
+
+                        MySqlParameter[] userParameters = new MySqlParameter[]
+                        {
+                            new MySqlParameter { ParameterName = "TaskOrderNumber", Value = taskordernumber, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
+                            //new MySqlParameter { ParameterName = "ContractNumber", Value = contractnumber, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
+                            new MySqlParameter { ParameterName = "rowsReturned", MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Output }
+                        };
+
+                        cmd.Parameters.AddRange(userParameters);
+
+                        cmd.ExecuteNonQuery();
+
+                        if ((int)cmd.Parameters["rowsReturned"].Value == 0)
+                            return false;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+            return true;
+
+
+        }
+
+        /// <summary>
+        /// Calls stored procedure that checks if CIW contracts match EASi-synced Data
+        /// </summary>
+        /// <param name="taskordernumber"></param>
+        /// <param name="contractnumber"></param>
+        /// <returns></returns>
+        private bool MatchedEASiData(string taskordernumber)
+        {
+            //Need global connection check.
+            MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString());
+            MySqlCommand cmd = new MySqlCommand();
+            try
+            {
+                using (conn)
+                {
+                    if (conn.State == ConnectionState.Closed)
+                        conn.Open();
+
+                    using (cmd)
+                    {
+                        cmd.Connection = conn;
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        cmd.CommandText = "CIW_MatchedEASiData";
+
+                        cmd.Parameters.Clear();
+
+                        MySqlParameter[] userParameters = new MySqlParameter[]
+                        {
+                            new MySqlParameter { ParameterName = "TaskOrderNumber", Value = taskordernumber, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
+                            //new MySqlParameter { ParameterName = "ContractNumber", Value = contractnumber, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
+                            new MySqlParameter { ParameterName = "rowsReturned", MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Output }
+                        };
+
+                        cmd.Parameters.AddRange(userParameters);
+
+                        cmd.ExecuteNonQuery();
+
+                        if ((int)cmd.Parameters["rowsReturned"].Value == 0)
+                            return false;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+            return true;
+
+
+        }
+
+    }
 
     /// <summary>
     /// Section 3 Validation
@@ -907,180 +1080,6 @@ namespace ProcessCIW.Validation
             RuleFor(building => building.Region)
                     .NotEmpty()
                     .WithMessage("GSA Region: Required Field");
-
-            When(b => (b.InvestigationTypeRequested.ToLower() != "tier 1c" && b.SponsoringOfficeSymbol.ToLower() != "pmc" && U.Utilities.validchildcare(b.TaskOrderDeliveryOrder) == false), () =>
-            {
-
-                When(b => (U.Utilities.validFAS(b.TaskOrderDeliveryOrder) == false && U.Utilities.validcontractnumber(b.TaskOrderDeliveryOrder) == false && U.Utilities.validLeaseAndRandolphcontractnumber(b.TaskOrderDeliveryOrder) == false), () =>
-                {
-                    RuleFor(e => e.TaskOrderDeliveryOrder)
-                        .Must(MatchedEASiData)
-                        .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: This contract does not match an existing contract in GCIMS and cannot be created. Please see the CIW user guide for further details.");
-                });
-
-                When(b => (U.Utilities.validFAS(b.TaskOrderDeliveryOrder) && MatchedGCIMSData(b.TaskOrderDeliveryOrder) == false), () =>
-                {
-                    RuleFor(building => building.SponsoringMajorOrg.ToLower())
-                        .Equal("q")
-                        .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: This contract does not match an existing contract in GCIMS and cannot be created. Please see the CIW user guide for further details.");                  
-                });
-
-                When(b => (U.Utilities.validLeaseAndRandolphcontractnumber(b.TaskOrderDeliveryOrder)), () =>
-                {
-                    RuleFor(building => building.SponsoringMajorOrg.ToLower())
-                        .Equal("p")
-                        .WithMessage(" Sponsoring Major Org: Only contractors with Major Org P can be assigned to this contract type");
-                });
-
-            });
-
-
-                When(b => (b.InvestigationTypeRequested.ToLower() == "tier 1c" && b.SponsoringOfficeSymbol.ToLower() == "pmc" && U.Utilities.validchildcare(b.TaskOrderDeliveryOrder) && b.SponsoringMajorOrg.ToLower() == "p"), () =>
-            {
-                //Ensure type contractor is child care when investigation type requested is tier 1C
-                When(b => b.InvestigationTypeRequested == "Tier 1C", () =>
-                {
-                    RuleFor(building => building.ContractorType.ToLower())
-                        .Equal("child care")
-                        .WithMessage("Type Contractor: Applicants with Investigation Type Requested Child Care Worker must have Type Contractor Child Care");
-
-                    RuleFor(building => building.SponsoringOfficeSymbol.ToLower())
-                        .Equal("pmc")
-                        .WithMessage("Sponsoring Office Symbol: Child care workers must have office symbol PMC");
-
-                    RuleFor(building => building.SponsoringMajorOrg.ToLower())
-                        .Equal("p")
-                        .WithMessage("Sponsoring Major Org: Child care workers must have major org P");
-
-                    RuleFor(building => building.TaskOrderDeliveryOrder)
-                        .Matches(@"^(Childcare)([0-9]{4})$")
-                        .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Provided contract number is not a valid childcare contract");
-                });
-
-                When(b => U.Utilities.validchildcare(b.TaskOrderDeliveryOrder), () =>
-                {
-                    RuleFor(employee => employee.InvestigationTypeRequested.ToLower())
-                        .Equal("tier 1c")
-                        .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Only childcare workers can be assigned to childcare contracts. Please see the CIW user guide for further details.");
-                });
-
-                When(b => b.SponsoringOfficeSymbol.ToLower() == "pmc", () =>
-                {
-                    RuleFor(building => building.InvestigationTypeRequested.ToLower())
-                        .Equal("tier 1c")
-                        .WithMessage(" Investigation Type Request: Office Symbol PMC can only be associated with childcare workers");
-
-                    RuleFor(building => building.SponsoringMajorOrg.ToLower())
-                        .Equal("p")
-                        .WithMessage("Sponsoring Major Org: Office Symbol PMC can only be associated with Sponsoring Major Org P");
-
-                    RuleFor(building => building.TaskOrderDeliveryOrder)
-                        .Matches(@"^(Childcare)([0-9]{4})$")
-                        .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Office Symbol PMC can only be associated with childcare contracts.");
-                });
-
-            });
-
-
-        }
-
-        private bool MatchedGCIMSData(string taskordernumber)
-        {
-            //Need global connection check.
-            MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString());
-            MySqlCommand cmd = new MySqlCommand();
-            try
-            {
-                using (conn)
-                {
-                    if (conn.State == ConnectionState.Closed)
-                        conn.Open();
-
-                    using (cmd)
-                    {
-                        cmd.Connection = conn;
-                        cmd.CommandType = CommandType.StoredProcedure;
-
-                        cmd.CommandText = "CIW_MatchedGCIMSData";
-
-                        cmd.Parameters.Clear();
-
-                        MySqlParameter[] userParameters = new MySqlParameter[]
-                        {
-                            new MySqlParameter { ParameterName = "TaskOrderNumber", Value = taskordernumber, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
-                            //new MySqlParameter { ParameterName = "ContractNumber", Value = contractnumber, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
-                            new MySqlParameter { ParameterName = "rowsReturned", MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Output }
-                        };
-
-                        cmd.Parameters.AddRange(userParameters);
-
-                        cmd.ExecuteNonQuery();
-
-                        if ((int)cmd.Parameters["rowsReturned"].Value == 0)
-                            return false;
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-
-            return true;
-
-
-        }
-
-        /// <summary>
-        /// Calls stored procedure that checks if CIW contracts match EASi-synced Data
-        /// </summary>
-        /// <param name="taskordernumber"></param>
-        /// <param name="contractnumber"></param>
-        /// <returns></returns>
-        private bool MatchedEASiData(string taskordernumber)
-        {
-            //Need global connection check.
-            MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString());
-            MySqlCommand cmd = new MySqlCommand();
-            try
-            {
-                using (conn)
-                {
-                    if (conn.State == ConnectionState.Closed)
-                        conn.Open();
-
-                    using (cmd)
-                    {
-                        cmd.Connection = conn;
-                        cmd.CommandType = CommandType.StoredProcedure;
-
-                        cmd.CommandText = "CIW_MatchedEASiData";
-
-                        cmd.Parameters.Clear();
-
-                        MySqlParameter[] userParameters = new MySqlParameter[]
-                        {
-                            new MySqlParameter { ParameterName = "TaskOrderNumber", Value = taskordernumber, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
-                            //new MySqlParameter { ParameterName = "ContractNumber", Value = contractnumber, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
-                            new MySqlParameter { ParameterName = "rowsReturned", MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Output }
-                        };
-
-                        cmd.Parameters.AddRange(userParameters);
-
-                        cmd.ExecuteNonQuery();
-
-                        if ((int)cmd.Parameters["rowsReturned"].Value == 0)
-                            return false;
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-
-            return true;
-
 
         }
 
@@ -1676,10 +1675,12 @@ namespace ProcessCIW.Validation
                 if (section != 1 || rule.PropertyName == "PositionJobTitle" || rule.PropertyName == "LastName" || rule.PropertyName == "FirstName" || rule.PropertyName == "MiddleName")
                 {
                     log.Warn(string.Format("{0} failed with attempted value {1}", rule.PropertyName, String.IsNullOrWhiteSpace(rule.AttemptedValue.ToString()) ? "Empty" : '"' + rule.AttemptedValue.ToString() + '"'));
+                    log.Error(string.Format("{0} failed with error message {1}", section, rule.ErrorMessage));
                 }
                 else
                 {
                     log.Warn(string.Format("{0} failed with attempted value {1}", rule.PropertyName, rule.AttemptedValue == null ? "Null" : rule.AttemptedValue.Equals("") ? "Empty" : "PII"));
+                    log.Error(string.Format("{0} failed with error message {1}", section, rule.ErrorMessage));
                 }
             }
         }
