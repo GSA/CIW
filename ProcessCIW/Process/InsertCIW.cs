@@ -423,17 +423,17 @@ namespace ProcessCIW
                     new MySqlParameter { ParameterName = "oPersGender", Value = ciwInformation.Sex, MySqlDbType = MySqlDbType.VarChar, Size = 1, Direction = ParameterDirection.Input },
 
                     //Section 1 - Row 2
-                    new MySqlParameter { ParameterName = "oPersSSN", Value = ciwInformation.SocialSecurityNumber, MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
-                    new MySqlParameter { ParameterName = "strBirthDate", Value = ciwInformation.DateOfBirth , MySqlDbType = MySqlDbType.Date, Direction = ParameterDirection.Input },
-                    new MySqlParameter { ParameterName = "oPersBirthCity", Value = ciwInformation.PlaceOfBirthCity , MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
-                    new MySqlParameter { ParameterName = "oPersBirthCountry", Value = ciwInformation.PlaceOfBirthCountry , MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "oPersSSN", Value = ciwInformation.SocialSecurityNumber, MySqlDbType = MySqlDbType.VarChar, Size = 9, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "strBirthDate", Value = ciwInformation.DateOfBirth , MySqlDbType = MySqlDbType.VarChar, Size = 10, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "oPersBirthCity", Value = ciwInformation.PlaceOfBirthCity , MySqlDbType = MySqlDbType.VarChar, Size = 50, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "oPersBirthCountry", Value = ciwInformation.PlaceOfBirthCountry , MySqlDbType = MySqlDbType.VarChar, Size = 2, Direction = ParameterDirection.Input },
 
                     //Use POB:State or POB:MexCan if State is null or empty
-                    new MySqlParameter { ParameterName = "oPersBirthState", Value = FieldPicker(ciwInformation.PlaceOfBirthState, ciwInformation.PlaceOfBirthMexicoCanada), MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "oPersBirthState", Value = FieldPicker(ciwInformation.PlaceOfBirthState, ciwInformation.PlaceOfBirthMexicoCanada), MySqlDbType = MySqlDbType.VarChar, Size = 2, Direction = ParameterDirection.Input },
 
                     //Section 1 - Row 3
-                    new MySqlParameter { ParameterName = "oPersHomeAddr1", Value = ciwInformation.HomeAddressOne , MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
-                    new MySqlParameter { ParameterName = "oPersHomeAddr2", Value = ciwInformation.HomeAddressTwo , MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "oPersHomeAddr1", Value = ciwInformation.HomeAddressOne , MySqlDbType = MySqlDbType.VarChar, Size = 60, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "oPersHomeAddr2", Value = ciwInformation.HomeAddressTwo , MySqlDbType = MySqlDbType.VarChar, Size = 60, Direction = ParameterDirection.Input },
 
                     //Section 1 - Row 4
                     new MySqlParameter { ParameterName = "oPersHomeCity", Value = ciwInformation.HomeAddressCity , MySqlDbType = MySqlDbType.VarChar, Size = 50, Direction = ParameterDirection.Input },
@@ -447,7 +447,7 @@ namespace ProcessCIW
                     //Section 1 - Row 5
                     new MySqlParameter { ParameterName = "oPersWorkCell", Value = FormatPhoneNumber(ciwInformation.PhoneNumberWorkCell) , MySqlDbType = MySqlDbType.VarChar, Size = 22, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersWorkPhone", Value = FormatPhoneNumber(ciwInformation.PhoneNumberWork) , MySqlDbType = MySqlDbType.VarChar, Size = 22, Direction = ParameterDirection.Input },
-                    new MySqlParameter { ParameterName = "oPersHomeEmail", Value = ciwInformation.PersonalEmailAddress , MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "oPersHomeEmail", Value = ciwInformation.PersonalEmailAddress , MySqlDbType = MySqlDbType.VarChar, Size = 60, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersJobTitle", Value = ciwInformation.PositionJobTitle , MySqlDbType = MySqlDbType.VarChar, Size = 60, Direction = ParameterDirection.Input },
 
                     //Section 1 - Row 6
@@ -457,9 +457,9 @@ namespace ProcessCIW
                     new MySqlParameter { ParameterName = "oPersIsCitizen", Value = ConvertYesNo(ciwInformation.Citizen) , MySqlDbType = MySqlDbType.Byte, Direction = ParameterDirection.Input },
 
                     //Section 1 - Row 7
-                    new MySqlParameter { ParameterName = "oPersForeignPOE", Value = ciwInformation.PortOfEntryUSCityAndState , MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
-                    new MySqlParameter { ParameterName = "oPersForeignDOE", Value = ciwInformation.DateOfEntry == String.Empty ? (object)DBNull.Value : ciwInformation.DateOfEntry, MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
-                    new MySqlParameter { ParameterName = "oPersForeignRegistration", Value = ciwInformation.AlienRegistrationNumber , MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "oPersForeignPOE", Value = ciwInformation.PortOfEntryUSCityAndState , MySqlDbType = MySqlDbType.VarChar, Size = 60, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "oPersForeignDOE", Value = ciwInformation.DateOfEntry == String.Empty ? (object)DBNull.Value : ciwInformation.DateOfEntry, MySqlDbType = MySqlDbType.VarChar, Size = 10, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "oPersForeignRegistration", Value = ciwInformation.AlienRegistrationNumber , MySqlDbType = MySqlDbType.VarChar, Size = 60, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersCitizenCountry", Value = ciwInformation.CitzenshipCountry , MySqlDbType = MySqlDbType.VarChar, Size = 2, Direction = ParameterDirection.Input },
 
                     //Section 3
