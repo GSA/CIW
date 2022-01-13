@@ -534,7 +534,7 @@ class ProcessDocuments
                 log.Info(String.Format("Checking if form is valid for user {0}", ciwInformation.First().FullNameForLog));
                 log.Info(String.Format("Checking if its investigation type is not Tier 1C and office symbor is not PMC for user {0}", ciwInformation.First().FullNameForLog));
 
-                if (validate.IsFormValid(ciwInformation) && ciwInformation.First().InvestigationTypeRequested != "Tier 1C" && ciwInformation.First().SponsoringOfficeSymbol != "PMC")
+                if (validate.IsFormValid(ciwInformation) && ciwInformation.First().InvestigationTypeRequested.ToLower() != "tier 1c" && ciwInformation.First().SponsoringOfficeSymbol.ToLower() != "pmc" && ciwInformation.First().ContractorType.ToLower() != "child care")
                 {
                     log.Info(String.Format("Form is valid for user {0}", ciwInformation.First().FullNameForLog));
 
