@@ -553,19 +553,19 @@ namespace ProcessCIW.Validation
                 {
                     RuleFor(building => building.ContractorType.ToLower())
                          .NotEqual("child care")
-                         .WithMessage("If CIW matches an existing EASi contract, contractor cannot be childcare");
+                         .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Provided contract number is not a valid childcare contract");
 
                     RuleFor(building => building.SponsoringOfficeSymbol.ToLower())
                         .NotEqual("pmc")
-                        .WithMessage("If CIW matches an existing EASi contract, office symbol can not be PMC");
+                        .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Provided contract number is not a valid childcare contract");
 
                     RuleFor(building => building.SponsoringMajorOrg.ToLower())
                         .NotEqual("p")
-                        .WithMessage("If CIW matches an existing EASi contract, Sponsoring Major Org can not be P");
+                        .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Provided contract number is not a valid childcare contract");
 
                     RuleFor(building => building.InvestigationTypeRequested.ToLower())
                         .NotEqual("tier 1c")
-                        .WithMessage("If CIW matches an existing EASi contract, Investigation Type Requested can not be Tier 1C");
+                        .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Provided contract number is not a valid childcare contract");
                 });
 
                 When(b => (b.InvestigationTypeRequested.ToLower() != "tier 1c" && b.SponsoringOfficeSymbol.ToLower() != "pmc" && U.Utilities.validchildcare(b.TaskOrderDeliveryOrder) == false), () =>
