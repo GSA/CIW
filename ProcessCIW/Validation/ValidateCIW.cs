@@ -549,10 +549,29 @@ namespace ProcessCIW.Validation
                     .NotEmpty()
                     .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Required Field");
 
+                When(b => MatchedEASiData(b.TaskOrderDeliveryOrder) == true, () =>
+                {
+                    RuleFor(building => building.ContractorType.ToLower())
+                         .NotEqual("child care")
+                         .WithMessage("If CIW matches an existing EASi contract, contractor cannot be childcare");
+
+                    RuleFor(building => building.SponsoringOfficeSymbol.ToLower())
+                        .NotEqual("pmc")
+                        .WithMessage("If CIW matches an existing EASi contract, office symbol can not be PMC");
+
+                    RuleFor(building => building.SponsoringMajorOrg.ToLower())
+                        .NotEqual("p")
+                        .WithMessage("If CIW matches an existing EASi contract, Sponsoring Major Org can not be P");
+
+                    RuleFor(building => building.InvestigationTypeRequested.ToLower())
+                        .NotEqual("tier 1c")
+                        .WithMessage("If CIW matches an existing EASi contract, Investigation Type Requested can not be Tier 1C");
+                });
+
                 When(b => (b.InvestigationTypeRequested.ToLower() != "tier 1c" && b.SponsoringOfficeSymbol.ToLower() != "pmc" && U.Utilities.validchildcare(b.TaskOrderDeliveryOrder) == false), () =>
                 {
 
-                    When(b => (U.Utilities.validFAS(b.TaskOrderDeliveryOrder) == false && U.Utilities.validcontractnumber(b.TaskOrderDeliveryOrder) == false && U.Utilities.validLeaseAndRandolphcontractnumber(b.TaskOrderDeliveryOrder) == false && MatchedEASiData(b.TaskOrderDeliveryOrder) == true), () =>
+                    When(b => (U.Utilities.validFAS(b.TaskOrderDeliveryOrder) == false && U.Utilities.validcontractnumber(b.TaskOrderDeliveryOrder) == false && U.Utilities.validLeaseAndRandolphcontractnumber(b.TaskOrderDeliveryOrder) == false), () =>
                     {
                         RuleFor(e => e.TaskOrderDeliveryOrder)
                             .Must(MatchedEASiData)
