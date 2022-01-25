@@ -551,22 +551,11 @@ namespace ProcessCIW.Validation
 
                 When(b => MatchedEASiData(b.TaskOrderDeliveryOrder) == true, () =>
                 {
-                    RuleFor(building => building.ContractorType.ToLower())
-                         .NotEqual("child care")
-                         .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Provided contract number is not a valid childcare contract");
-
-                    RuleFor(building => building.SponsoringOfficeSymbol.ToLower())
-                        .NotEqual("pmc")
-                        .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Provided contract number is not a valid childcare contract");
-
-                    RuleFor(building => building.SponsoringMajorOrg.ToLower())
-                        .NotEqual("p")
-                        .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Provided contract number is not a valid childcare contract");
-
-                    RuleFor(building => building.InvestigationTypeRequested.ToLower())
-                        .NotEqual("tier 1c")
-                        .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Provided contract number is not a valid childcare contract");
+                    RuleFor(b => b)
+                          .Must(b => b.InvestigationTypeRequested.ToLower() != "tier 1c" && b.SponsoringMajorOrg.ToLower() != "p" && b.SponsoringOfficeSymbol.ToLower() != "pmc" && b.ContractorType.ToLower() != "child care")
+                          .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Provided contract number is not a valid childcare contract");
                 });
+
 
                 When(b => (b.InvestigationTypeRequested.ToLower() != "tier 1c" && b.SponsoringOfficeSymbol.ToLower() != "pmc" && U.Utilities.validchildcare(b.TaskOrderDeliveryOrder) == false), () =>
                 {
