@@ -552,7 +552,7 @@ namespace ProcessCIW.Validation
                 When(b => MatchedEASiData(b.TaskOrderDeliveryOrder) == true, () =>
                 {
                     RuleFor(b => b)
-                          .Must(b => b.InvestigationTypeRequested.ToLower() != "tier 1c" && b.SponsoringMajorOrg.ToLower() != "p" && b.SponsoringOfficeSymbol.ToLower() != "pmc" && b.ContractorType.ToLower() != "child care")
+                          .Must(b => b.InvestigationTypeRequested.ToLower() != "tier 1c" && b.SponsoringMajorOrg.ToLower() != "p" && b.SponsoringOfficeSymbol.ToLower() != "pmc" && b.ContractorType.ToLower() != "child care" && U.Utilities.validchildcare(b.TaskOrderDeliveryOrder) == false)
                           .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Provided contract number is not a valid childcare contract");
                 });
 
