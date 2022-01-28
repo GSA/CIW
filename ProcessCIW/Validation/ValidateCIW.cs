@@ -583,7 +583,7 @@ namespace ProcessCIW.Validation
 
                 });
 
-            When(b => (b.InvestigationTypeRequested.ToLower() == "tier 1c" && U.Utilities.validchildcare(b.TaskOrderDeliveryOrder) == true && b.ContractorType.ToLower() == "child care"), () =>
+            When(b => (b.InvestigationTypeRequested.ToLower() == "tier 1c" || b.ContractorType.ToLower() == "child care" || b.SponsoringOfficeSymbol.ToLower() == "pmc" || b.SponsoringMajorOrg.ToLower() == "p" || U.Utilities.validchildcare(b.TaskOrderDeliveryOrder) == true), () =>
                 {
                     //Ensure type contractor is child care when investigation type requested is tier 1C
                     When(b => b.InvestigationTypeRequested == "Tier 1C", () =>
