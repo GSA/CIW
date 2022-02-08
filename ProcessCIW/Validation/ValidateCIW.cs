@@ -549,12 +549,12 @@ namespace ProcessCIW.Validation
                     .NotEmpty()
                     .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Required Field");
 
-                When(b => MatchedEASiData(b.TaskOrderDeliveryOrder) == true, () =>
-                {
-                    RuleFor(b => b)
-                          .Must(b => b.InvestigationTypeRequested.ToLower() != "tier 1c" && b.SponsoringOfficeSymbol.ToLower() != "pmc" && b.ContractorType.ToLower() != "child care" && U.Utilities.validchildcare(b.TaskOrderDeliveryOrder) == false)
-                          .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Provided contract number is not a valid childcare contract");
-                });
+                //When(b => MatchedEASiData(b.TaskOrderDeliveryOrder) == true, () =>
+                //{
+                //    RuleFor(b => b)
+                //          .Must(b => b.InvestigationTypeRequested.ToLower() != "tier 1c" && b.SponsoringOfficeSymbol.ToLower() != "pmc" && b.ContractorType.ToLower() != "child care" && U.Utilities.validchildcare(b.TaskOrderDeliveryOrder) == false)
+                //          .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Provided contract number is not a valid childcare contract");
+                //});
 
 
                 When(b => (b.InvestigationTypeRequested.ToLower() != "tier 1c" && b.SponsoringOfficeSymbol.ToLower() != "pmc" && U.Utilities.validchildcare(b.TaskOrderDeliveryOrder) == false), () =>
@@ -600,8 +600,8 @@ namespace ProcessCIW.Validation
                             .Equal("p")
                             .WithMessage("Sponsoring Major Org: Child care workers must have major org P");
 
-                        RuleFor(building => building.TaskOrderDeliveryOrder)
-                            .Matches(@"^(\d{4})$")
+                        RuleFor(b => b)
+                            .Must(b => MatchedEASiData(b.TaskOrderDeliveryOrder) == false && U.Utilities.validchildcare(b.TaskOrderDeliveryOrder) == true && b.SponsoringOfficeSymbol.ToLower() == "pmc" && b.ContractorType.ToLower() == "child care")
                             .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Provided contract number is not a valid childcare contract");
                     });
 
@@ -622,7 +622,7 @@ namespace ProcessCIW.Validation
                             .Equal("p")
                             .WithMessage("Sponsoring Major Org: Office Symbol PMC can only be associated with Sponsoring Major Org P");
 
-                        RuleFor(building => building.TaskOrderDeliveryOrder)
+                        RuleFor(building => building.TaskOrderDeliveryOrder )
                             .Matches(@"^(\d{4})$")
                             .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: Office Symbol PMC can only be associated with childcare contracts.");
                     });
