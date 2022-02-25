@@ -197,20 +197,10 @@ namespace ProcessCIW
                                 log.Info(String.Format("{0} inserted with id {1}", ciwInformation.FullNameForLog, personID));
                                 int contractID = 0;
 
-                                if (ciwInformation.ContractorType == "Child Care" || ciwInformation.InvestigationTypeRequested == "Tier 1C")
-                                {
-                                    log.Info(String.Format("Inserting/Retrieving Child Care/Tier 1C contract header"));
+                                log.Info(String.Format("Updating matched EASi contract header {0} with start date of {1} and end date {2}", ciwInformation.TaskOrderDeliveryOrder, ciwInformation.ContractStartDate, ciwInformation.ContractEndDate));
 
-                                    //Insert Contract header of child care worker or tier 1C and assign return value to contractID
-                                    contractID = InsertContractHeaderChildCare(cmd, "CIW_InsertContractHeader_ChildCare");
-                                }
-                                else
-                                {
-                                    log.Info(String.Format("Updating matched EASi contract header {0} with start date of {1} and end date {2}", ciwInformation.TaskOrderDeliveryOrder, ciwInformation.ContractStartDate, ciwInformation.ContractEndDate));
-
-                                    //Insert Contract header and assign return value to contractID
-                                    contractID = UpdateMatchedEASiContractHeader(cmd, "CIW_UpdateContractHeader");
-                                }
+                                //Insert Contract header and assign return value to contractID
+                                contractID = UpdateMatchedEASiContractHeader(cmd, "CIW_UpdateContractHeader");
 
                                 //Continue on success
                                 if (contractID > 0)
@@ -316,20 +306,20 @@ namespace ProcessCIW
                                 log.Info(String.Format("{0} inserted with id {1}", ciwInformation.FullNameForLog, personID));
                                 int contractID = 0;
 
-                                //if (ciwInformation.ContractorType == "Child Care" || ciwInformation.InvestigationTypeRequested == "Tier 1C")
-                                //{
-                                //    log.Info(String.Format("Inserting/Retrieving Child Care/Tier 1C contract header"));
+                                if (ciwInformation.ContractorType == "Child Care" || ciwInformation.InvestigationTypeRequested == "Tier 1C")
+                                {
+                                    log.Info(String.Format("Inserting Child Care/Tier 1C contract header"));
 
-                                //    //Insert Contract header of child care worker or tier 1C and assign return value to contractID
-                                //    contractID = InsertContractHeaderChildCare(cmd, "CIW_InsertContractHeader_ChildCare");
-                                //}
-                                //else
-                                //{
-                                log.Info(String.Format("Inserting contract header {0} with start date of {1} and end date {2}", ciwInformation.TaskOrderDeliveryOrder, ciwInformation.ContractStartDate, ciwInformation.ContractEndDate));
+                                    //Insert Contract header of child care worker or tier 1C and assign return value to contractID
+                                    contractID = InsertContractHeaderChildCare(cmd, "CIW_InsertContractHeader_ChildCare");
+                                }
+                                else
+                                {
+                                    log.Info(String.Format("Inserting contract header {0} with start date of {1} and end date {2}", ciwInformation.TaskOrderDeliveryOrder, ciwInformation.ContractStartDate, ciwInformation.ContractEndDate));
 
-                                //Insert Contract header and assign return value to contractID
-                                contractID = InsertContractHeader(cmd, "CIW_InsertContractHeader");
-                                //}
+                                    //Insert Contract header and assign return value to contractID
+                                    contractID = InsertContractHeader(cmd, "CIW_InsertContractHeader");
+                                }
 
                                 //Continue on success
                                 if (contractID > 0)
