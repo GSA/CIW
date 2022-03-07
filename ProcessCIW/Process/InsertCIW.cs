@@ -414,7 +414,7 @@ namespace ProcessCIW
 
                     //Section 1 - Row 2
                     new MySqlParameter { ParameterName = "oPersSSN", Value = ciwInformation.SocialSecurityNumber, MySqlDbType = MySqlDbType.VarChar, Size = 9, Direction = ParameterDirection.Input },
-                    new MySqlParameter { ParameterName = "strBirthDate", Value = ciwInformation.DateOfBirth , MySqlDbType = MySqlDbType.VarChar, Size = 10, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "strBirthDate", Value = ciwInformation.DateOfBirth , MySqlDbType = MySqlDbType.Date, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersBirthCity", Value = ciwInformation.PlaceOfBirthCity , MySqlDbType = MySqlDbType.VarChar, Size = 50, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersBirthCountry", Value = ciwInformation.PlaceOfBirthCountry , MySqlDbType = MySqlDbType.VarChar, Size = 2, Direction = ParameterDirection.Input },
 
