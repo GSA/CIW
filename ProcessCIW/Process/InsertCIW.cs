@@ -87,10 +87,10 @@ namespace ProcessCIW
                                 }
                                 else
                                 {
-                                    log.Info(String.Format("Inserting/Updating contract header {0} with start date of {1} and end date {2}", ciwInformation.TaskOrderDeliveryOrder, ciwInformation.ContractStartDate, ciwInformation.ContractEndDate));
+                                    log.Info(String.Format("Updating matched GCIMS contract header {0} with start date of {1} and end date {2}", ciwInformation.TaskOrderDeliveryOrder, ciwInformation.ContractStartDate, ciwInformation.ContractEndDate));
 
                                     //Insert Contract header and assign return value to contractID
-                                    contractID = InsertOrUpdateContractHeader(cmd, "CIW_InsertOrUpdateContractHeader");
+                                    contractID = UpdateMacthedGCIMSContractHeader(cmd, "CIW_UpdateContractHeader");
                                 }
 
                                 //Continue on success
@@ -156,6 +156,235 @@ namespace ProcessCIW
             }
         }
 
+        public int SaveCIWMatchedEasi()
+        {
+            try
+            {
+                using (conn)
+                {
+                    conn.Open();
+
+                    trans = conn.BeginTransaction();
+
+                    //Should auto rollback if it fails
+                    using (cmd)
+                    {
+                        int personID = 0;
+
+                        cmd = conn.CreateCommand();
+
+                        cmd.Connection = conn;
+                        cmd.Transaction = trans;
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        using (trans)
+                        {
+                            log.Info(String.Format("Inserting user {0}", ciwInformation.FullNameForLog));
+
+                            //Call stored procedure "CIW_InsertPerson" and assign to personID
+                            personID = InsertNewUser(cmd, "CIW_InsertPerson");
+
+                            if (personID == 0)
+                            {
+                                //Rollback on failure
+                                trans.Rollback();
+                                return 0;
+                            }
+
+                            //Continue on success
+                            if (personID > 0)
+                            {
+                                log.Info(String.Format("{0} inserted with id {1}", ciwInformation.FullNameForLog, personID));
+                                int contractID = 0;
+
+                                log.Info(String.Format("Updating matched EASi contract header {0} with start date of {1} and end date {2}", ciwInformation.TaskOrderDeliveryOrder, ciwInformation.ContractStartDate, ciwInformation.ContractEndDate));
+
+                                //Insert Contract header and assign return value to contractID
+                                contractID = UpdateMatchedEASiContractHeader(cmd, "CIW_UpdateContractHeader");
+
+                                //Continue on success
+                                if (contractID > 0)
+                                {
+                                    log.Info(string.Format("Contract Id is {0}", contractID));
+                                    int rows = 0;
+
+                                    //Associate person with contract
+                                    rows = AssignContract(cmd, "CIW_InsertContractPerson", personID, contractID);
+
+                                    if (rows > 0)
+                                    {
+                                        log.Info(String.Format("Successfully associated contract {0} to {1}", ciwInformation.TaskOrderDeliveryOrder, ciwInformation.FullNameForLog));
+
+                                        log.Info(String.Format("Begin inserting {0} vendor POC('s)", ciwInformation.VendorPOC.Count));
+                                        foreach (var POC in ciwInformation.VendorPOC)
+                                        {
+                                            log.Info(String.Format("Inserting vendorPOC {0} {1} with Email:{2}", POC.FirstName, POC.LastName, POC.EMail));
+
+                                            //Insert VendorPOC's by iterating through collection of vendors
+                                            InsertVendorPOC(cmd, "CIW_InsertVendorPOC", personID, contractID, POC.FirstName, POC.LastName, POC.WorkPhone, POC.EMail);
+
+                                        }
+
+                                        log.Info(String.Format("Begin inserting {0} GSA POC('s)", ciwInformation.GSAPOC.Count));
+                                        foreach (var GSAPOC in ciwInformation.GSAPOC)
+                                        {
+                                            log.Info(String.Format("Adding GSAPOC with Email:{0}", GSAPOC.EMail));
+
+                                            //Insert GSAPOC's by iterating through collection of POC's
+                                            InsertPMPOC(cmd, "CIW_InsertPMPOC", personID, contractID, GSAPOC.EMail, GSAPOC.IsPM_COR_CO_CS);
+                                        }
+                                    }
+                                }
+                            }
+
+                            trans.Commit();
+
+                            return personID;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error(String.Format("Insert failed:{0}", ex.Message));
+
+                try
+                {
+                    trans.Rollback();
+                }
+                catch (Exception ex2)
+                {
+                    log.Error(String.Format("Rollback failed:{0}", ex2.Message));
+                }
+
+                return 0;
+            }
+            finally
+            {
+                conn.Close();
+            }
+        }
+
+        public int SaveNewCIW()
+        {
+            try
+            {
+                using (conn)
+                {
+                    conn.Open();
+
+                    trans = conn.BeginTransaction();
+
+                    //Should auto rollback if it fails
+                    using (cmd)
+                    {
+                        int personID = 0;
+
+                        cmd = conn.CreateCommand();
+
+                        cmd.Connection = conn;
+                        cmd.Transaction = trans;
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        using (trans)
+                        {
+                            log.Info(String.Format("Inserting user {0}", ciwInformation.FullNameForLog));
+
+                            //Call stored procedure "CIW_InsertPerson" and assign to personID
+                            personID = InsertNewUser(cmd, "CIW_InsertPerson");
+
+                            if (personID == 0)
+                            {
+                                //Rollback on failure
+                                trans.Rollback();
+                                return 0;
+                            }
+
+                            //Continue on success
+                            if (personID > 0)
+                            {
+                                log.Info(String.Format("{0} inserted with id {1}", ciwInformation.FullNameForLog, personID));
+                                int contractID = 0;
+
+                                if (ciwInformation.ContractorType == "Child Care" || ciwInformation.InvestigationTypeRequested == "Tier 1C")
+                                {
+                                    log.Info(String.Format("Inserting Child Care/Tier 1C contract header"));
+
+                                    //Insert Contract header of child care worker or tier 1C and assign return value to contractID
+                                    contractID = InsertContractHeaderChildCare(cmd, "CIW_InsertContractHeader_ChildCare");
+                                }
+                                else
+                                {
+                                    log.Info(String.Format("Inserting contract header {0} with start date of {1} and end date {2}", ciwInformation.TaskOrderDeliveryOrder, ciwInformation.ContractStartDate, ciwInformation.ContractEndDate));
+
+                                    //Insert Contract header and assign return value to contractID
+                                    contractID = InsertContractHeader(cmd, "CIW_InsertContractHeader");
+                                }
+
+                                //Continue on success
+                                if (contractID > 0)
+                                {
+                                    log.Info(string.Format("Contract Id is {0}", contractID));
+                                    int rows = 0;
+
+                                    //Associate person with contract
+                                    rows = AssignContract(cmd, "CIW_InsertContractPerson", personID, contractID);
+
+                                    if (rows > 0)
+                                    {
+                                        log.Info(String.Format("Successfully associated contract {0} to {1}", ciwInformation.TaskOrderDeliveryOrder, ciwInformation.FullNameForLog));
+
+                                        log.Info(String.Format("Begin inserting {0} vendor POC('s)", ciwInformation.VendorPOC.Count));
+                                        foreach (var POC in ciwInformation.VendorPOC)
+                                        {
+                                            log.Info(String.Format("Inserting vendorPOC {0} {1} with Email:{2}", POC.FirstName, POC.LastName, POC.EMail));
+
+                                            //Insert VendorPOC's by iterating through collection of vendors
+                                            InsertVendorPOC(cmd, "CIW_InsertNewVendorPOC", personID, contractID, POC.FirstName, POC.LastName, POC.WorkPhone, POC.EMail);
+
+                                        }
+
+                                        log.Info(String.Format("Begin inserting {0} GSA POC('s)", ciwInformation.GSAPOC.Count));
+                                        foreach (var GSAPOC in ciwInformation.GSAPOC)
+                                        {
+                                            log.Info(String.Format("Adding GSAPOC with Email:{0}", GSAPOC.EMail));
+
+                                            //Insert GSAPOC's by iterating through collection of POC's
+                                            InsertGSAPOC(cmd, "CIW_InsertNewGSAPOC", personID, contractID, GSAPOC.EMail, GSAPOC.IsPM_COR_CO_CS);
+                                        }
+                                    }
+                                }
+                            }
+
+                            trans.Commit();
+
+                            return personID;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error(String.Format("Insert failed:{0}", ex.Message));
+
+                try
+                {
+                    trans.Rollback();
+                }
+                catch (Exception ex2)
+                {
+                    log.Error(String.Format("Rollback failed:{0}", ex2.Message));
+                }
+
+                return 0;
+            }
+            finally
+            {
+                conn.Close();
+            }
+        }
+
+
         /// <summary>
         /// Function that calls stored procedure for inserting a user
         /// </summary>
@@ -184,17 +413,17 @@ namespace ProcessCIW
                     new MySqlParameter { ParameterName = "oPersGender", Value = ciwInformation.Sex, MySqlDbType = MySqlDbType.VarChar, Size = 1, Direction = ParameterDirection.Input },
 
                     //Section 1 - Row 2
-                    new MySqlParameter { ParameterName = "oPersSSN", Value = ciwInformation.SocialSecurityNumber, MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "oPersSSN", Value = ciwInformation.SocialSecurityNumber, MySqlDbType = MySqlDbType.VarChar, Size = 9, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "strBirthDate", Value = ciwInformation.DateOfBirth , MySqlDbType = MySqlDbType.Date, Direction = ParameterDirection.Input },
-                    new MySqlParameter { ParameterName = "oPersBirthCity", Value = ciwInformation.PlaceOfBirthCity , MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
-                    new MySqlParameter { ParameterName = "oPersBirthCountry", Value = ciwInformation.PlaceOfBirthCountry , MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "oPersBirthCity", Value = ciwInformation.PlaceOfBirthCity , MySqlDbType = MySqlDbType.VarChar, Size = 50, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "oPersBirthCountry", Value = ciwInformation.PlaceOfBirthCountry , MySqlDbType = MySqlDbType.VarChar, Size = 2, Direction = ParameterDirection.Input },
 
                     //Use POB:State or POB:MexCan if State is null or empty
-                    new MySqlParameter { ParameterName = "oPersBirthState", Value = FieldPicker(ciwInformation.PlaceOfBirthState, ciwInformation.PlaceOfBirthMexicoCanada), MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "oPersBirthState", Value = FieldPicker(ciwInformation.PlaceOfBirthState, ciwInformation.PlaceOfBirthMexicoCanada), MySqlDbType = MySqlDbType.VarChar, Size = 2, Direction = ParameterDirection.Input },
 
                     //Section 1 - Row 3
-                    new MySqlParameter { ParameterName = "oPersHomeAddr1", Value = ciwInformation.HomeAddressOne , MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
-                    new MySqlParameter { ParameterName = "oPersHomeAddr2", Value = ciwInformation.HomeAddressTwo , MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "oPersHomeAddr1", Value = ciwInformation.HomeAddressOne , MySqlDbType = MySqlDbType.VarChar, Size = 60, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "oPersHomeAddr2", Value = ciwInformation.HomeAddressTwo , MySqlDbType = MySqlDbType.VarChar, Size = 60, Direction = ParameterDirection.Input },
 
                     //Section 1 - Row 4
                     new MySqlParameter { ParameterName = "oPersHomeCity", Value = ciwInformation.HomeAddressCity , MySqlDbType = MySqlDbType.VarChar, Size = 50, Direction = ParameterDirection.Input },
@@ -208,7 +437,7 @@ namespace ProcessCIW
                     //Section 1 - Row 5
                     new MySqlParameter { ParameterName = "oPersWorkCell", Value = FormatPhoneNumber(ciwInformation.PhoneNumberWorkCell) , MySqlDbType = MySqlDbType.VarChar, Size = 22, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersWorkPhone", Value = FormatPhoneNumber(ciwInformation.PhoneNumberWork) , MySqlDbType = MySqlDbType.VarChar, Size = 22, Direction = ParameterDirection.Input },
-                    new MySqlParameter { ParameterName = "oPersHomeEmail", Value = ciwInformation.PersonalEmailAddress , MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "oPersHomeEmail", Value = ciwInformation.PersonalEmailAddress , MySqlDbType = MySqlDbType.VarChar, Size = 60, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersJobTitle", Value = ciwInformation.PositionJobTitle , MySqlDbType = MySqlDbType.VarChar, Size = 60, Direction = ParameterDirection.Input },
 
                     //Section 1 - Row 6
@@ -218,9 +447,9 @@ namespace ProcessCIW
                     new MySqlParameter { ParameterName = "oPersIsCitizen", Value = ConvertYesNo(ciwInformation.Citizen) , MySqlDbType = MySqlDbType.Byte, Direction = ParameterDirection.Input },
 
                     //Section 1 - Row 7
-                    new MySqlParameter { ParameterName = "oPersForeignPOE", Value = ciwInformation.PortOfEntryUSCityAndState , MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
-                    new MySqlParameter { ParameterName = "oPersForeignDOE", Value = ciwInformation.DateOfEntry == String.Empty ? (object)DBNull.Value : ciwInformation.DateOfEntry, MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
-                    new MySqlParameter { ParameterName = "oPersForeignRegistration", Value = ciwInformation.AlienRegistrationNumber , MySqlDbType = MySqlDbType.TinyBlob, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "oPersForeignPOE", Value = ciwInformation.PortOfEntryUSCityAndState , MySqlDbType = MySqlDbType.VarChar, Size = 60, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "oPersForeignDOE", Value = ciwInformation.DateOfEntry == String.Empty ? (object)DBNull.Value : ciwInformation.DateOfEntry, MySqlDbType = MySqlDbType.VarChar, Size = 10, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "oPersForeignRegistration", Value = ciwInformation.AlienRegistrationNumber , MySqlDbType = MySqlDbType.VarChar, Size = 60, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersCitizenCountry", Value = ciwInformation.CitzenshipCountry , MySqlDbType = MySqlDbType.VarChar, Size = 2, Direction = ParameterDirection.Input },
 
                     //Section 3
@@ -276,7 +505,7 @@ namespace ProcessCIW
         /// <param name="cmd"></param>
         /// <param name="storedProcedure"></param>
         /// <returns>Contract ID</returns>
-        private int InsertOrUpdateContractHeader(MySqlCommand cmd, string storedProcedure)
+        private int UpdateMacthedGCIMSContractHeader(MySqlCommand cmd, string storedProcedure)
         {
             cmd.CommandText = storedProcedure;
             cmd.Parameters.Clear();
@@ -304,7 +533,79 @@ namespace ProcessCIW
             cmd.ExecuteNonQuery();
 
             //Returns the Contract ID
-            log.Info(String.Format("InsertOrUpdateContractHeader completed with ContractId:{0} and SqlException:{1}", cmd.Parameters["ContractID"].Value, cmd.Parameters["SQLExceptionWarning"].Value));
+            log.Info(String.Format("Update Matched GCIMS ContractHeader completed with ContractId:{0} and SqlException:{1}", cmd.Parameters["ContractID"].Value, cmd.Parameters["SQLExceptionWarning"].Value));
+
+            return (int)cmd.Parameters["ContractID"].Value;
+        }
+
+        /// <summary>
+        /// Function that calls stored procedure to update a contract
+        /// </summary>
+        /// <param name="cmd"></param>
+        /// <param name="storedProcedure"></param>
+        /// <returns>Contract ID</returns>
+        private int UpdateMatchedEASiContractHeader(MySqlCommand cmd, string storedProcedure)
+        {
+            cmd.CommandText = storedProcedure;
+            cmd.Parameters.Clear();
+
+            MySqlParameter[] ContractHeaderParameters = new MySqlParameter[]
+                {
+                   
+                    new MySqlParameter { ParameterName = "ContractNumber", Value = ciwInformation.TaskOrderDeliveryOrder, MySqlDbType = MySqlDbType.VarChar, Size=45, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "ContractDateStart", Value = string.Format("{0:yyyy-MM-dd}", ciwInformation.ContractStartDate) , MySqlDbType = MySqlDbType.Date, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "ContractDateEnd", Value = string.Format("{0:yyyy-MM-dd}", ciwInformation.ContractEndDate) , MySqlDbType = MySqlDbType.Date, Direction = ParameterDirection.Input },             
+                    new MySqlParameter { ParameterName = "UploaderID", Value = uploaderID, MySqlDbType=MySqlDbType.Int32, Direction = ParameterDirection.Input },
+
+                    new MySqlParameter { ParameterName = "ContractID", MySqlDbType=MySqlDbType.Int32, Direction = ParameterDirection.Output },
+                    new MySqlParameter { ParameterName = "SQLExceptionWarning", MySqlDbType=MySqlDbType.VarChar, Size=4000, Direction = ParameterDirection.Output },
+                };
+
+            cmd.Parameters.AddRange(ContractHeaderParameters);
+
+            cmd.ExecuteNonQuery();
+
+            //Returns the Contract ID
+            log.Info(String.Format("Update Matched EASi ContractHeader completed with ContractId:{0} and SqlException:{1}", cmd.Parameters["ContractID"].Value, cmd.Parameters["SQLExceptionWarning"].Value));
+
+            return (int)cmd.Parameters["ContractID"].Value;
+        }
+
+        /// <summary>
+        /// Function that calls stored procedure to update a contract
+        /// </summary>
+        /// <param name="cmd"></param>
+        /// <param name="storedProcedure"></param>
+        /// <returns>Contract ID</returns>
+        private int InsertContractHeader(MySqlCommand cmd, string storedProcedure)
+        {
+            cmd.CommandText = storedProcedure;
+            cmd.Parameters.Clear();
+
+            MySqlParameter[] ContractHeaderParameters = new MySqlParameter[]
+                {
+                    new MySqlParameter { ParameterName = "ContractDUNSNumber", Value = ciwInformation.DataUniversalNumberingSystem, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "ContractTaskOrderNumber", Value = ciwInformation.ContractNumberType.Equals("Task Order/Delivery Order Number")?ciwInformation.TaskOrderDeliveryOrder:(object)DBNull.Value, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "ContractNumber", Value = ciwInformation.TaskOrderDeliveryOrder, MySqlDbType = MySqlDbType.VarChar, Size=45, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "ContractDateStart", Value = string.Format("{0:yyyy-MM-dd}", ciwInformation.ContractStartDate) , MySqlDbType = MySqlDbType.Date, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "ContractDateEnd", Value = string.Format("{0:yyyy-MM-dd}", ciwInformation.ContractEndDate) , MySqlDbType = MySqlDbType.Date, Direction = ParameterDirection.Input },
+
+                    new MySqlParameter { ParameterName = "ContractHasOptionYears", Value = ConvertYesNo(ciwInformation.HasOptionYears) , MySqlDbType = MySqlDbType.Bit, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "ContractNumOptionYrs", Value = ciwInformation.NumberOfOptionYears != "" ? ciwInformation.NumberOfOptionYears : "0" , MySqlDbType = MySqlDbType.Int64, Direction = ParameterDirection.Input },
+
+                    new MySqlParameter { ParameterName = "ContractCompanyName", Value = ciwInformation.CompanyName , MySqlDbType = MySqlDbType.VarChar, Size=96, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "UploaderID", Value = uploaderID, MySqlDbType=MySqlDbType.Int32, Direction = ParameterDirection.Input },
+
+                    new MySqlParameter { ParameterName = "ContractID", MySqlDbType=MySqlDbType.Int32, Direction = ParameterDirection.Output },
+                    new MySqlParameter { ParameterName = "SQLExceptionWarning", MySqlDbType=MySqlDbType.VarChar, Size=4000, Direction = ParameterDirection.Output },
+                };
+
+            cmd.Parameters.AddRange(ContractHeaderParameters);
+
+            cmd.ExecuteNonQuery();
+
+            //Returns the Contract ID
+            log.Info(String.Format("Insert ContractHeader completed with ContractId:{0} and SqlException:{1}", cmd.Parameters["ContractID"].Value, cmd.Parameters["SQLExceptionWarning"].Value));
 
             return (int)cmd.Parameters["ContractID"].Value;
         }
@@ -448,6 +749,44 @@ namespace ProcessCIW
             cmd.ExecuteNonQuery();
 
             log.Info(String.Format("InsertGSAPOC completed with Result:{0} and SqlException:{1}", cmd.Parameters["Result"].Value, cmd.Parameters["SQLExceptionWarning"].Value));
+
+            //Returns 'Result' from stored procedure that indicates number of rows affected
+            return (int)cmd.Parameters["Result"].Value;
+
+        }
+
+        /// <summary>
+        /// Calls stored procedure that inserts GSAPOC's
+        /// </summary>
+        /// <param name="cmd"></param>
+        /// <param name="storedProcedure"></param>
+        /// <param name="personId"></param>
+        /// <param name="contractId"></param>
+        /// <param name="email"></param>
+        /// <param name="roleTypeId"></param>
+        /// <returns>Number of rows affected</returns>
+        private int InsertPMPOC(MySqlCommand cmd, string storedProcedure, int personId, int contractId, string email, string roleTypeId)
+        {
+            cmd.CommandText = storedProcedure;
+
+            cmd.Parameters.Clear();
+
+            MySqlParameter[] GSAPOCParameters = new MySqlParameter[]
+                {
+                    new MySqlParameter { ParameterName = "SponsorEmail", Value = email , MySqlDbType = MySqlDbType.VarChar, Size= 64, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "RoleTypeID", Value = GetRoleTypeNum(roleTypeId) , MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "PersID", Value =personId , MySqlDbType = MySqlDbType.Int64, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "ContractID", Value = contractId, MySqlDbType = MySqlDbType.Int32, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "UploaderID", Value = uploaderID, MySqlDbType=MySqlDbType.Int32, Direction = ParameterDirection.Input },
+
+                    new MySqlParameter { ParameterName = "Result", MySqlDbType=MySqlDbType.Int32, Direction = ParameterDirection.Output },
+                    new MySqlParameter { ParameterName = "SQLExceptionWarning", MySqlDbType=MySqlDbType.VarChar, Size=4000, Direction = ParameterDirection.Output },
+                };
+            cmd.Parameters.AddRange(GSAPOCParameters);
+
+            cmd.ExecuteNonQuery();
+
+            log.Info(String.Format("Insert PM POC completed with Result:{0} and SqlException:{1}", cmd.Parameters["Result"].Value, cmd.Parameters["SQLExceptionWarning"].Value));
 
             //Returns 'Result' from stored procedure that indicates number of rows affected
             return (int)cmd.Parameters["Result"].Value;
