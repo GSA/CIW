@@ -225,5 +225,72 @@ namespace ProcessCIW.Utilities
                 File.Delete(file);
             }
         }
+
+        /// <summary>
+        /// Checks if contract number follows nomenclature for fas contract
+        /// </summary>
+        /// <param name="contractnumber"></param>
+        /// <returns>Bool</returns>
+        public static bool validFAS(string contractnumber)
+        {
+            bool FASvalid = Regex.IsMatch(contractnumber, @"^(GS\d{2}[A-Z]\w{5})|(47Q[A-Z]{3}\d\d\w{5})|(CM\d{6}CT\d{4})|(DTTS\d{4}D\d{5})|(GS\d{2}\w\d{2}[A-Z]{3}\w{4})$");
+
+            if (FASvalid)
+            {
+                return true;
+            }
+            
+            else return false;
+            
+        }
+
+
+        public static bool validcontractnumber(string contractnumber)
+        {
+            bool ChildCarevalid = Regex.IsMatch(contractnumber, @"^(\d{4})$");
+            bool IAAvalid = Regex.IsMatch(contractnumber, @"^IAA\w*$");
+            bool MOUvalid = Regex.IsMatch(contractnumber, @"^MOU\w*$");
+            bool MOAvalid = Regex.IsMatch(contractnumber, @"^MOA\w*$");
+
+            if (ChildCarevalid || IAAvalid || MOUvalid || MOAvalid)
+            {
+                return true;
+            }
+
+            else return false;
+
+        }
+
+        public static bool validLeaseAndRandolphcontractnumber(string contractnumber)
+        {
+            bool Leasevalid = Regex.IsMatch(contractnumber, @"^[Ll](A[LKSZRAEP]|C[AOT]|D[EC]|F[LM]|G[AU]|HI|I[ADLN]|K[SY]|LA|M[ADEHINOPST]|N[CDEHJMVY]|O[HKR]|P[ARW]|RI|S[CD]|T[NX]|UT|V[AIT]|W[AIVY])(\d{5})$");
+            bool Randolphvalid = Regex.IsMatch(contractnumber, @"^(RS)(A[LKSZRAEP]|C[AOT]|D[EC]|F[LM]|G[AU]|HI|I[ADLN]|K[SY]|LA|M[ADEHINOPST]|N[CDEHJMVY]|O[HKR]|P[ARW]|RI|S[CD]|T[NX]|UT|V[AIT]|W[AIVY])(\d{4})([A-Z]{2,3})(\d*)$");
+            bool CreditUvalid = Regex.IsMatch(contractnumber, @"^(CU)(A[LKSZRAEP]|C[AOT]|D[EC]|F[LM]|G[AU]|HI|I[ADLN]|K[SY]|LA|M[ADEHINOPST]|N[CDEHJMVY]|O[HKR]|P[ARW]|RI|S[CD]|T[NX]|UT|V[AIT]|W[AIVY])(\d{4})$");
+            bool RevokeLicensevalid = Regex.IsMatch(contractnumber, @"^(RL)(\w)*$");
+
+
+            if (Leasevalid || Randolphvalid || CreditUvalid || RevokeLicensevalid)
+            {
+               
+                    return true;
+            }
+                else return false;
+
+        }
+
+        public static bool validchildcare(string contractnumber)
+        {
+           
+            bool ChildCarevalid = Regex.IsMatch(contractnumber, @"^(\d{4})$");
+
+            if (ChildCarevalid)
+            {
+                return true;
+            }
+
+            else return false;
+
+        }
+
     }
 }
