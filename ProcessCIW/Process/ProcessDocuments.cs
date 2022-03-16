@@ -15,6 +15,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Xml;
+using U = ProcessCIW.Utilities;
 
 namespace ProcessCIW
 {
@@ -522,54 +523,348 @@ class ProcessDocuments
 
             log.Info(String.Format("Company Name Primary is : {0}", !string.IsNullOrWhiteSpace(ciwInformation.FirstOrDefault().CompanyName) ? ciwInformation.FirstOrDefault().CompanyName : "No Company Name Primary"));
             log.Info(String.Format("Company Name Sub is : {0}", !string.IsNullOrWhiteSpace(ciwInformation.FirstOrDefault().CompanyNameSub) ? ciwInformation.FirstOrDefault().CompanyNameSub : "No Company Name Sub"));
-            log.Info(String.Format("Checking if form is valid for user {0}", ciwInformation.First().FullNameForLog));
 
-            
 
-            //Validation is called inside if statement
-            if (validate.IsFormValid(ciwInformation))
+            /// <summary>
+            /// check if it matches EASi data
+            /// </summary>
+            if (validate.MatchedEASiData(ciwInformation))
+            {
+                log.Info(String.Format("Check Contract Validation of EASi-synced Contract for user {0}", ciwInformation.First().FullNameForLog));
+                log.Info(String.Format("Checking if form is valid for user {0}", ciwInformation.First().FullNameForLog));
+                log.Info(String.Format("Checking if its investigation type is not Tier 1C and office symbor is not PMC for user {0}", ciwInformation.First().FullNameForLog));
+
+                if (validate.IsFormValid(ciwInformation) && ciwInformation.First().InvestigationTypeRequested.ToLower() != "tier 1c" && ciwInformation.First().SponsoringOfficeSymbol.ToLower() != "pmc" && ciwInformation.First().ContractorType.ToLower() != "child care")
+                {
+                    log.Info(String.Format("Form is valid for user {0}", ciwInformation.First().FullNameForLog));
+
+                    //Create object to begin insertion of ciw into database
+                    InsertCIW sd = new InsertCIW(ciwInformation.First(), fmd.UploaderPersID);
+
+                    int persID = 0;
+
+                    //Save the data
+                    log.Info(String.Format("Begin inserting Matched EASi Data for {0}", ciwInformation.First().FullNameForLog));
+                    persID = sd.SaveCIWMatchedEasi();
+
+                    //Begin sponsorship if successful
+                    if (persID > 0)
+                        sendEmails.SendSponsorshipEMail(persID);
+                    log.Info(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.successfully_processed, (int)ErrorCodes.successfully_processed));
+                    return (int)ErrorCodes.successfully_processed;
+                }
+                else return FormError(ciwInformation, validate, sendEmails);
+
+
+            }
+
+            /// <summary>
+            /// check contract validation if it is Child Care 
+            /// </summary>
+            else if (ciwInformation.First().InvestigationTypeRequested.ToLower() == "tier 1c" || ciwInformation.First().SponsoringOfficeSymbol.ToLower() == "pmc" || U.Utilities.validchildcare(ciwInformation.First().TaskOrderDeliveryOrder))
+            {
+                log.Info(String.Format("Check Contract Validation for {0} if it is Child Care", ciwInformation.First().FullNameForLog));
+
+                if (ciwInformation.First().InvestigationTypeRequested.ToLower() == "tier 1c" && ciwInformation.First().SponsoringOfficeSymbol.ToLower() == "pmc" && ciwInformation.First().SponsoringMajorOrg.ToLower() == "p" && U.Utilities.validchildcare(ciwInformation.First().TaskOrderDeliveryOrder))
+                {
+                    if (validate.MatchedContractNumber(ciwInformation.First().TaskOrderDeliveryOrder))
+                    {
+                        log.Info(String.Format("Checking if form is valid for user {0} if it matches contract number in GCIMS", ciwInformation.First().FullNameForLog));
+
+                        if (validate.IsFormValid(ciwInformation))
+                        {
+                            log.Info(String.Format("Form is valid for user {0}", ciwInformation.First().FullNameForLog));
+
+                            //Create object to begin insertion of ciw into database
+                            InsertCIW sd = new InsertCIW(ciwInformation.First(), fmd.UploaderPersID);
+
+                            int persID = 0;
+
+                            //Save the data
+                            log.Info(String.Format("Begin inserting CIW for {0}", ciwInformation.First().FullNameForLog));
+                            persID = sd.SaveCIW();
+
+                            //Begin sponsorship if successful
+                            if (persID > 0)
+                                sendEmails.SendSponsorshipEMail(persID);
+                            log.Info(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.successfully_processed, (int)ErrorCodes.successfully_processed));
+                            return (int)ErrorCodes.successfully_processed;
+                        }
+                        else return FormError(ciwInformation, validate, sendEmails);
+
+
+                    }
+                    else if (validate.IsFormValid(ciwInformation))
+                    {
+                        log.Info(String.Format("Form is valid for user {0}", ciwInformation.First().FullNameForLog));
+
+                        //Create object to begin insertion of ciw into database
+                        InsertCIW sd = new InsertCIW(ciwInformation.First(), fmd.UploaderPersID);
+
+                        int persID = 0;
+
+                        //Save the data
+                        log.Info(String.Format("Begin inserting New CIW for {0}", ciwInformation.First().FullNameForLog));
+                        persID = sd.SaveNewCIW();
+
+                        //Begin sponsorship if successful
+                        if (persID > 0)
+                            sendEmails.SendSponsorshipEMail(persID);
+                        log.Info(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.successfully_processed, (int)ErrorCodes.successfully_processed));
+                        return (int)ErrorCodes.successfully_processed;
+                    }
+                    else return FormError(ciwInformation, validate, sendEmails);
+
+                }
+                else if (validate.IsFormValid(ciwInformation))
+                {
+                    log.Info(String.Format("Form is valid for user {0}", ciwInformation.First().FullNameForLog));
+                    log.Info(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.successfully_processed, (int)ErrorCodes.successfully_processed));
+                    return (int)ErrorCodes.successfully_processed;
+                }
+                else return FormError(ciwInformation, validate, sendEmails);
+
+
+            }
+
+            /// <summary>
+            /// check if contract number follows nomenclature of any of the contract type
+            /// </summary>
+            else if (U.Utilities.validFAS(ciwInformation.First().TaskOrderDeliveryOrder))
+            {
+                log.Info(String.Format("Check Contract Validation of FAS Contract for {0}", ciwInformation.First().FullNameForLog));
+
+                if (validate.MatchedGCIMSData(ciwInformation))
+                {
+                    log.Info(String.Format("Check Contract Validation of FAS Contract for {0} if it matches contract in GSCIMS", ciwInformation.First().FullNameForLog));
+                    log.Info(String.Format("Checking if form is valid for user {0}", ciwInformation.First().FullNameForLog));
+
+                    if (validate.IsFormValid(ciwInformation))
+                    {
+                        log.Info(String.Format("Form is valid for user {0}", ciwInformation.First().FullNameForLog));
+
+                        //Create object to begin insertion of ciw into database
+                        InsertCIW sd = new InsertCIW(ciwInformation.First(), fmd.UploaderPersID);
+
+                        int persID = 0;
+
+                        //Save the data
+                        log.Info(String.Format("Begin inserting CIW for {0}", ciwInformation.First().FullNameForLog));
+                        persID = sd.SaveCIW();
+
+                        //Begin sponsorship if successful
+                        if (persID > 0)
+                            sendEmails.SendSponsorshipEMail(persID);
+                        log.Info(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.successfully_processed, (int)ErrorCodes.successfully_processed));
+                        return (int)ErrorCodes.successfully_processed;
+                    }
+                    else return FormError(ciwInformation, validate, sendEmails);
+                }
+                else
+                {
+                    log.Info(String.Format("Checking if the major org is q for user {0}", ciwInformation.First().FullNameForLog));
+                    log.Info(String.Format("Checking if form is valid for user {0}", ciwInformation.First().FullNameForLog));
+
+                    if (validate.IsFormValid(ciwInformation))
+                    {
+                        log.Info(String.Format("Form is valid for user {0}", ciwInformation.First().FullNameForLog));
+
+                        //Create object to begin insertion of ciw into database
+                        InsertCIW sd = new InsertCIW(ciwInformation.First(), fmd.UploaderPersID);
+
+                        int persID = 0;
+
+                        //Save the data
+                        log.Info(String.Format("Begin inserting CIW for {0}", ciwInformation.First().FullNameForLog));
+                        persID = sd.SaveNewCIW();
+
+                        //Begin sponsorship if successful
+                        if (persID > 0)
+                            sendEmails.SendSponsorshipEMail(persID);
+                        log.Info(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.successfully_processed, (int)ErrorCodes.successfully_processed));
+                        return (int)ErrorCodes.successfully_processed;
+                    }
+                    else return FormError(ciwInformation, validate, sendEmails);
+
+                }
+
+
+            }
+            else if (U.Utilities.validLeaseAndRandolphcontractnumber(ciwInformation.First().TaskOrderDeliveryOrder))
+            {
+                log.Info(String.Format("Check Contract Validation of NON-FAS Contract for {0} if contract number match nomenclature of Lease, Revokable License, Credit Union, or Randolph Sheppard", ciwInformation.First().FullNameForLog));
+
+                if (ciwInformation.First().SponsoringMajorOrg.ToLower() == "p")
+                {
+                    if (validate.MatchedGCIMSData(ciwInformation))
+                    {
+                        log.Info(String.Format("Checking if form is valid for user {0} if it matches contract in GCIMS", ciwInformation.First().FullNameForLog));
+
+                        if (validate.IsFormValid(ciwInformation))
+                        {
+                            log.Info(String.Format("Form is valid for user {0}", ciwInformation.First().FullNameForLog));
+
+                            //Create object to begin insertion of ciw into database
+                            InsertCIW sd = new InsertCIW(ciwInformation.First(), fmd.UploaderPersID);
+
+                            int persID = 0;
+
+                            //Save the data
+                            log.Info(String.Format("Begin inserting CIW for {0}", ciwInformation.First().FullNameForLog));
+                            persID = sd.SaveCIW();
+
+                            //Begin sponsorship if successful
+                            if (persID > 0)
+                                sendEmails.SendSponsorshipEMail(persID);
+                            log.Info(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.successfully_processed, (int)ErrorCodes.successfully_processed));
+                            return (int)ErrorCodes.successfully_processed;
+                        }
+                        else return FormError(ciwInformation, validate, sendEmails);
+
+                    }
+                    else if (validate.IsFormValid(ciwInformation))
+                    {
+                        log.Info(String.Format("Form is valid for user {0}", ciwInformation.First().FullNameForLog));
+
+                        //Create object to begin insertion of ciw into database
+                        InsertCIW sd = new InsertCIW(ciwInformation.First(), fmd.UploaderPersID);
+
+                        int persID = 0;
+
+                        //Save the data
+                        log.Info(String.Format("Begin inserting New CIW for {0}", ciwInformation.First().FullNameForLog));
+                        persID = sd.SaveNewCIW();
+
+                        //Begin sponsorship if successful
+                        if (persID > 0)
+                            sendEmails.SendSponsorshipEMail(persID);
+                        log.Info(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.successfully_processed, (int)ErrorCodes.successfully_processed));
+                        return (int)ErrorCodes.successfully_processed;
+                    }
+                    else return FormError(ciwInformation, validate, sendEmails);
+                }
+                else if (validate.IsFormValid(ciwInformation))
+                {
+                    log.Info(String.Format("Form is valid for user {0}", ciwInformation.First().FullNameForLog));
+                    log.Info(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.successfully_processed, (int)ErrorCodes.successfully_processed));
+                    return (int)ErrorCodes.successfully_processed;
+                }
+                else return FormError(ciwInformation, validate, sendEmails);
+
+            }
+            else if (U.Utilities.validcontractnumber(ciwInformation.First().TaskOrderDeliveryOrder))
+            {
+                log.Info(String.Format("Check Contract Validation of NON-FAS Contract for {0} if contract number follows nomenclature of:Credit Union,Child Care, Credit Card Purchases,Concessions,or Vending", ciwInformation.First().FullNameForLog));
+
+                if (validate.MatchedGCIMSData(ciwInformation))
+                {
+                    log.Info(String.Format("Checking if form is valid for user {0} if it matches contract in GCIMS", ciwInformation.First().FullNameForLog));
+
+                    if (validate.IsFormValid(ciwInformation))
+                    {
+                        log.Info(String.Format("Form is valid for user {0}", ciwInformation.First().FullNameForLog));
+
+                        //Create object to begin insertion of ciw into database
+                        InsertCIW sd = new InsertCIW(ciwInformation.First(), fmd.UploaderPersID);
+
+                        int persID = 0;
+
+                        //Save the data
+                        log.Info(String.Format("Begin inserting CIW for {0}", ciwInformation.First().FullNameForLog));
+                        persID = sd.SaveCIW();
+
+                        //Begin sponsorship if successful
+                        if (persID > 0)
+                            sendEmails.SendSponsorshipEMail(persID);
+                        log.Info(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.successfully_processed, (int)ErrorCodes.successfully_processed));
+                        return (int)ErrorCodes.successfully_processed;
+                    }
+                    else return FormError(ciwInformation, validate, sendEmails);
+
+                }
+                else if (validate.IsFormValid(ciwInformation))
+                {
+                    log.Info(String.Format("Form is valid for user {0}", ciwInformation.First().FullNameForLog));
+
+                    //Create object to begin insertion of ciw into database
+                    InsertCIW sd = new InsertCIW(ciwInformation.First(), fmd.UploaderPersID);
+
+                    int persID = 0;
+
+                    //Save the data
+                    log.Info(String.Format("Begin inserting New CIW for {0}", ciwInformation.First().FullNameForLog));
+                    persID = sd.SaveNewCIW();
+
+                    //Begin sponsorship if successful
+                    if (persID > 0)
+                        sendEmails.SendSponsorshipEMail(persID);
+                    log.Info(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.successfully_processed, (int)ErrorCodes.successfully_processed));
+                    return (int)ErrorCodes.successfully_processed;
+                }
+                else return FormError(ciwInformation, validate, sendEmails);
+
+            }
+            else if(validate.MatchedGCIMSData(ciwInformation))
+            {
+                log.Info(String.Format("Checking if form is valid for user {0} if it matches contract in GCIMS", ciwInformation.First().FullNameForLog));
+
+                if (validate.IsFormValid(ciwInformation))
+                {
+                    log.Info(String.Format("Form is valid for user {0}", ciwInformation.First().FullNameForLog));
+
+                    //Create object to begin insertion of ciw into database
+                    InsertCIW sd = new InsertCIW(ciwInformation.First(), fmd.UploaderPersID);
+
+                    int persID = 0;
+
+                    //Save the data
+                    log.Info(String.Format("Begin inserting CIW for {0}", ciwInformation.First().FullNameForLog));
+                    persID = sd.SaveCIW();
+
+                    //Begin sponsorship if successful
+                    if (persID > 0)
+                        sendEmails.SendSponsorshipEMail(persID);
+                    log.Info(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.successfully_processed, (int)ErrorCodes.successfully_processed));
+                    return (int)ErrorCodes.successfully_processed;
+                }
+                else return FormError(ciwInformation, validate, sendEmails);
+
+            }
+            else if (validate.IsFormValid(ciwInformation))
             {
                 log.Info(String.Format("Form is valid for user {0}", ciwInformation.First().FullNameForLog));
-
-                //Create object to begin insertion of ciw into database
-                InsertCIW sd = new InsertCIW(ciwInformation.First(), fmd.UploaderPersID);
-
-                int persID = 0;
-
-                //Save the data
-                log.Info(String.Format("Begin inserting CIW for {0}", ciwInformation.First().FullNameForLog));
-                persID = sd.SaveCIW();
-
-                //Begin sponsorship if successful
-                if (persID > 0)
-                    sendEmails.SendSponsorshipEMail(persID);
                 log.Info(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.successfully_processed, (int)ErrorCodes.successfully_processed));
                 return (int)ErrorCodes.successfully_processed;
             }
-            else
-            {
-                log.Warn(String.Format("Form failed validation for user {0}", ciwInformation.First().FullNameForLog));
+            else return FormError(ciwInformation, validate, sendEmails);
 
-                //E-Mail Failure Template
-                //Send error email
-                Tuple<ValidationResult, ValidationResult, ValidationResult,
-                        ValidationResult, ValidationResult, ValidationResult> ValidationErrors = new Tuple<ValidationResult, ValidationResult, ValidationResult,
-                                                                                                            ValidationResult, ValidationResult, ValidationResult>(null, null,
-                                                                                                                                                                null, null, null, null);
+        }
 
-                log.Info(string.Format("Getting errors"));
 
-                ValidationErrors = validate.GetErrors();
+        private int FormError(List<CIW> ciwInformation, ValidateCIW validate,  CIWEMails sendEmails)
+        {
 
-                log.Info(string.Format("{0} errors returned", CountErrors(ValidationErrors)));
+            log.Warn(String.Format("Form failed validation for user {0}", ciwInformation.First().FullNameForLog));
 
-                //send error email which contains a list of each sections errors
-                sendEmails.SendErrors(ValidationErrors.Item1, ValidationErrors.Item2, ValidationErrors.Item3,
-                                       ValidationErrors.Item4, ValidationErrors.Item5, ValidationErrors.Item6);
-                log.Warn(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.failed_validation, (int)ErrorCodes.failed_validation));
+            //E-Mail Failure Template
+            //Send error email
+            Tuple<ValidationResult, ValidationResult, ValidationResult,
+                    ValidationResult, ValidationResult, ValidationResult> ValidationErrors = new Tuple<ValidationResult, ValidationResult, ValidationResult,
+                                                                                                        ValidationResult, ValidationResult, ValidationResult>(null, null,
+                                                                                                                                                            null, null, null, null);
 
-                return (int)ErrorCodes.failed_validation;
-            }
+            log.Info(string.Format("Getting errors"));
+
+            ValidationErrors = validate.GetErrors();
+
+            log.Info(string.Format("{0} errors returned", CountErrors(ValidationErrors)));
+
+            //send error email which contains a list of each sections errors
+            sendEmails.SendErrors(ValidationErrors.Item1, ValidationErrors.Item2, ValidationErrors.Item3,
+                                   ValidationErrors.Item4, ValidationErrors.Item5, ValidationErrors.Item6);
+            log.Warn(string.Format("Inserting error code {0}:{1} into upload table", ErrorCodes.failed_validation, (int)ErrorCodes.failed_validation));
+
+            return (int)ErrorCodes.failed_validation; ;
         }
 
         /// <summary>
