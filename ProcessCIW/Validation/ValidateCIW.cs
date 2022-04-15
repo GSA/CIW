@@ -540,8 +540,10 @@ namespace ProcessCIW.Validation
                 When(e => !(e.DataUniversalNumberingSystem.Equals("")), () =>
                 {
                     RuleFor(employee => employee.DataUniversalNumberingSystem)
-                        .Matches(@"^[0-9]{9,9}$")
-                        .WithMessage("DUNS Number: Invalid - should be only numeric and exactly 9 characters long");
+                        //.Matches(@"^[0-9]{9,9}$")
+                        //.WithMessage("DUNS Number: Invalid - should be only numeric and exactly 9 characters long");
+                        .Matches(@"^\d{9}|\w{12}$")
+                        .WithMessage("DUNS Number: Invalid - should be numeric OR alpha numeric and must be between 9 and 12 characters long");
                 });
 
                 // TO/DO
