@@ -542,7 +542,7 @@ namespace ProcessCIW.Validation
                     RuleFor(employee => employee.DataUniversalNumberingSystem)
                         //.Matches(@"^[0-9]{9,9}$")
                         //.WithMessage("DUNS Number: Invalid - should be only numeric and exactly 9 characters long");
-                        .Matches(@"^[1-9]{1}[0-9]{8}|^[0-9a-zA-Z]{12}$")
+                        .Matches(@"^[0-9]{9}|^[0-9a-zA-Z]{12}$")
                         .WithMessage("DUNS Number: Only 9-digit numbers or 12-character alphanumeric codes are accepted.");
                 });
 
