@@ -128,7 +128,7 @@ class ProcessDocuments
                     cmd.CommandText = "CIW_Unprocessed";
                     cmd.CommandType = CommandType.StoredProcedure;
 
-                    cmd.Parameters.Add("SQLExceptionWarning", MySqlDbType.VarChar, 4000);
+                    cmd.Parameters.Add("@SQLExceptionWarning", MySqlDbType.VarChar, 4000);
 
                     unprocessedFiles = cmd.ExecuteReader();
 
