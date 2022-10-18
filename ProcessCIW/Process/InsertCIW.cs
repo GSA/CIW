@@ -3,6 +3,7 @@ using ProcessCIW.Models;
 using System;
 using System.Configuration;
 using System.Data;
+using System.Globalization;
 using U = ProcessCIW.Utilities;
 
 namespace ProcessCIW
@@ -403,6 +404,8 @@ namespace ProcessCIW
             hashedSSNFull = u.HashSSN(ciwInformation.SocialSecurityNumber);
             hashedSSNFour = u.HashSSN(ciwInformation.SocialSecurityNumber.Substring(ciwInformation.SocialSecurityNumber.Length - 4));
 
+            DateTime Dob = DateTime.Parse(ciwInformation.DateOfBirth, CultureInfo.InvariantCulture);
+
             MySqlParameter[] UserParamters = new MySqlParameter[]
                 {
                     //section 1 row 1
@@ -414,7 +417,7 @@ namespace ProcessCIW
 
                     //Section 1 - Row 2
                     new MySqlParameter { ParameterName = "oPersSSN", Value = ciwInformation.SocialSecurityNumber, MySqlDbType = MySqlDbType.VarChar, Size = 9, Direction = ParameterDirection.Input },
-                    new MySqlParameter { ParameterName = "strBirthDate", Value = ciwInformation.DateOfBirth , MySqlDbType = MySqlDbType.Date, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "strBirthDate", Value = Dob, MySqlDbType = MySqlDbType.Date, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersBirthCity", Value = ciwInformation.PlaceOfBirthCity , MySqlDbType = MySqlDbType.VarChar, Size = 50, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "oPersBirthCountry", Value = ciwInformation.PlaceOfBirthCountry , MySqlDbType = MySqlDbType.VarChar, Size = 2, Direction = ParameterDirection.Input },
 
@@ -510,13 +513,16 @@ namespace ProcessCIW
             cmd.CommandText = storedProcedure;
             cmd.Parameters.Clear();
 
+            DateTime startDate = DateTime.Parse(ciwInformation.ContractStartDate, CultureInfo.InvariantCulture);
+            DateTime endDate = DateTime.Parse(ciwInformation.ContractEndDate, CultureInfo.InvariantCulture);
+
             MySqlParameter[] ContractHeaderParameters = new MySqlParameter[]
                 {
                     new MySqlParameter { ParameterName = "ContractDUNSNumber", Value = ciwInformation.DataUniversalNumberingSystem, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "ContractTaskOrderNumber", Value = ciwInformation.ContractNumberType.Equals("Task Order/Delivery Order Number")?ciwInformation.TaskOrderDeliveryOrder:(object)DBNull.Value, MySqlDbType = MySqlDbType.VarChar, Size = 45, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "ContractNumber", Value = ciwInformation.TaskOrderDeliveryOrder, MySqlDbType = MySqlDbType.VarChar, Size=45, Direction = ParameterDirection.Input },
-                    new MySqlParameter { ParameterName = "ContractDateStart", Value = string.Format("{0:yyyy-MM-dd}", ciwInformation.ContractStartDate) , MySqlDbType = MySqlDbType.Date, Direction = ParameterDirection.Input },
-                    new MySqlParameter { ParameterName = "ContractDateEnd", Value = string.Format("{0:yyyy-MM-dd}", ciwInformation.ContractEndDate) , MySqlDbType = MySqlDbType.Date, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "ContractDateStart", Value = startDate , MySqlDbType = MySqlDbType.Date, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "ContractDateEnd", Value = endDate , MySqlDbType = MySqlDbType.Date, Direction = ParameterDirection.Input },
 
                     new MySqlParameter { ParameterName = "ContractHasOptionYears", Value = ConvertYesNo(ciwInformation.HasOptionYears) , MySqlDbType = MySqlDbType.Bit, Direction = ParameterDirection.Input },
                     new MySqlParameter { ParameterName = "ContractNumOptionYrs", Value = ciwInformation.NumberOfOptionYears != "" ? ciwInformation.NumberOfOptionYears : "0" , MySqlDbType = MySqlDbType.Int64, Direction = ParameterDirection.Input },
@@ -549,12 +555,15 @@ namespace ProcessCIW
             cmd.CommandText = storedProcedure;
             cmd.Parameters.Clear();
 
+            DateTime startDate = DateTime.Parse(ciwInformation.ContractStartDate, CultureInfo.InvariantCulture);
+            DateTime endDate = DateTime.Parse(ciwInformation.ContractEndDate, CultureInfo.InvariantCulture);
+
             MySqlParameter[] ContractHeaderParameters = new MySqlParameter[]
                 {
                    
                     new MySqlParameter { ParameterName = "ContractNumber", Value = ciwInformation.TaskOrderDeliveryOrder, MySqlDbType = MySqlDbType.VarChar, Size=45, Direction = ParameterDirection.Input },
-                    new MySqlParameter { ParameterName = "ContractDateStart", Value = string.Format("{0:yyyy-MM-dd}", ciwInformation.ContractStartDate) , MySqlDbType = MySqlDbType.Date, Direction = ParameterDirection.Input },
-                    new MySqlParameter { ParameterName = "ContractDateEnd", Value = string.Format("{0:yyyy-MM-dd}", ciwInformation.ContractEndDate) , MySqlDbType = MySqlDbType.Date, Direction = ParameterDirection.Input },             
+                    new MySqlParameter { ParameterName = "ContractDateStart", Value = startDate, MySqlDbType = MySqlDbType.Date, Direction = ParameterDirection.Input },
+                    new MySqlParameter { ParameterName = "ContractDateEnd", Value = endDate, MySqlDbType = MySqlDbType.Date, Direction = ParameterDirection.Input },             
                     new MySqlParameter { ParameterName = "UploaderID", Value = uploaderID, MySqlDbType=MySqlDbType.Int32, Direction = ParameterDirection.Input },
 
                     new MySqlParameter { ParameterName = "ContractID", MySqlDbType=MySqlDbType.Int32, Direction = ParameterDirection.Output },
