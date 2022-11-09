@@ -15,7 +15,7 @@ namespace ProcessCIW.Mapping
             //Version
             Map(m => m.VersionNumber).Name(CIWConstants.VERSION_NUMBER).Default("V0");
 
-            //Map country names for use with fips lookups, append 2 to differentiate from previous versions
+            //Map country names for use with ISO lookups, append 2 to differentiate from previous versions
             Map(m => m.PlaceOfBirthCountryName).Name(CIWConstants.EMPLOYEE_PLACEOFBIRTHCOUNTRY + "2");
             Map(m => m.HomeCountryName).Name(CIWConstants.EMPLOYEE_COUNTRY + "2");
             Map(m => m.CitizenCountryName).Name(CIWConstants.EMPLOYEE_CITZENSHIPCOUNTRY + "2");

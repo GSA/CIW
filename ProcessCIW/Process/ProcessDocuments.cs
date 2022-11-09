@@ -52,19 +52,18 @@ class ProcessDocuments
             config.WillThrowOnMissingField = false;
             config.IsHeaderCaseSensitive = false;
             config.TrimFields = false;
-        }
-                
-        private DataSet GetFipsCodeFromCountryName(string placeOfBirthCountryName, string homeCountryName, string citizenshipCountryName)
+        }     
+        private DataSet GetISOCodeFromCountryName(string placeOfBirthCountryName, string homeCountryName, string citizenshipCountryName)
         {
             DataSet DS = new DataSet();
 
-            log.Info("Getting fips code from database");
+            log.Info("Getting ISO code from database");
             MySqlConnection conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["GCIMS"].ToString());
             try
             {
                 using (conn)
                 {                    
-                    using (MySqlCommand cmd = new MySqlCommand("uspGetFipsCode"))
+                    using (MySqlCommand cmd = new MySqlCommand("uspGetISOCode"))
                     {
                         using (MySqlDataAdapter DA = new MySqlDataAdapter(cmd))
                         {
@@ -88,7 +87,7 @@ class ProcessDocuments
 
                             if(DS.Tables[0].Rows.Count > 0 && DS.Tables[1].Rows.Count > 0 && DS.Tables[2].Rows.Count > 0)
                             {
-                                log.Info(String.Format("Get Fips code returned {0}, {1}, and {2}", DS.Tables[0].Rows[0].ItemArray[0].ToString(), DS.Tables[1].Rows[0].ItemArray[0].ToString(), DS.Tables[2].Rows[0].ItemArray[0].ToString()));
+                                log.Info(String.Format("Get ISO code returned {0}, {1}, and {2}", DS.Tables[0].Rows[0].ItemArray[0].ToString(), DS.Tables[1].Rows[0].ItemArray[0].ToString(), DS.Tables[2].Rows[0].ItemArray[0].ToString()));
                             }
                             else
                             {
@@ -431,7 +430,7 @@ class ProcessDocuments
             return ciwInformation.First().ContractorType == "Child Care" || ciwInformation.First().InvestigationTypeRequested == "Tier 1C";
         }
 
-        private void ApplyFipsCodes(ref List<CIW> ciw, DataSet ds)
+        private void ApplyISOCodes(ref List<CIW> ciw, DataSet ds)
         {
             ciw[0].PlaceOfBirthCountry = ds.Tables[0].Rows.Count > 0 ? ds.Tables[0].Rows[0].ItemArray[0].ToString() : string.Empty;
             ciw[0].HomeAddressCountry = ds.Tables[1].Rows.Count > 0 ? ds.Tables[1].Rows[0].ItemArray[0].ToString() : string.Empty;
@@ -459,9 +458,9 @@ class ProcessDocuments
             //Gets list of CIW's after mapping from csv files
             ciwInformation = GetFileData<CIW, CIWMapping>(fmd.TempFilePath, config);
 
-            DataSet fipsCodes = GetFipsCodeFromCountryName(ciwInformation[0].PlaceOfBirthCountryName, ciwInformation[0].HomeCountryName, ciwInformation[0].CitizenCountryName);
+            DataSet ISOCodes = GetISOCodeFromCountryName(ciwInformation[0].PlaceOfBirthCountryName, ciwInformation[0].HomeCountryName, ciwInformation[0].CitizenCountryName);
 
-            ApplyFipsCodes(ref ciwInformation, fipsCodes);
+            ApplyISOCodes(ref ciwInformation, ISOCodes);
 
             CIWEMails sendEmails = new CIWEMails(fmd.UploaderPersID, ciwInformation.First().FirstName, ciwInformation.First().MiddleName,
                                                  ciwInformation.First().LastName, ciwInformation.First().Suffix, Path.GetFileName(fmd.FilePath),
