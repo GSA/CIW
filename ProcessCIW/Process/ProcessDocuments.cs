@@ -129,6 +129,7 @@ class ProcessDocuments
                     cmd.CommandType = CommandType.StoredProcedure;
 
                     cmd.Parameters.Add("SQLExceptionWarning", MySqlDbType.VarChar, 4000);
+                    cmd.Parameters["SQLExceptionWarning"].Direction = ParameterDirection.Output;
 
                     unprocessedFiles = cmd.ExecuteReader();
 
