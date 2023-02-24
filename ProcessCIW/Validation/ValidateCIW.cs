@@ -309,7 +309,9 @@ namespace ProcessCIW.Validation
                     .NotEmpty()
                     .WithMessage("Personal E-Mail: Required Field")
                     .EmailAddress()
-                    .WithMessage("Personal E-Mail: Invalid E-Mail Address");
+                    .WithMessage("Personal E-Mail: Invalid E-Mail Address")
+                    .Matches(@"^[\w-\.]+@(((?!gsa).)+\.)+((?!gov).)*$")
+                    .WithMessage("Personal E-Mail: The email with government (.gov) domain is not allowed to be used for personal/home e-mail address");
 
             //Job Title
             RuleFor(employee => employee.PositionJobTitle)
