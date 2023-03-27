@@ -129,9 +129,9 @@ namespace ProcessCIW.Validation
             //Suffix
 
             //Gender
-            RuleFor(employee => employee.Sex)
+            /*RuleFor(employee => employee.Sex)
                     .NotEmpty()
-                    .WithMessage("Gender: Required Field");
+                    .WithMessage("Gender: Required Field");*/
 
             //Social Security Number (need to check for more than one)
             RuleFor(employee => employee.SocialSecurityNumber)
