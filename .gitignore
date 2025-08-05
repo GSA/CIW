@@ -159,3 +159,8 @@ $RECYCLE.BIN/
 # Mac desktop service store files
 .DS_Store
 /packages
+/.vs/ProcessCIW/CopilotIndices/17.14.939.21063
+/.vs/ProcessCIW/FileContentIndex
+/.vs/ProcessCIW/v17/DocumentLayout.backup.json
+/.vs/ProcessCIW/v17/DocumentLayout.json
+/ProcessCIW/.vs/ProcessCIW.csproj.dtbcache.json
