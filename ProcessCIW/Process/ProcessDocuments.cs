@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Xml;
@@ -45,13 +46,13 @@ class ProcessDocuments
         /// </summary>
         public ProcessDocuments()
         {
-            config = new CsvConfiguration();
+            config = new CsvConfiguration(CultureInfo.InvariantCulture);
 
             config.Delimiter = "||";
             config.HasHeaderRecord = true;
-            config.WillThrowOnMissingField = false;
-            config.IsHeaderCaseSensitive = false;
-            config.TrimFields = false;
+            config.MissingFieldFound = null;
+            config.PrepareHeaderForMatch = args => args.Header.ToLowerInvariant();
+            config.TrimOptions = TrimOptions.None;
         }
                 
         private DataSet GetFipsCodeFromCountryName(string placeOfBirthCountryName, string homeCountryName, string citizenshipCountryName)
@@ -920,7 +921,7 @@ class ProcessDocuments
         /// <returns>List of CIW's</returns>
         private List<TClass> GetFileData<TClass, TMap>(string filePath, CsvConfiguration config)
             where TClass : class
-            where TMap : CsvClassMap<TClass>
+            where TMap : ClassMap<TClass>
         {
             log.Info(string.Format("Parsing CSV file {0} and mapping to CIW object", filePath));
 
@@ -928,7 +929,7 @@ class ProcessDocuments
             {
                 using (CsvReader csvReader = new CsvReader(csvParser))
                 {
-                    csvReader.Configuration.RegisterClassMap<TMap>();
+                    csvReader.Context.RegisterClassMap<TMap>();
 
                     return csvReader.GetRecords<TClass>().ToList();
                 }

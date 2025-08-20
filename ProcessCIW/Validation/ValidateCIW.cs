@@ -97,7 +97,7 @@ namespace ProcessCIW.Validation
         /// </summary>
         public EmployeeValidator()
         {
-            ValidatorOptions.CascadeMode = CascadeMode.StopOnFirstFailure;
+            ValidatorOptions.Global.CascadeMode = CascadeMode.Stop;
 
             //Last Name
             RuleFor(employee => employee.LastName)
@@ -1189,7 +1189,7 @@ namespace ProcessCIW.Validation
             RuleSet("ValidGSARow1", () =>
             {
                 RuleFor(requestingOfficial => requestingOfficial.SponsorEmailAddress)
-                        .Cascade(FluentValidation.CascadeMode.StopOnFirstFailure)
+                        .Cascade(FluentValidation.CascadeMode.Stop)
                         .NotEmpty()
                         .WithMessage("Primary GSA Requesting Official E-Mail Address: Required Field")
                         .Matches(@"^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(gsa)(ig)?\.gov$")
@@ -1716,7 +1716,11 @@ namespace ProcessCIW.Validation
         {
             ContractorValidator validator = new ContractorValidator();
 
-            section2 = validator.Validate(ciwInformation.First(), ruleSet: "ValidFirstAndSecondRow,ValidPOCRow1,ValidPOCRow2,ValidPOCRow3,ValidPOCRow4,ValidPOCRow5");
+            section2 = validator.Validate(ciwInformation.First(), options =>
+            {
+                options.IncludeRuleSets("ValidFirstAndSecondRow", "ValidPOCRow1", "ValidPOCRow2", "ValidPOCRow3", "ValidPOCRow4", "ValidPOCRow5");
+
+            });
 
             if (section2.IsValid)
             {
@@ -1819,7 +1823,11 @@ namespace ProcessCIW.Validation
         {
             RequestingOfficialValidator validator = new RequestingOfficialValidator();
 
-            section6 = validator.Validate(ciwInformation.First(), ruleSet: "ValidGSARow1,ValidGSARow2,ValidGSARow3,ValidGSARow4,ValidGSARow5");
+            section6 = validator.Validate(ciwInformation.First(), options =>
+            {
+                options.IncludeRuleSets("ValidGSARow1", "ValidGSARow2", "ValidGSARow3", "ValidGSARow4", "ValidGSARow5");
+
+            });
 
             if (section6.IsValid)
             {
