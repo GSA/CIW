@@ -238,7 +238,7 @@ class ProcessDocuments
 
                 if (node != null)
                 {
-                    if (node.InnerText != "V1")
+                    if (node.InnerText != "V2")
                     {
                         //Begin exiting if wrong version
                         sendWrongVersion(fmd.UploaderPersID, fileNameHelper(fmd.FileName));
