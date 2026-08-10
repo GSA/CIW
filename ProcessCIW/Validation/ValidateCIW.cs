@@ -123,7 +123,7 @@ namespace ProcessCIW.Validation
                     .WithMessage("Full Middle Name(or NMN if none): exceeds maximum number of characters. Please double-check the field. If value is correct, please reach out to HSPD-12 Security at HSPD12.Security@gsa.gov or at +1 (202) 501-4459.")
                     .NotEmpty()
                     .WithMessage("Full Middle Name(or NMN if none): Required Field")
-                    .Matches(@"^[A-Za-z \-\‘\’\'\`]{1,40}|[NMN]{1,3}$")
+                    .Matches(@"^([A-Za-z \-\‘\’\'\`]{1,40}|[NMN]{1,3})$")
                     .WithMessage("Full Middle Name(or NMN if none): Contains Invalid Characters");
 
             //Suffix
