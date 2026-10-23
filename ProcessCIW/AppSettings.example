@@ -1,6 +1,6 @@
 ﻿<appSettings>
   <add key="DEBUGMODE" value="false" />
-  <add key="VERSION" value="V1"/>
+  <add key="VERSION" value="V2"/>
   <add key="SMTPSERVER" value="smtp.server.com" />
   <add key="DEFAULTSUBJECT" value="Automated CIW Process" />
   <add key="SUMMARYEMAIL" value="replaceme@example.com" />

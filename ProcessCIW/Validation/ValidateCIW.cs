@@ -316,9 +316,7 @@ namespace ProcessCIW.Validation
             //Job Title
             RuleFor(employee => employee.PositionJobTitle)
                     .NotEmpty()
-                    .WithMessage("Position (Job) Title: Required Field")
-                    .Matches(@"^[a-zA-Z0-9 .\\-\\\']+$")
-                    .WithMessage("Position (Job) Title: Contains Invalid Characters");
+                    .WithMessage("Position (Job) Title: Required Field");
 
             //Prior Investigation
             RuleFor(employee => employee.PriorInvestigation)
@@ -574,7 +572,7 @@ namespace ProcessCIW.Validation
                     When(b => (U.Utilities.validFAS(b.TaskOrderDeliveryOrder) == true && MatchedGCIMSData(b.TaskOrderDeliveryOrder) == false), () =>
                     {
                         RuleFor(building => building.SponsoringMajorOrg.ToLower())
-                            .Equal("q")
+                            .Equal("f")
                             .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: This contract does not match an existing contract in GCIMS and cannot be created. Please see the CIW user guide for further details.");
                     });
 
