@@ -572,7 +572,7 @@ namespace ProcessCIW.Validation
                     When(b => (U.Utilities.validFAS(b.TaskOrderDeliveryOrder) == true && MatchedGCIMSData(b.TaskOrderDeliveryOrder) == false), () =>
                     {
                         RuleFor(building => building.SponsoringMajorOrg.ToLower())
-                            .Equal("q")
+                            .Equal("f")
                             .WithMessage("Task Order (TO)/ Delivery Order (DO) Number/ Contract Base Number: This contract does not match an existing contract in GCIMS and cannot be created. Please see the CIW user guide for further details.");
                     });
 
