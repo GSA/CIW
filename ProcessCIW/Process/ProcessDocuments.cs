@@ -238,7 +238,7 @@ class ProcessDocuments
 
                 if (node != null)
                 {
-                    if (node.InnerText != "V1")
+                    if (node.InnerText != "V2")
                     {
                         //Begin exiting if wrong version
                         sendWrongVersion(fmd.UploaderPersID, fileNameHelper(fmd.FileName));
@@ -290,6 +290,11 @@ class ProcessDocuments
                     var citizenCountry = xml.FirstChild.ChildNodes[2].ChildNodes[9].ChildNodes[4].ChildNodes[2].InnerText;
                     var citizenTag = xml.FirstChild.ChildNodes[2].ChildNodes[9].ChildNodes[4].ChildNodes[2].FirstChild.ChildNodes[1].Attributes[0].Value;
                     ciwInformation.Add(new CIWData { InnerText=citizenCountry, TagName=citizenTag+"2" });
+
+                    //get job title for test
+                    //var jobTitle = xml.FirstChild.ChildNodes[2].ChildNodes[7].ChildNodes[4].ChildNodes[2].LastChild.InnerText;
+                    //var jobtitleTag = xml.FirstChild.ChildNodes[2].ChildNodes[7].ChildNodes[4].ChildNodes[2].FirstChild.ChildNodes[1].Attributes[0].Value;
+                    //ciwInformation.Add(new CIWData { InnerText = jobTitle, TagName = jobtitleTag });
 
                     //get all table cells and add them after the version in ciwInformation
                     ciwInformation.AddRange( tableCells
