@@ -134,12 +134,12 @@ namespace ProcessCIW.Process
         }
 
         /// <summary>
-        /// Checks if uploaderMajorOrg is "q"
+        /// Checks if uploaderMajorOrg is "q" or "f"
         /// </summary>
         /// <returns>Bool</returns>
         private bool IncludeFASEMail()
         {
-            return uploaderMajorOrg.ToLower().Equals("q");
+            return uploaderMajorOrg.ToLower().Equals("q") || uploaderMajorOrg.ToLower().Equals("f");
         }
 
         /// <summary>
